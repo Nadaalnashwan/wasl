@@ -104,6 +104,10 @@ const supabase: SupabaseClient | null =
     ? createClient(SUPA_URL, SUPA_ANON)
     : null;
 
+type RegisterResult =
+  | "email_confirmation_required"
+  | "signed_in";
+
 type AuthCtx = {
   user: User | null;
   loading: boolean;
@@ -116,7 +120,7 @@ type AuthCtx = {
     email: string,
     password: string,
     fullName: string
-  ) => Promise<void>;
+  ) => Promise<RegisterResult>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -291,11 +295,11 @@ function AuthProvider({
       email: string,
       password: string,
       fullName: string
-    ) => {
+    ): Promise<RegisterResult> => {
       if (AUTH_MODE === "supabase") {
         const client = requireSupabase();
 
-        const { error } = await client.auth.signUp({
+        const { data, error } = await client.auth.signUp({
           email: email.trim(),
           password,
           options: {
@@ -309,11 +313,14 @@ function AuthProvider({
           throw new ApiError(400, error.message);
         }
 
-        // Supabase may require email confirmation before
-        // creating an authenticated session.
-        await refresh();
+        // When email confirmation is enabled, Supabase
+        // normally returns a user without a session.
+        if (!data.session) {
+          return "email_confirmation_required";
+        }
 
-        return;
+        await refresh();
+        return "signed_in";
       }
 
       const result = await api<{
@@ -340,6 +347,7 @@ function AuthProvider({
       }
 
       await refresh();
+      return "signed_in";
     },
     [requireSupabase, refresh],
   );

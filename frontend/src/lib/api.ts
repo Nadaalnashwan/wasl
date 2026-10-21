@@ -85,3 +85,7 @@ export async function upload<T>(path: string, file: File): Promise<T> {
   fd.append("file", file);
   return api<T>(path, { method: "POST", body: fd });
 }
+
+export async function getApiToken(): Promise<string | null> {
+  return getToken();
+}

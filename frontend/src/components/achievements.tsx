@@ -1,8 +1,8 @@
+
 "use client";
 
 import { AlertCircle, Award, Briefcase, Check, FileQuestion, GraduationCap, Medal, PenLine, Quote, Sparkles, Trash2, Upload, X } from "lucide-react";
 import { GithubIcon as Github } from "@/components/brand-icons";
-import Link from "next/link";
 import { useState } from "react";
 import { AiWorking, ErrorNote } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
@@ -267,11 +267,6 @@ export function AddAchievementDialog({ trigger, onDone }: { trigger: React.React
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setCandidates(null)}>
                     {t("common.back")}
-                  </Button>
-                  <Button asChild variant="secondary">
-                    <Link href="/discovery" onClick={() => setOpen(false)}>
-                      {t("disc.review")}
-                    </Link>
                   </Button>
                 </div>
               </div>

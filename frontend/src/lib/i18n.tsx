@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
@@ -11,7 +12,6 @@ const en = {
   "nav.cv": "CV Manager",
   "nav.tailor": "CV Tailoring",
   "nav.gap": "Gap Analyzer",
-  "nav.discovery": "Discovery",
   "nav.monitoring": "Monitoring",
   "nav.settings": "Settings",
   "nav.group.workspace": "Workspace",
@@ -37,17 +37,17 @@ const en = {
   "common.none": "Nothing here yet",
   "theme.light": "Paper",
   "theme.dark": "Blueprint",
-  "landing.cta": "Start free",
+  "landing.cta": "Sign up",
   "landing.signin": "Sign in",
   "landing.hero.title": "Document an achievement once. Use it everywhere.",
-  "landing.hero.sub": "Wasl turns your projects, certificates and GitHub work into verified achievements — then drafts LinkedIn posts, updates your CV with your approval, tailors it to jobs and maps your skill gaps. Nothing invented.",
+  "landing.hero.sub": "Wasl turns your projects, certificates and accomplishments into professionally structured achievements — then drafts LinkedIn posts, recommends meaningful CV updates for your approval, tailors your CV to jobs and maps your skill gaps. Nothing invented.",
   "landing.how": "How the Wasl machine works",
   "landing.step1.t": "Drop in your work",
-  "landing.step1.d": "Describe an achievement, upload a certificate, or connect GitHub.",
+  "landing.step1.d": "Describe an achievement, add a project, or upload a certificate.",
   "landing.step2.t": "AI extracts & verifies",
-  "landing.step2.d": "Evidence quotes are checked against your source. You confirm what you actually did.",
+  "landing.step2.d": "Wasl analyzes your achievement, checks the information you provide and helps you confirm what you actually did.",
   "landing.step3.t": "Out comes your career",
-  "landing.step3.d": "LinkedIn posts, CV updates (Accept / Edit / Reject), tailored CVs and a learning roadmap.",
+  "landing.step3.d": "LinkedIn posts, recommended CV updates (Accept / Edit / Reject), tailored CVs and a learning roadmap.",
   "landing.f.studio": "LinkedIn Post Studio",
   "landing.f.studio.d": "Six tones, Arabic & English, claim-checked before you publish with one explicit click.",
   "landing.f.cv": "Living Master CV",
@@ -56,8 +56,6 @@ const en = {
   "landing.f.tailor.d": "Reorders and rephrases what you already have. Invented bullets are blocked.",
   "landing.f.gap": "Gap analyzer",
   "landing.f.gap.d": "Separates missing skills from skills you have but can't prove yet.",
-  "landing.f.discovery": "Achievement discovery",
-  "landing.f.discovery.d": "Reads READMEs and documents, asks about your personal contribution.",
   "landing.f.monitor": "Measured, not guessed",
   "landing.f.monitor.d": "Latency, failures, fallbacks, unsupported-claim rate — on a live dashboard.",
   "landing.footer": "Built for the Tuwaiq Academy AI Product Development & Monitoring project.",
@@ -84,11 +82,10 @@ const en = {
   "dash.add": "Add an achievement",
   "dash.version": "Version",
   "rec.create_cv": "Create or upload your Master CV so Wasl can keep it updated.",
-  "rec.review_pending": "achievement(s) discovered by AI are waiting for your confirmation.",
   "rec.review_suggestions": "CV update draft(s) are waiting for Accept / Edit / Reject.",
   "rec.achievements_not_in_cv": "confirmed achievement(s) are not in your CV yet.",
   "rec.achievements_not_posted": "achievement(s) have never been shared on LinkedIn.",
-  "rec.connect_github": "Connect GitHub to discover achievements from your repositories.",
+  "rec.connect_github": "Add your achievements manually to keep your career profile up to date.",
   "rec.connect_linkedin": "Connect LinkedIn to publish posts directly.",
   "rec.try_gap": "Paste a job post into the Gap Analyzer to see your roadmap.",
   "ach.add.title": "Add an achievement",
@@ -196,17 +193,6 @@ const en = {
   "gap.roadmap": "Your roadmap",
   "gap.quickwins": "Quick wins",
   "gap.weeks": "weeks",
-  "disc.title": "Achievement Discovery",
-  "disc.sub": "Let Wasl find achievements in your documents and GitHub repositories. You confirm what you actually did.",
-  "disc.upload": "Upload a certificate or project document",
-  "disc.github": "GitHub repositories",
-  "disc.scan": "Scan selected",
-  "disc.review": "Waiting for your review",
-  "disc.github.off": "Connect GitHub in Settings to scan repositories.",
-  "disc.github.unconfigured": "GitHub integration is not configured on this server.",
-  "disc.state.new": "new",
-  "disc.state.updated": "updated",
-  "disc.state.unchanged": "scanned",
   "mon.title": "Monitoring & Evaluation",
   "mon.sub": "Live metrics computed from real backend events. No sample data.",
   "set.title": "Settings",
@@ -233,7 +219,6 @@ const ar: Dict = {
   "nav.cv": "إدارة السيرة الذاتية",
   "nav.tailor": "تخصيص السيرة",
   "nav.gap": "تحليل الفجوات",
-  "nav.discovery": "اكتشاف الإنجازات",
   "nav.monitoring": "المراقبة",
   "nav.settings": "الإعدادات",
   "nav.group.workspace": "مساحة العمل",
@@ -259,17 +244,17 @@ const ar: Dict = {
   "common.none": "لا يوجد شيء بعد",
   "theme.light": "ورقي",
   "theme.dark": "مخطط أزرق",
-  "landing.cta": "ابدأ مجاناً",
+  "landing.cta": "إنشاء حساب",
   "landing.signin": "تسجيل الدخول",
   "landing.hero.title": "وثّق إنجازك مرة واحدة. واستخدمه في كل مكان.",
-  "landing.hero.sub": "يحوّل وصل مشاريعك وشهاداتك وأعمالك على GitHub إلى إنجازات موثّقة، ثم يكتب منشورات LinkedIn ويحدّث سيرتك الذاتية بموافقتك ويخصصها للوظائف ويحدد فجوات مهاراتك — دون اختلاق أي معلومة.",
+  "landing.hero.sub": "يحوّل وصل مشاريعك وشهاداتك وإنجازاتك إلى إنجازات منظمة باحترافية، ثم يكتب منشورات LinkedIn ويقترح تحديثات مهمة لسيرتك الذاتية بعد مراجعتك وموافقتك، ويخصصها للوظائف ويحدد فجوات مهاراتك — دون اختلاق أي معلومة.",
   "landing.how": "كيف تعمل آلة وصل",
   "landing.step1.t": "أضف أعمالك",
-  "landing.step1.d": "اكتب إنجازاً أو ارفع شهادة أو اربط حساب GitHub.",
+  "landing.step1.d": "اكتب إنجازاً أو أضف مشروعاً أو ارفع شهادة.",
   "landing.step2.t": "الذكاء الاصطناعي يستخرج ويتحقق",
-  "landing.step2.d": "نتحقق من الاقتباسات مقابل المصدر، وأنت تؤكد ما قمت به فعلاً.",
+  "landing.step2.d": "يحلل وصل إنجازك ويتحقق من المعلومات التي تقدمها، ويساعدك على تأكيد ما قمت به فعلاً.",
   "landing.step3.t": "تخرج مسيرتك جاهزة",
-  "landing.step3.d": "منشورات LinkedIn وتحديثات للسيرة (قبول / تعديل / رفض) وسير مخصصة وخطة تعلم.",
+  "landing.step3.d": "منشورات LinkedIn وتحديثات مقترحة للسيرة (قبول / تعديل / رفض) وسير مخصصة وخطة تعلم.",
   "landing.f.studio": "استوديو منشورات LinkedIn",
   "landing.f.studio.d": "ست نبرات، بالعربية والإنجليزية، مع فحص للادعاءات قبل النشر بنقرة صريحة.",
   "landing.f.cv": "سيرة ذاتية رئيسية حيّة",
@@ -278,8 +263,6 @@ const ar: Dict = {
   "landing.f.tailor.d": "يعيد الترتيب والصياغة لما لديك فقط، ويمنع أي نقطة مختلقة.",
   "landing.f.gap": "محلل الفجوات",
   "landing.f.gap.d": "يفرّق بين المهارات المفقودة والمهارات التي تملكها دون دليل.",
-  "landing.f.discovery": "اكتشاف الإنجازات",
-  "landing.f.discovery.d": "يقرأ ملفات README والمستندات ويسألك عن مساهمتك الشخصية.",
   "landing.f.monitor": "قياس لا تخمين",
   "landing.f.monitor.d": "زمن الاستجابة والأعطال والتحويل بين المزودين ونسبة الادعاءات غير المدعومة — في لوحة حية.",
   "landing.footer": "طُوّر لمشروع تطوير ومراقبة منتجات الذكاء الاصطناعي — أكاديمية طويق.",
@@ -306,11 +289,10 @@ const ar: Dict = {
   "dash.add": "أضف إنجازاً",
   "dash.version": "الإصدار",
   "rec.create_cv": "أنشئ سيرتك الرئيسية أو ارفعها ليتمكن وصل من تحديثها.",
-  "rec.review_pending": "إنجاز(ات) اكتشفها الذكاء الاصطناعي بانتظار تأكيدك.",
   "rec.review_suggestions": "مسودة(ات) تحديث للسيرة بانتظار القبول أو التعديل أو الرفض.",
   "rec.achievements_not_in_cv": "إنجاز(ات) مؤكدة غير موجودة في سيرتك بعد.",
   "rec.achievements_not_posted": "إنجاز(ات) لم تُشارك على LinkedIn بعد.",
-  "rec.connect_github": "اربط GitHub لاكتشاف الإنجازات من مستودعاتك.",
+  "rec.connect_github": "أضف إنجازاتك يدوياً لتحديث ملفك المهني باستمرار.",
   "rec.connect_linkedin": "اربط LinkedIn لنشر المنشورات مباشرة.",
   "rec.try_gap": "الصق إعلان وظيفة في محلل الفجوات لترى خطتك.",
   "ach.add.title": "أضف إنجازاً",
@@ -418,17 +400,6 @@ const ar: Dict = {
   "gap.roadmap": "خطتك",
   "gap.quickwins": "مكاسب سريعة",
   "gap.weeks": "أسابيع",
-  "disc.title": "اكتشاف الإنجازات",
-  "disc.sub": "دع وصل يجد الإنجازات في مستنداتك ومستودعات GitHub. وأنت تؤكد ما قمت به فعلاً.",
-  "disc.upload": "ارفع شهادة أو مستند مشروع",
-  "disc.github": "مستودعات GitHub",
-  "disc.scan": "افحص المحدد",
-  "disc.review": "بانتظار مراجعتك",
-  "disc.github.off": "اربط GitHub من الإعدادات لفحص المستودعات.",
-  "disc.github.unconfigured": "تكامل GitHub غير مُعد على هذا الخادم.",
-  "disc.state.new": "جديد",
-  "disc.state.updated": "محدّث",
-  "disc.state.unchanged": "مفحوص",
   "mon.title": "المراقبة والتقييم",
   "mon.sub": "مقاييس حية محسوبة من أحداث الخادم الفعلية. لا بيانات تجريبية.",
   "set.title": "الإعدادات",
@@ -447,19 +418,33 @@ const ar: Dict = {
 };
 
 export type TKey = keyof typeof en;
+
 const dicts: Record<Locale, Dict> = { en, ar };
 
-type Ctx = { locale: Locale; dir: "ltr" | "rtl"; t: (k: TKey) => string; setLocale: (l: Locale) => void };
+type Ctx = {
+  locale: Locale;
+  dir: "ltr" | "rtl";
+  t: (k: TKey) => string;
+  setLocale: (l: Locale) => void;
+};
+
 const I18nContext = createContext<Ctx | null>(null);
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
+export function I18nProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [locale, setLocaleState] = useState<Locale>("en");
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem("wasl.locale") as Locale | null;
+
       // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate persisted preference after mount
-      if (saved === "ar" || saved === "en") setLocaleState(saved);
+      if (saved === "ar" || saved === "en") {
+        setLocaleState(saved);
+      }
     } catch {}
   }, []);
 
@@ -470,20 +455,35 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
+
     try {
       localStorage.setItem("wasl.locale", l);
     } catch {}
   }, []);
 
   const value = useMemo<Ctx>(
-    () => ({ locale, dir: locale === "ar" ? "rtl" : "ltr", t: (k) => dicts[locale][k] ?? en[k] ?? k, setLocale }),
-    [locale, setLocale],
+    () => ({
+      locale,
+      dir: locale === "ar" ? "rtl" : "ltr",
+      t: (k) => dicts[locale][k] ?? en[k] ?? k,
+      setLocale,
+    }),
+    [locale, setLocale]
   );
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+
+  return (
+    <I18nContext.Provider value={value}>
+      {children}
+    </I18nContext.Provider>
+  );
 }
 
 export function useI18n() {
   const ctx = useContext(I18nContext);
-  if (!ctx) throw new Error("useI18n outside provider");
+
+  if (!ctx) {
+    throw new Error("useI18n outside provider");
+  }
+
   return ctx;
 }

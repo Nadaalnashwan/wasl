@@ -1,3 +1,4 @@
+
 """Database models. Every user-owned table carries user_id and every query filters by it.
 
 On Supabase the same tables are created by supabase/migrations/0001_init.sql, which also
@@ -31,12 +32,12 @@ class User(Base, TimestampMixin):
     __tablename__ = "users"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
-    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)  # null for Supabase users
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     full_name: Mapped[str] = mapped_column(String(200), default="")
     headline: Mapped[str] = mapped_column(String(300), default="")
     locale: Mapped[str] = mapped_column(String(5), default="en")
     # AI preferences (BYOK)
-    ai_mode: Mapped[str] = mapped_column(String(20), default="platform")  # platform | personal | personal_first
+    ai_mode: Mapped[str] = mapped_column(String(20), default="platform")
     allow_platform_fallback: Mapped[bool] = mapped_column(Boolean, default=True)
     allow_cross_provider: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -47,8 +48,8 @@ class Achievement(Base, TimestampMixin):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     title: Mapped[str] = mapped_column(String(300))
     description: Mapped[str] = mapped_column(Text, default="")
-    category: Mapped[str] = mapped_column(String(40), default="project")  # project|certification|experience|award|education
-    source: Mapped[str] = mapped_column(String(20), default="manual")  # manual|github|upload
+    category: Mapped[str] = mapped_column(String(40), default="project")
+    source: Mapped[str] = mapped_column(String(20), default="manual")
     source_ref: Mapped[str | None] = mapped_column(String(500), nullable=True)
     technologies: Mapped[list[str]] = mapped_column(JSON, default=list)
     skills: Mapped[list[str]] = mapped_column(JSON, default=list)
@@ -56,7 +57,7 @@ class Achievement(Base, TimestampMixin):
     evidence: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     # pending = AI-suggested, needs user confirmation. confirmed = user verified. rejected = dismissed.
     status: Mapped[str] = mapped_column(String(20), default="confirmed", index=True)
-    contribution_note: Mapped[str] = mapped_column(Text, default="")  # user's own words about their role
+    contribution_note: Mapped[str] = mapped_column(Text, default="")
     needs_contribution_confirmation: Mapped[bool] = mapped_column(Boolean, default=False)
     fingerprint: Mapped[str] = mapped_column(String(64), index=True, default="")
     confidence: Mapped[float] = mapped_column(Float, default=1.0)
@@ -72,7 +73,12 @@ class Post(Base, TimestampMixin):
     tone: Mapped[str] = mapped_column(String(30), default="professional")
     language: Mapped[str] = mapped_column(String(5), default="en")
     hashtags: Mapped[list[str]] = mapped_column(JSON, default=list)
-    # draft | publishing | published | failed
+
+    # Images attached to the LinkedIn post (up to 4).
+    # Stores image metadata/references, not the image binary itself.
+    images: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+
+    # draft | publishing | published | failed | uncertain
     status: Mapped[str] = mapped_column(String(20), default="draft", index=True)
     linkedin_post_urn: Mapped[str | None] = mapped_column(String(200), nullable=True)
     publish_error: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -88,7 +94,7 @@ class CV(Base, TimestampMixin):
     __tablename__ = "cvs"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    kind: Mapped[str] = mapped_column(String(20), default="master")  # master | tailored
+    kind: Mapped[str] = mapped_column(String(20), default="master")
     title: Mapped[str] = mapped_column(String(300), default="Master CV")
     data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     version: Mapped[int] = mapped_column(Integer, default=1)
@@ -105,7 +111,7 @@ class CVVersion(Base, TimestampMixin):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     version: Mapped[int] = mapped_column(Integer)
     data: Mapped[dict[str, Any]] = mapped_column(JSON)
-    change_summary: Mapped[str] = mapped_column(Text, default="")
+    change_summary: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
 
 
 class CVSuggestion(Base, TimestampMixin):
@@ -120,7 +126,6 @@ class CVSuggestion(Base, TimestampMixin):
     draft_data: Mapped[dict[str, Any]] = mapped_column(JSON)
     changes: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     rationale: Mapped[str] = mapped_column(Text, default="")
-    # pending | accepted | edited | rejected | stale
     status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
@@ -129,7 +134,7 @@ class JobAnalysis(Base, TimestampMixin):
     __tablename__ = "job_analyses"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    kind: Mapped[str] = mapped_column(String(20))  # tailor | gap
+    kind: Mapped[str] = mapped_column(String(20))
     job_title: Mapped[str] = mapped_column(String(300), default="")
     company: Mapped[str] = mapped_column(String(300), default="")
     requirements: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
@@ -142,13 +147,13 @@ class Integration(Base, TimestampMixin):
     __table_args__ = (UniqueConstraint("user_id", "provider"),)
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    provider: Mapped[str] = mapped_column(String(20))  # linkedin | github
+    provider: Mapped[str] = mapped_column(String(20))
     access_token_enc: Mapped[str] = mapped_column(Text)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     scopes: Mapped[str] = mapped_column(String(500), default="")
     account_id: Mapped[str] = mapped_column(String(200), default="")
     account_name: Mapped[str] = mapped_column(String(300), default="")
-    status: Mapped[str] = mapped_column(String(20), default="connected")  # connected | expired | error
+    status: Mapped[str] = mapped_column(String(20), default="connected")
     last_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
@@ -169,8 +174,8 @@ class UserApiKey(Base, TimestampMixin):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     provider: Mapped[str] = mapped_column(String(20))
     key_enc: Mapped[str] = mapped_column(Text)
-    key_hint: Mapped[str] = mapped_column(String(12))  # e.g. "…a1b2"
-    status: Mapped[str] = mapped_column(String(20), default="unverified")  # valid | invalid | unverified
+    key_hint: Mapped[str] = mapped_column(String(12))
+    status: Mapped[str] = mapped_column(String(20), default="unverified")
     validated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
@@ -182,7 +187,7 @@ class Upload(Base, TimestampMixin):
     mime: Mapped[str] = mapped_column(String(100))
     size_bytes: Mapped[int] = mapped_column(Integer)
     sha256: Mapped[str] = mapped_column(String(64), index=True)
-    purpose: Mapped[str] = mapped_column(String(20))  # cv | evidence
+    purpose: Mapped[str] = mapped_column(String(20))
     storage_path: Mapped[str] = mapped_column(String(500))
     text_chars: Mapped[int] = mapped_column(Integer, default=0)
     injection_flags: Mapped[list[str]] = mapped_column(JSON, default=list)
@@ -208,16 +213,16 @@ class AIEvent(Base, TimestampMixin):
 
     __tablename__ = "ai_events"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    request_id: Mapped[str] = mapped_column(String(36), index=True)  # groups attempts of one logical call
+    request_id: Mapped[str] = mapped_column(String(36), index=True)
     user_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
     task: Mapped[str] = mapped_column(String(40), index=True)
     provider: Mapped[str] = mapped_column(String(20), index=True)
     model: Mapped[str] = mapped_column(String(100))
-    key_source: Mapped[str] = mapped_column(String(10), default="platform")  # platform | user
+    key_source: Mapped[str] = mapped_column(String(10), default="platform")
     attempt: Mapped[int] = mapped_column(Integer, default=1)
     is_fallback: Mapped[bool] = mapped_column(Boolean, default=False)
-    status: Mapped[str] = mapped_column(String(20), index=True)  # success | error | invalid_output
-    error_type: Mapped[str | None] = mapped_column(String(40), nullable=True)  # timeout|rate_limit|auth|server|validation|network
+    status: Mapped[str] = mapped_column(String(20), index=True)
+    error_type: Mapped[str | None] = mapped_column(String(40), nullable=True)
     http_status: Mapped[int | None] = mapped_column(Integer, nullable=True)
     latency_ms: Mapped[int] = mapped_column(Integer)
     prompt_tokens: Mapped[int] = mapped_column(Integer, default=0)
@@ -229,7 +234,7 @@ class HTTPEvent(Base, TimestampMixin):
     __tablename__ = "http_events"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     method: Mapped[str] = mapped_column(String(8))
-    route: Mapped[str] = mapped_column(String(200), index=True)  # route template, never raw path with ids
+    route: Mapped[str] = mapped_column(String(200), index=True)
     status_code: Mapped[int] = mapped_column(Integer, index=True)
     latency_ms: Mapped[int] = mapped_column(Integer)
     user_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
@@ -241,13 +246,12 @@ class QualityEvent(Base, TimestampMixin):
 
     __tablename__ = "quality_events"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    user_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
+    user_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     kind: Mapped[str] = mapped_column(String(40), index=True)
-    # task_completed | task_failed | claim_check | cv_suggestion_decision | achievement_feedback | publish_result
     task: Mapped[str] = mapped_column(String(40), default="")
     outcome: Mapped[str] = mapped_column(String(30), default="")
     value: Mapped[float | None] = mapped_column(Float, nullable=True)
-    details: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)  # counts only, no user content
+    details: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
 
 class ErrorLog(Base, TimestampMixin):
@@ -255,7 +259,7 @@ class ErrorLog(Base, TimestampMixin):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     route: Mapped[str] = mapped_column(String(200))
     error_type: Mapped[str] = mapped_column(String(100))
-    message: Mapped[str] = mapped_column(Text)  # scrubbed
+    message: Mapped[str] = mapped_column(Text)
     user_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
 
 
@@ -264,6 +268,5 @@ class EvalRun(Base, TimestampMixin):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     dataset_version: Mapped[str] = mapped_column(String(40))
     provider: Mapped[str] = mapped_column(String(40), default="")
-    model: Mapped[str] = mapped_column(String(100), default="")
     summary: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     cases: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
