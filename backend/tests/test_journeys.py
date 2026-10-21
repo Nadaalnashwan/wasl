@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 import copy
+from datetime import UTC, datetime, timedelta
+from uuid import uuid4
 
+from app.db import SessionLocal
+from app.models import Achievement, Post
 from tests.conftest import SAMPLE_CV
 
 ACH = {"title": "AI resume parser", "description": "Built an AI resume parser with Python and FastAPI for students.",
@@ -101,6 +105,87 @@ def test_post_generation_and_publish_guards(client, auth):
     nolink = client.post(f"/api/posts/{post['id']}/publish", json={"confirm": True}, headers=auth)
     assert nolink.status_code == 412  # LinkedIn not connected -> never fake success
     assert client.get("/api/posts", headers=auth).json()[0]["status"] == "draft"
+
+
+def test_dashboard_activity_only_shows_verified_user_activity(client, auth):
+    user_id = client.get("/api/auth/me", headers=auth).json()["id"]
+    other = client.post(
+        "/api/auth/register",
+        json={"email": f"other-{uuid4()}@test.dev", "password": "password123"},
+    ).json()
+    now = datetime.now(UTC)
+
+    def add_achievement(owner_id, title, status, created_at):
+        return Achievement(
+            user_id=owner_id,
+            title=title,
+            description=f"{title} description",
+            status=status,
+            created_at=created_at,
+        )
+
+    def add_post(owner_id, content, status, created_at, *, urn=None, published_at=None):
+        return Post(
+            user_id=owner_id,
+            content=content,
+            status=status,
+            linkedin_post_urn=urn,
+            created_at=created_at,
+            published_at=published_at,
+        )
+
+    accepted = add_achievement(user_id, "Accepted achievement", "confirmed", now - timedelta(days=1))
+    pending = add_achievement(user_id, "Pending achievement", "pending", now + timedelta(days=1))
+    rejected = add_achievement(user_id, "Rejected achievement", "rejected", now + timedelta(days=2))
+    published_time = now
+    published = add_post(
+        user_id,
+        "A post verified as published",
+        "published",
+        published_time,
+        urn="urn:li:share:verified",
+        published_at=published_time,
+    )
+    draft = add_post(user_id, "A draft", "draft", now + timedelta(days=3))
+    failed = add_post(user_id, "A failed attempt", "failed", now + timedelta(days=4))
+    uncertain = add_post(user_id, "An uncertain attempt", "uncertain", now + timedelta(days=5))
+    missing_urn = add_post(user_id, "Published without proof", "published", now + timedelta(days=6), published_at=now + timedelta(days=6))
+    missing_date = add_post(user_id, "Published without timestamp", "published", now + timedelta(days=7), urn="urn:li:share:no-time")
+    other_user_id = other["user"]["id"]
+    other_achievement = add_achievement(other_user_id, "Another user's achievement", "confirmed", now + timedelta(days=8))
+    other_post = add_post(
+        other_user_id,
+        "Another user's published post",
+        "published",
+        now + timedelta(days=9),
+        urn="urn:li:share:other",
+        published_at=now + timedelta(days=9),
+    )
+
+    db = SessionLocal()
+    try:
+        db.add_all([
+            accepted, pending, rejected, published, draft, failed, uncertain,
+            missing_urn, missing_date, other_achievement, other_post,
+        ])
+        db.commit()
+    finally:
+        db.close()
+
+    response = client.get("/api/dashboard", headers=auth)
+    assert response.status_code == 200, response.text
+    activity = response.json()["recent_activity"]
+    assert [item["id"] for item in activity] == [published.id, accepted.id]
+    assert [item["type"] for item in activity] == ["linkedin_post", "achievement"]
+    assert activity[0]["preview"] == "A post verified as published"
+    assert activity[1]["title"] == "Accepted achievement"
+    assert activity[0]["created_at"] > activity[1]["created_at"]
+
+
+def test_dashboard_activity_is_empty_without_qualifying_records(client, auth):
+    response = client.get("/api/dashboard", headers=auth)
+    assert response.status_code == 200, response.text
+    assert response.json()["recent_activity"] == []
 
 
 def test_tailor_never_invents(client, auth):

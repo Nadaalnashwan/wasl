@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.deps import achievement_dict, get_current_user, get_db, master_cv
+from app.deps import get_current_user, get_db, master_cv
 from app.models import Achievement, CVSuggestion, Integration, JobAnalysis, Post, User
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
@@ -43,15 +43,49 @@ def summary(user: User = Depends(get_current_user), db: Session = Depends(get_db
         )
     )
 
-    recent = db.scalars(
+    recent_achievements = db.scalars(
         select(Achievement)
         .where(
             Achievement.user_id == user.id,
-            Achievement.status != "rejected",
+            Achievement.status == "confirmed",
         )
         .order_by(Achievement.created_at.desc())
-        .limit(5)
+        .limit(10)
     ).all()
+
+    recent_posts = db.scalars(
+        select(Post)
+        .where(
+            Post.user_id == user.id,
+            Post.status == "published",
+            Post.linkedin_post_urn.is_not(None),
+            Post.published_at.is_not(None),
+        )
+        .order_by(Post.published_at.desc())
+        .limit(10)
+    ).all()
+
+    recent_activity = [
+        {
+            "id": a.id,
+            "type": "achievement",
+            "title": a.title,
+            "preview": a.description,
+            "created_at": a.created_at.isoformat(),
+        }
+        for a in recent_achievements
+    ] + [
+        {
+            "id": p.id,
+            "type": "linkedin_post",
+            "title": "",
+            "preview": p.content[:240],
+            "created_at": p.published_at.isoformat(),
+        }
+        for p in recent_posts
+    ]
+    recent_activity.sort(key=lambda item: item["created_at"], reverse=True)
+    recent_activity = recent_activity[:10]
 
     cv = master_cv(db, user)
 
@@ -191,10 +225,7 @@ def summary(user: User = Depends(get_current_user), db: Session = Depends(get_db
                 )
             } if cv else None,
         },
-        "recent_achievements": [
-            achievement_dict(a)
-            for a in recent
-        ],
+        "recent_activity": recent_activity,
         "integrations": integrations,
         "last_analysis": {
             "id": last_analysis.id,

@@ -72,13 +72,20 @@ export function AchievementCard({ a, onChanged, compact }: { a: Achievement; onC
   }
 
   return (
-    <article className={cn("sketch pop-in flex flex-col gap-3 p-4", a.status === "pending" && "!bg-paper-2")}>
-      <div className="flex items-start gap-3">
+    <article
+      className={cn(
+        compact
+          ? "sketch-soft pop-in flex items-center gap-3 bg-paper p-3"
+          : "sketch pop-in flex flex-col gap-3 p-4",
+        !compact && a.status === "pending" && "!bg-paper-2"
+      )}
+    >
+      <div className={cn("flex gap-3", compact ? "items-center" : "items-start")}>
         <span className="grid size-10 shrink-0 place-items-center rounded-xl border-2 border-ink bg-sky">
           <Icon className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="font-hand text-xl leading-tight" dir={isArabic(a.title) ? "rtl" : undefined}>
+          <h3 className={cn(compact ? "truncate text-sm font-semibold" : "font-hand text-xl", "leading-tight")} dir={isArabic(a.title) ? "rtl" : undefined}>
             {a.title}
           </h3>
           <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-ink-faint">

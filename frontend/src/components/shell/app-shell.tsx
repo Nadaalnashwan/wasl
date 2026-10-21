@@ -21,6 +21,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import logoDark from "../../../public/brand/Wasl-logo-dark.png";
+import logoLight from "../../../public/brand/Wasl-logo-light.png";
 import { Gear } from "@/components/sketch/illustrations";
 import { useI18n, type TKey } from "@/lib/i18n";
 import { useAuth, useTheme } from "@/lib/providers";
@@ -70,7 +72,7 @@ export function Logo({
     >
       <>
         <Image
-          src="/brand/Wasl-logo-light.png"
+          src={logoLight}
           alt=""
           width={1410}
           height={442}
@@ -78,7 +80,7 @@ export function Logo({
           priority
         />
         <Image
-          src="/brand/Wasl-logo-dark.png"
+          src={logoDark}
           alt=""
           width={1410}
           height={442}
