@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   Target,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -120,8 +119,11 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen">
-      <header className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-5 md:px-8">
-        <Logo />
+      <header className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-5 sm:gap-3 sm:px-4 md:px-8">
+        <Logo
+          className="shrink-0"
+          imageClassName="h-11 sm:h-12"
+        />
 
         <div className="ms-auto flex items-center gap-2">
           <Toggles className="hidden sm:flex" />
@@ -309,21 +311,16 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="border-t-[2.5px] border-ink py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 text-sm text-ink-soft md:px-8">
-          <Image
-            src="/brand/wasl-mark.png"
-            alt=""
-            width={498}
-            height={646}
-            className="h-8 w-auto"
-          />
+      <footer className="border-t-2 border-brand/40 bg-paper/95 py-10 backdrop-blur-sm sm:py-12">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-4 text-center sm:flex-row sm:justify-between sm:text-start md:px-8">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
+            <Logo className="shrink-0" imageClassName="h-10" />
+            <span className="text-sm font-semibold leading-relaxed tracking-wide text-ink-soft">
+              © 2026 Wasl — {t("brand.tagline")}
+            </span>
+          </div>
 
-          <span>
-            © 2026 Wasl — {t("brand.tagline")}
-          </span>
-
-          <span className="ms-auto">
+          <span className="text-xs leading-relaxed text-ink-faint sm:max-w-xs sm:text-end sm:text-sm">
             {t("landing.footer")}
           </span>
         </div>

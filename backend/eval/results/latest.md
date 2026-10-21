@@ -1,7 +1,7 @@
 # Wasl evaluation — wasl-eval-v1
 
-Run: 2026-10-20T15:47:32.196824+00:00  
-Provider(s): groq  
+Run: 2026-10-21T15:48:07.267198+00:00
+Provider(s): groq
 Model(s): openai/gpt-oss-120b, openai/gpt-oss-20b
 
 ## Summary
@@ -20,7 +20,7 @@ Model(s): openai/gpt-oss-120b, openai/gpt-oss-20b
 | post_unsupported_claim_rate | 0.0 |
 | posts_revised | 1 |
 | tailor_unsupported_before_enforcement | 0 |
-| tailor_claims_checked | 13 |
+| tailor_claims_checked | 12 |
 | tailor_no_invention_rate | 1.0 |
 | success rate: extraction | 1.0 |
 | success rate: post | 1.0 |

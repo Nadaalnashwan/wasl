@@ -55,10 +55,10 @@ const NAV: {
 
 export function Logo({
   className,
-  compact,
+  imageClassName,
 }: {
   className?: string;
-  compact?: boolean;
+  imageClassName?: string;
 }) {
   return (
     <Link
@@ -66,24 +66,24 @@ export function Logo({
       className={cn("flex items-center gap-2", className)}
       aria-label="Wasl home"
     >
-      <Image
-        src="/brand/wasl-mark.png"
-        alt=""
-        width={498}
-        height={646}
-        className="h-9 w-auto"
-        priority
-      />
-      {!compact && (
+      <>
         <Image
-          src="/brand/wasl-wordmark.png"
-          alt="Wasl"
-          width={578}
-          height={209}
-          className="h-6 w-auto dark:brightness-150"
+          src="/brand/Wasl-logo-light.png"
+          alt=""
+          width={1410}
+          height={442}
+          className={cn("h-8 w-auto dark:hidden", imageClassName)}
           priority
         />
-      )}
+        <Image
+          src="/brand/Wasl-logo-dark.png"
+          alt=""
+          width={1410}
+          height={442}
+          className={cn("hidden h-8 w-auto dark:block", imageClassName)}
+          priority
+        />
+      </>
     </Link>
   );
 }
@@ -263,7 +263,7 @@ export function AppShell({
           <Menu className="size-5" />
         </button>
 
-        <Logo compact />
+        <Logo />
 
         <div className="ms-auto">
           <Toggles />

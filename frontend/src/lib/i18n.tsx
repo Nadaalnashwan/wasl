@@ -7,7 +7,7 @@ export type Locale = "en" | "ar";
 
 const en = {
   "brand.tagline": "Connect your achievements to your career",
-  "nav.dashboard": "Dashboard",
+  "nav.dashboard": "Career Hub",
   "nav.studio": "Post Studio",
   "nav.cv": "CV Manager",
   "nav.tailor": "CV Tailoring",
