@@ -69,6 +69,21 @@ class Settings(BaseSettings):
     github_scopes: str = "read:user"  # public repos only; add "repo" to include private repos (broad scope)
     github_max_repos_per_scan: int = 10
 
+    # --- job providers (backend only) ---
+    # JSearch via OpenWeb Ninja (x-api-key) and SerpApi's Google Jobs engine. Both are used on free plans; the
+    # monthly limits below are Wasl's own hard caps, set under the real quotas so no paid usage is ever triggered.
+    jsearch_api_key: str = ""
+    jsearch_base_url: str = "https://api.openwebninja.com/jsearch"
+    serpapi_api_key: str = ""
+    jobs_jsearch_monthly_limit: int = 150
+    jobs_serpapi_monthly_limit: int = 200
+    jobs_serpapi_reserve: int = 15  # stop when SerpApi reports this many searches left or fewer
+    jobs_cache_hours: int = 24  # identical searches within this window are served from cache
+    jobs_refresh_cooldown_minutes: int = 15
+    jobs_refreshes_per_day: int = 6
+    jobs_listing_max_age_days: int = 45
+    jobs_timeout_seconds: float = 20.0
+
     # --- uploads ---
     max_upload_mb: int = 5
     upload_dir: str = str(BACKEND_DIR / "uploads")
@@ -112,6 +127,9 @@ class Settings(BaseSettings):
     @property
     def github_configured(self) -> bool:
         return bool(self.github_client_id and self.github_client_secret)
+
+    def job_providers(self) -> list[str]:
+        return [p for p, key in (("jsearch", self.jsearch_api_key), ("serpapi", self.serpapi_api_key)) if key]
 
 
 @lru_cache

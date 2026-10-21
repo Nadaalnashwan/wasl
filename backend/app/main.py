@@ -15,7 +15,7 @@ from app.ai.router import AIUnavailableError
 from app.config import settings
 from app.db import init_db
 from app.monitoring.recorder import record_error, record_http_event
-from app.routers import achievements, auth, career, cv, dashboard, integrations, monitoring, posts, user_settings
+from app.routers import achievements, auth, career, cv, dashboard, integrations, jobs, monitoring, posts, user_settings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("wasl")
@@ -113,6 +113,7 @@ for r in (
     posts,
     cv,
     career,
+    jobs,
     integrations,
     user_settings,
     monitoring,

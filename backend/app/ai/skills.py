@@ -122,8 +122,10 @@ def cv_evidence_index(cv: dict, confirmed_achievements: list[dict] | None = None
     return index, listed
 
 
-def match_requirements(requirements: list[dict], cv: dict, achievements: list[dict] | None = None) -> list[SkillEvidence]:
-    index, listed = cv_evidence_index(cv, achievements)
+def match_requirements(requirements: list[dict], cv: dict, achievements: list[dict] | None = None,
+                       evidence_index: tuple[dict[str, list[str]], set[str]] | None = None) -> list[SkillEvidence]:
+    """`evidence_index` lets callers scoring many jobs build cv_evidence_index once."""
+    index, listed = evidence_index or cv_evidence_index(cv, achievements)
     lower_index = {k.lower(): v for k, v in index.items()}
     lower_listed = {s.lower() for s in listed}
     out = []

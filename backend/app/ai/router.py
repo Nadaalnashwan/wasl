@@ -53,6 +53,8 @@ TASKS: dict[str, TaskProfile] = {
     "job_requirements": TaskProfile("fast", 1200, 0.0),
     "cv_tailor": TaskProfile("quality", 3000, 0.2),
     "gap_roadmap": TaskProfile("quality", 2000, 0.3),
+    "job_profile": TaskProfile("fast", 800, 0.0),
+    "job_requirements_batch": TaskProfile("fast", 2500, 0.0),
 }
 
 

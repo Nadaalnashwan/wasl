@@ -1,9 +1,9 @@
 
 "use client";
 
-import { Download, History, Scissors } from "lucide-react";
+import { Briefcase, Download, History, Scissors } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CVView } from "@/components/cv";
 import { AiWorking, EmptyState, ErrorNote } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import { api, ApiError, download } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/lib/providers";
-import type { Analysis, CV, CVData } from "@/lib/types";
+import type { Analysis, CV, CVData, Job } from "@/lib/types";
 import { fmtDate } from "@/lib/utils";
 
 export default function TailorPage() {
@@ -32,6 +32,23 @@ export default function TailorPage() {
   );
 
   const [jd, setJd] = useState("");
+  const [fromJob, setFromJob] = useState<Pick<Job, "title" | "company"> | null>(null);
+
+  // "Tailor CV" from Job Recommendations: /tailor?job=<listing id> prefills the description
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("job");
+    if (!id) return;
+    api<Job & { description: string }>(`/api/jobs/listings/${encodeURIComponent(id)}`)
+      .then((j) => {
+        setFromJob({ title: j.title, company: j.company });
+        setJd(
+          [`${j.title}${j.company ? ` — ${j.company}` : ""}`, j.location, "", j.description]
+            .join("\n")
+            .slice(0, 15000)
+        );
+      })
+      .catch((e) => toast("error", (e as ApiError).message));
+  }, [toast]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 
@@ -117,6 +134,15 @@ export default function TailorPage() {
       {master.data && (
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
           <Card>
+            {fromJob && (
+              <p className="mb-3 flex items-center gap-2 rounded-xl bg-sky p-2 text-sm">
+                <Briefcase className="size-4 shrink-0" />
+                <span>
+                  {t("tailor.fromjob")} <b>{fromJob.title}</b>
+                  {fromJob.company && ` · ${fromJob.company}`}
+                </span>
+              </p>
+            )}
             <Field
               label={t("tailor.jd")}
               hint={`${jd.length} / 15000`}

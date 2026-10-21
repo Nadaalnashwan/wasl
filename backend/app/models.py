@@ -207,6 +207,107 @@ class RepoSnapshot(Base, TimestampMixin):
     last_scanned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+# ---------------------------------------------------------------- job recommendations
+class JobListing(Base, TimestampMixin):
+    """A public job listing merged across providers. Shared by all users (no personal data)."""
+
+    __tablename__ = "job_listings"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    # normalized company + title + city; the dedup key across JSearch and SerpApi
+    fingerprint: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    providers: Mapped[list[str]] = mapped_column(JSON, default=list)
+    external_ids: Mapped[dict[str, str]] = mapped_column(JSON, default=dict)
+    title: Mapped[str] = mapped_column(String(300))
+    company: Mapped[str] = mapped_column(String(300), default="")
+    company_logo: Mapped[str] = mapped_column(String(1000), default="")
+    city: Mapped[str] = mapped_column(String(100), default="", index=True)
+    location: Mapped[str] = mapped_column(String(300), default="")
+    country: Mapped[str] = mapped_column(String(5), default="SA")
+    employment_type: Mapped[str] = mapped_column(String(20), default="")  # full_time | part_time | contract | internship
+    is_remote: Mapped[bool] = mapped_column(Boolean, default=False)
+    posted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    apply_url: Mapped[str] = mapped_column(String(2000), default="")
+    apply_options: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    salary: Mapped[str] = mapped_column(String(200), default="")
+    publisher: Mapped[str] = mapped_column(String(100), default="")
+    description: Mapped[str] = mapped_column(Text, default="")
+    # {must: [..], nice: [..], min_years, education, level, source: rules|ai}
+    requirements: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+class JobSearchCache(Base, TimestampMixin):
+    """One provider response, keyed by provider + normalized query. Identical searches reuse it until it expires."""
+
+    __tablename__ = "job_search_cache"
+    __table_args__ = (UniqueConstraint("provider", "query_key"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    provider: Mapped[str] = mapped_column(String(20))
+    query_key: Mapped[str] = mapped_column(String(64), index=True)
+    query: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    listing_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class JobApiCall(Base, TimestampMixin):
+    """Every billable provider request (cache hits are not stored). Source of the monthly usage counters."""
+
+    __tablename__ = "job_api_calls"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    provider: Mapped[str] = mapped_column(String(20), index=True)
+    month: Mapped[str] = mapped_column(String(7), index=True)  # YYYY-MM (UTC)
+    user_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    status: Mapped[str] = mapped_column(String(20))  # ok | error | rate_limited
+    http_status: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    results: Mapped[int] = mapped_column(Integer, default=0)
+    latency_ms: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class JobProfile(Base, TimestampMixin):
+    """What Wasl learned from the user's Master CV for job search. Recomputed only when the CV changes."""
+
+    __tablename__ = "job_profiles"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True)
+    cv_hash: Mapped[str] = mapped_column(String(64))
+    profile: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    source: Mapped[str] = mapped_column(String(10), default="rules")  # ai | rules
+    searched_hash: Mapped[str] = mapped_column(String(64), default="")  # profile searches last refreshed for
+    refreshed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    refresh_log: Mapped[list[str]] = mapped_column(JSON, default=list)  # ISO timestamps of recent refreshes
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class UserJobFeed(Base, TimestampMixin):
+    """Which listings were found for which user. Scores are computed live from the current CV."""
+
+    __tablename__ = "user_job_feed"
+    __table_args__ = (UniqueConstraint("user_id", "listing_id"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    listing_id: Mapped[str] = mapped_column(ForeignKey("job_listings.id", ondelete="CASCADE"), index=True)
+    query: Mapped[str] = mapped_column(String(300), default="")
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class SavedJob(Base, TimestampMixin):
+    """Bookmark + application tracker. A snapshot keeps the card readable even after the listing expires."""
+
+    __tablename__ = "saved_jobs"
+    __table_args__ = (UniqueConstraint("user_id", "listing_id"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    listing_id: Mapped[str | None] = mapped_column(ForeignKey("job_listings.id", ondelete="SET NULL"), nullable=True)
+    # saved | applied | interviewing | offer | rejected
+    status: Mapped[str] = mapped_column(String(20), default="saved", index=True)
+    notes: Mapped[str] = mapped_column(Text, default="")
+    snapshot: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    match_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    applied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    tailored_cv_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
 # ---------------------------------------------------------------- monitoring tables
 class AIEvent(Base, TimestampMixin):
     """One row per provider attempt. No prompt or completion text is stored (privacy)."""

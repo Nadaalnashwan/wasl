@@ -3,6 +3,7 @@
 
 import {
   Activity,
+  Briefcase,
   FileText,
   Languages,
   LayoutDashboard,
@@ -40,6 +41,7 @@ const NAV: {
   {
     group: "nav.group.career",
     items: [
+      { href: "/jobs", key: "nav.jobs", icon: Briefcase },
       { href: "/tailor", key: "nav.tailor", icon: Scissors },
       { href: "/gap", key: "nav.gap", icon: Target },
     ],

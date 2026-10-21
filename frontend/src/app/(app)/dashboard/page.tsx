@@ -4,6 +4,7 @@
 import {
   ArrowRight,
   Award,
+  Briefcase,
   FileText,
   PenLine,
   Plus,
@@ -23,12 +24,13 @@ import {
   ErrorNote,
   Loading,
 } from "@/components/feedback";
+import { JobsPreview } from "@/components/jobs";
 import { Button } from "@/components/ui/button";
 import { Badge, Card, CardTitle, Stat } from "@/components/ui/card";
 import { useApi } from "@/lib/hooks";
 import { useI18n, type TKey } from "@/lib/i18n";
 import { useAuth } from "@/lib/providers";
-import type { Achievement } from "@/lib/types";
+import type { Achievement, JobsResponse } from "@/lib/types";
 import { fmtDate } from "@/lib/utils";
 
 type Summary = {
@@ -81,6 +83,8 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { data, error, loading, reload } =
     useApi<Summary>("/api/dashboard");
+  // reads the already-scored feed; never spends job-API quota
+  const jobs = useApi<JobsResponse>("/api/jobs/recommendations?limit=3");
 
   const recommendations =
     data?.recommendations.filter(
@@ -109,6 +113,12 @@ export default function DashboardPage() {
           <Button asChild variant="secondary">
             <Link href="/studio">
               <PenLine /> {t("nav.studio")}
+            </Link>
+          </Button>
+
+          <Button asChild variant="outline">
+            <Link href="/jobs">
+              <Briefcase /> {t("nav.jobs")}
             </Link>
           </Button>
 
@@ -210,6 +220,36 @@ export default function DashboardPage() {
             </Card>
 
             <div className="flex flex-col gap-6">
+              <Card>
+                <CardTitle
+                  icon={<Briefcase />}
+                  action={
+                    jobs.data?.items.length ? (
+                      <Link href="/jobs" className="text-sm font-semibold underline">
+                        {t("dash.jobs.all")}
+                      </Link>
+                    ) : undefined
+                  }
+                >
+                  {t("dash.jobs")}
+                </CardTitle>
+
+                {jobs.data?.items.length ? (
+                  <JobsPreview items={jobs.data.items} />
+                ) : (
+                  <div className="flex flex-col items-start gap-3">
+                    <p className="text-sm text-ink-soft">
+                      {jobs.data?.state === "no_cv" ? t("jobs.nocv.d") : t("dash.jobs.empty")}
+                    </p>
+                    <Button asChild size="sm" variant="secondary">
+                      <Link href={jobs.data?.state === "no_cv" ? "/cv" : "/jobs"}>
+                        <Briefcase /> {jobs.data?.state === "no_cv" ? t("nav.cv") : t("jobs.refresh")}
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </Card>
+
               <Card tone="sky">
                 <CardTitle icon={<Target />}>
                   {t("dash.recs")}

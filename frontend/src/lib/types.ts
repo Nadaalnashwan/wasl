@@ -134,3 +134,78 @@ export type IntegrationStatus = {
   connected_at: string | null;
   expires_at: string | null;
 };
+
+/* ------------------------------------------------------------ job recommendations */
+export type JobLevel = "internship" | "entry" | "mid" | "senior";
+export type TrackStatus = "saved" | "applied" | "interviewing" | "offer" | "rejected";
+
+export type JobScorePart =
+  | { key: "skills"; score: number; weight: number; matched: number; total: number }
+  | { key: "experience"; score: number; weight: number; job_level: JobLevel | "unknown"; user_level: JobLevel; min_years: number | null; user_years: number }
+  | { key: "title"; score: number; weight: number; target: string }
+  | { key: "freshness"; score: number; weight: number; days: number | null };
+
+export type JobMatch = {
+  score: number;
+  confidence: "high" | "medium" | "low";
+  breakdown: JobScorePart[];
+  matching_skills: string[];
+  missing_skills: string[];
+  missing_nice: string[];
+};
+
+export type Job = {
+  id: string;
+  title: string;
+  company: string;
+  company_logo: string;
+  city: string;
+  location: string;
+  employment_type: "" | "full_time" | "part_time" | "contract" | "internship";
+  is_remote: boolean;
+  posted_at: string | null;
+  apply_url: string;
+  apply_options: { title: string; link: string }[];
+  salary: string;
+  publisher: string;
+  providers: string[];
+  level: JobLevel | "unknown";
+  education: string;
+  min_years: number | null;
+  requirements_source: "ai" | "rules";
+};
+
+export type JobItem = Job & { match: JobMatch; saved: { id: string; status: TrackStatus } | null };
+
+export type ProviderUsage = { configured: boolean; used: number; limit: number; remaining: number };
+
+export type JobsResponse = {
+  state: "ok" | "empty" | "no_cv" | "needs_refresh";
+  items: JobItem[];
+  total: number;
+  offset?: number;
+  limit?: number;
+  facets?: { cities: { value: string; count: number }[]; types: { value: string; count: number }[]; levels: { value: string; count: number }[]; remote: number };
+  profile?: { target_titles: string[]; seniority: JobLevel; key_skills: string[]; include_internships: boolean; rationale: string; years: number; level: JobLevel; source: "ai" | "rules" };
+  cv_changed?: boolean;
+  last_refreshed_at?: string | null;
+  can_refresh?: boolean;
+  refresh_blocked?: "cooldown" | "daily_limit" | null;
+  usage: Record<"jsearch" | "serpapi", ProviderUsage>;
+  providers_configured: string[];
+  refresh?: { found: number; calls: Record<string, number>; cache_hits: number; skipped: { provider: string; reason: string }[]; errors: { provider: string; reason: string }[]; ai_enriched: number };
+};
+
+export type SavedJob = {
+  id: string;
+  listing_id: string | null;
+  status: TrackStatus;
+  notes: string;
+  match_score: number | null;
+  applied_at: string | null;
+  tailored_cv_id: string | null;
+  created_at: string;
+  updated_at: string;
+  job: Job;
+  expired: boolean;
+};

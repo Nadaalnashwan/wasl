@@ -17,6 +17,8 @@ os.environ.update({
     "UPLOAD_DIR": str(_tmp / "uploads"),
     "AI_MAX_RETRIES": "2",
     "LINKEDIN_CLIENT_ID": "", "LINKEDIN_CLIENT_SECRET": "", "GITHUB_CLIENT_ID": "", "GITHUB_CLIENT_SECRET": "",
+    # job tests inject fake keys + fake fetchers; real keys from backend/.env must never reach a test
+    "JSEARCH_API_KEY": "", "SERPAPI_API_KEY": "",
 })
 
 import pytest  # noqa: E402
@@ -60,6 +62,13 @@ def default_responder(messages) -> str:
                                                                      "technologies": ["Python", "FastAPI"], "bullets": ["Built an AI resume parser with Python and FastAPI"]}},
             {"section": "skills", "action": "add_skills", "skills": ["FastAPI", "Kubernetes"]},
         ], "rationale": "New project"})
+    if "plan a job search" in system:
+        return json.dumps({"target_titles": ["Backend Developer", "Python Developer"], "seniority": "senior",
+                           "key_skills": ["Python", "SQL"], "include_internships": False, "rationale": "Backend roles in CV"})
+    if "Extract hiring requirements from each job ad" in system:
+        refs = [line.split("=", 1)[1] for line in user.splitlines() if line.startswith("ref=")]
+        return json.dumps({"jobs": [{"ref": r, "must_have": ["Python", "SQL", "Kafka"], "nice_to_have": ["Kubernetes"],
+                                     "min_years": 2, "education": "Bachelor's", "level": "mid"} for r in refs]})
     if "Extract hiring requirements" in system:
         return json.dumps({"job_title": "ML Engineer", "company": "Nova", "seniority": "mid",
                            "must_have": [{"skill": "Python"}, {"skill": "Docker"}, {"skill": "SQL"}],

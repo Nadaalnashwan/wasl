@@ -170,3 +170,33 @@ class GapRoadmap(BaseModel):
     overview: str = ""
     steps: list[LearningStep] = Field(default_factory=list, max_length=12)
     quick_wins: list[str] = Field(default_factory=list)
+
+
+# ------------------------------------------------------------------ job recommendations
+Seniority = Literal["internship", "entry", "mid", "senior"]
+
+
+class JobSearchProfile(BaseModel):
+    target_titles: list[str] = Field(default_factory=list, max_length=4, description="Concrete market job titles, most suitable first")
+    seniority: Seniority = "entry"
+    key_skills: list[str] = Field(default_factory=list, max_length=12)
+    include_internships: bool = False
+    rationale: str = ""
+
+    @field_validator("target_titles", "key_skills")
+    @classmethod
+    def _clean(cls, v: list[str]) -> list[str]:
+        return list(dict.fromkeys(s.strip() for s in v if s and s.strip()))
+
+
+class ListingRequirements(BaseModel):
+    ref: str
+    must_have: list[str] = Field(default_factory=list, max_length=12)
+    nice_to_have: list[str] = Field(default_factory=list, max_length=8)
+    min_years: int | None = Field(default=None, ge=0, le=30)
+    education: str = ""
+    level: Seniority | Literal["unknown"] = "unknown"
+
+
+class ListingRequirementsBatch(BaseModel):
+    jobs: list[ListingRequirements] = Field(default_factory=list, max_length=8)
