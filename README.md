@@ -1,97 +1,348 @@
-<p align="center"><img src="frontend/public/brand/wasl-logo.png" width="120" alt="Wasl logo"></p>
+# Wasl — وصل
 
-<h1 align="center">Wasl — وصل</h1>
-<p align="center"><b>Document an achievement once. Use it everywhere.</b><br>
-AI career platform that turns real achievements into LinkedIn posts, Master-CV updates (Accept / Edit / Reject),
-honest tailored CVs and a skill-gap roadmap — with a live Monitoring & Evaluation system.</p>
+### Document an achievement once. Use it everywhere.
+
+Wasl is an AI-powered career development platform that helps users turn verified achievements into professional LinkedIn posts, maintain a Master CV, tailor CVs to job descriptions, and identify skills to develop for their target careers.
+
+Wasl combines AI-powered career tools with evidence verification, user approval workflows, and a Monitoring & Evaluation system designed to make AI outputs more trustworthy and observable.
+
+**Live application:** [https://wasl-ruddy.vercel.app](https://wasl-ruddy.vercel.app)
 
 ---
 
-## Why
+## Table of Contents
 
-Professionals describe the same achievement again and again: on LinkedIn, in the CV, in each job application.
-Generic AI writers make this faster but **invent** metrics, skills and titles. Wasl keeps one verified source of
-truth (confirmed achievements + an approved Master CV) and makes every AI output traceable to it.
+- [Problem Statement](#problem-statement)
+- [Solution](#solution)
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [System Architecture](#system-architecture)
+- [Monitoring and Evaluation](#monitoring-and-evaluation)
+- [Deployment](#deployment)
+- [Local Development](#local-development)
+- [Environment Configuration](#environment-configuration)
+- [Testing and Quality Assurance](#testing-and-quality-assurance)
+- [Project Documentation](#project-documentation)
+- [Current Integration Status](#current-integration-status)
 
-## What it does
+## Problem Statement
 
-| Feature | Highlights |
-|---|---|
-| **Achievement Discovery** | Free text, uploaded PDF/DOCX certificates, or GitHub repositories → structured achievements. Evidence quotes are verified against the source, unsupported terms are dropped, repositories always ask *what you personally did*. Duplicate detection. |
-| **LinkedIn Post Studio** | 6 tones, English & Arabic, claim-checked (auto-revised once), editable preview, drafts. Publishing via LinkedIn OAuth only after an explicit confirmation dialog; atomic lock prevents duplicate posts; ambiguous results are never reported as success. |
-| **CV Manager** | Upload & parse CV → review → Master CV. Confirmed achievements automatically produce a **separate draft** with Accept / Edit / Reject; Master CV is versioned (history + restore) and never silently modified. PDF & DOCX export (Arabic supported). |
-| **CV Tailoring** | Extracts requirements, deterministic evidence matching, explainable match score, side-by-side original vs tailored. An *honesty guard* rejects rewritten bullets that add claims not in your CV. |
-| **Career Gap Analyzer** | Verified vs **unverified** (claimed but unproven) vs missing skills, prioritised week-by-week roadmap. |
-| **Monitoring & Evaluation** | Real events → metrics → dashboard + threshold alerts: failure rate, p50/p95/p99 latency, tokens by provider & task, fallback rate, unsupported-claim rate, CV acceptance rate, extraction precision, task success, API health, error log. Reproducible evaluation dataset. |
-| **Settings / BYOK** | Profile, LinkedIn & GitHub connections, AI mode (platform / my keys first / my keys only), fallback & cross-provider privacy switches, encrypted personal API keys validated with the provider. |
+Professionals often need to describe the same achievements repeatedly across their CVs, LinkedIn profiles, and job applications. Generic AI writing tools can speed up this process, but they may introduce unsupported skills, fabricated metrics, or misleading experience.
 
-UI: hand-drawn "workflow machine" design system (paper ✏️ / blueprint 🌙 themes), English + Arabic with full RTL, responsive.
+Wasl addresses this problem by organizing achievements and career information into a reusable source of truth. AI-generated content is designed to remain grounded in the user's available evidence, with review and approval steps where appropriate.
 
-## Architecture (short)
+## Solution
 
+Wasl provides a connected career workflow:
+
+1. Discover and document achievements.
+2. Review evidence and confirm relevant information.
+3. Generate LinkedIn content from verified achievements.
+4. Maintain and update a Master CV through controlled review.
+5. Tailor a CV to a target job description.
+6. Analyze career skill gaps and identify learning priorities.
+7. Monitor application health and evaluate AI task performance.
+
+## Features
+
+### LinkedIn Post Studio
+
+- Generate professional LinkedIn post drafts in supported tones and languages.
+- Review and edit generated content before publishing.
+- Check claims against available achievement information.
+- Support LinkedIn OAuth and publishing when the required application credentials and permissions are configured.
+- Require explicit user confirmation before publishing.
+
+### CV Manager
+
+- Upload and parse supported CV documents.
+- Review extracted career information.
+- Maintain a Master CV and its versions.
+- Prepare achievement-based updates for user review.
+- Support accepting, editing, or rejecting proposed updates.
+- Export CV documents in supported formats, including PDF and DOCX.
+
+### CV Tailoring
+
+- Analyze a target job description.
+- Extract job requirements and compare them with available CV evidence.
+- Present explainable skill and requirement matches.
+- Generate tailored content while aiming to preserve the truth of the original CV.
+- Compare original and tailored content for review.
+
+### Career Gap Analyzer
+
+- Compare a target job description with available user skills and achievements.
+- Distinguish demonstrated, unverified, and missing skills where supported by the available evidence.
+- Recommend prioritized learning actions to help users work toward their career goals.
+
+### Job Matches
+
+- Provide a dedicated workspace for job recommendations.
+- Support live job-search integrations when the relevant providers, API keys, and application configuration are available.
+- Potential providers include JSearch and SerpApi.
+
+###
+
+### Settings and Integrations
+
+- Manage user profile and AI preferences.
+- Support Supabase authentication.
+- Provide LinkedIn integration settings when configured.
+
+
+
+## Technology Stack
+
+| Component           | Technologies                                    |
+| ------------------- | ----------------------------------------------- |
+| Frontend            | Next.js 16, React, TypeScript                   |
+| Styling and UI      | Tailwind CSS 4, Radix-based UI components       |
+| Charts              | Recharts                                        |
+| Backend API         | FastAPI, Python, Pydantic                       |
+| Database access     | SQLAlchemy 2                                    |
+| AI workflows        | LangGraph and provider adapters                 |
+| AI providers        | Groq, Google Gemini, OpenRouter                 |
+| Authentication      | Supabase Auth                                   |
+| Production database | Supabase PostgreSQL                             |
+| File storage        | Supabase Storage                                |
+| Frontend hosting    | Vercel                                          |
+| Backend hosting     | Render                                          |
+| Testing             | pytest, Ruff, TypeScript, ESLint, Next.js build |
+
+The exact availability of optional integrations depends on their credentials and environment configuration.
+
+## System Architecture
+
+The application is organized into three main areas:
+
+```text
+Wasl/
+├── frontend/       # Next.js web application
+├── backend/        # FastAPI API and AI workflows
+├── supabase/       # Database schema and migrations
+└── docs/           # Architecture, setup, monitoring,
+                    # evaluation, progress, and pitch documentation
 ```
-frontend/  Next.js 16 · TypeScript · Tailwind 4 · shadcn-style Radix components · Recharts
-backend/   FastAPI · SQLAlchemy 2 · Pydantic 2 · LangGraph · httpx provider adapters
-supabase/  Postgres schema + Row Level Security + private Storage bucket
+
+### Request Flow
+
+```text
+User
+ |
+ v
+Next.js Frontend (Vercel)
+ |                  \
+ | HTTPS API calls   \ Supabase Auth
+ v                     \
+FastAPI Backend         Supabase
+(Render)                |
+ |                       ├── Authentication
+ ├── AI workflows        ├── PostgreSQL
+ ├── Business logic      └── Storage
+ ├── Provider adapters
+ └── Monitoring events
+          |
+          v
+Monitoring and Evaluation
 ```
 
-* **3 LangGraph agents**: Content Generation · Achievement Discovery & Verification · CV Optimization & Career Analysis
-* **AI Model Router**: Groq / Gemini / OpenRouter adapters, task-tier model selection, timeouts, retries with backoff, Retry-After, JSON-schema validation + one repair round, compatible fallback, BYOK & privacy preferences, per-attempt telemetry.
-* **Never-invent guarantees** are enforced in code (deterministic claim checker + evidence verification), not only in prompts.
+The frontend communicates with the backend through its configured API URL. Supabase provides the configured authentication, database, and storage services.
 
-Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · Monitoring: [docs/MONITORING.md](docs/MONITORING.md) · Evaluation: [docs/EVALUATION.md](docs/EVALUATION.md)
+The backend handles application logic, AI integrations, and protected operations. Environment variables control production configuration and keep server-side secrets out of frontend code.
 
-## Quick start (local, ~5 minutes)
+### AI Workflows
 
-Requirements: Python 3.11+ (tested 3.14), Node 20+ (tested 24).
+Wasl's AI architecture includes workflows for content generation, verification, and CV optimization and career analysis.
+
+The provider layer supports configured AI services, with task-specific model selection and operational safeguards such as timeouts, retries, response validation, and fallback behavior where implemented.
+
+AI-generated content should not be treated as automatically verified. User review and evidence checks remain important parts of the workflow.
+
+##
+
+## Deployment
+
+Wasl is deployed using separate frontend and backend services.
+
+| Service                     | Platform         | Configuration                |
+| --------------------------- | ---------------- | ---------------------------- |
+| Frontend                    | Vercel           | Root directory: `frontend`   |
+| Backend API                 | Render           | Root directory: `backend`    |
+| Database and authentication | Supabase         | PostgreSQL and Supabase Auth |
+| File storage                | Supabase Storage | Configured storage bucket    |
+
+### Production Environment
+
+The frontend requires the correct public backend API URL and Supabase client configuration. The backend requires its database connection, authentication settings, application secrets, and any provider credentials needed for enabled features.
+
+The following settings must use the actual production URLs:
+
+- Frontend API configuration must point to the deployed Render backend.
+- Backend `FRONTEND_URL` and `CORS_ORIGINS` must include the deployed frontend origin.
+- Backend `BACKEND_URL` must match the public Render service URL.
+- Supabase's site URL and allowed redirect URLs must include the production frontend domain.
+- OAuth providers must use their registered production callback URLs.
+
+**Production verification is ongoing.** A successful hosting deployment confirms that a service was built and started; it does not by itself prove that authentication, database access, email verification, OAuth, uploads, or every AI feature works end to end.
+
+## Local Development
+
+### Prerequisites
+
+- Python 3.11 or a compatible version supported by the project dependencies.
+- Node.js and npm.
+- A Supabase project for testing Supabase-backed functionality.
+- API credentials for the AI or external integrations you intend to test.
+
+### 1. Clone the Repository
 
 ```bash
-# backend
-cd backend
-python -m venv .venv && .venv/Scripts/activate      # macOS/Linux: source .venv/bin/activate
-pip install -r requirements-dev.txt
-cp .env.example .env        # add GROQ_API_KEY and/or GEMINI_API_KEY (free) — see docs/SETUP.md
-uvicorn app.main:app --reload --port 8000
+git clone https://github.com/Nadaalnashwan/wasl.git
+cd wasl
+```
 
-# frontend (new terminal)
+### 2. Configure the Backend
+
+```bash
+cd backend
+
+python -m venv .venv
+```
+
+Activate the virtual environment:
+
+```powershell
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+```
+
+```bash
+# macOS / Linux
+source .venv/bin/activate
+```
+
+Install the dependencies and prepare the environment file:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Copy `.env.example` to `.env` and configure the values required for your local setup. Follow the instructions in `docs/SETUP.md`.
+
+Start the API:
+
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
+### 3. Configure the Frontend
+
+Open a second terminal:
+
+```bash
 cd frontend
 npm install
-cp .env.example .env.local
-npm run dev                 # http://localhost:3000
 ```
 
-Optional demo account with a clearly-labelled **sample** CV: `python -m scripts.seed_demo` (backend/).
+Copy `frontend/.env.example` to `frontend/.env.local` and fill in the required local values.
 
-Without any AI key the app runs and every AI feature shows a clear *"AI is not available"* state — nothing is simulated.
-
-## Integration status
-
-| Integration | Code | Verified in this repo | Needs from you |
-|---|---|---|---|
-| SQLite (local) | ✅ | ✅ tests + browser | — |
-| Supabase Postgres / Auth / Storage / RLS | ✅ | ⚠️ not yet run against a live project | Supabase project + keys |
-| Groq / Gemini | ✅ | ✅ live calls, fallback verified, 17/17 evaluation cases | — |
-| LinkedIn OAuth + publishing | ✅ | ⚠️ app configured; redirect URL must be registered | redirect URL in LinkedIn app |
-| GitHub OAuth + repo scan | ✅ | ⚠️ credentials valid; callback URL must be updated | callback URL in GitHub app |
-
-Full, honest status: [docs/PROGRESS.md](docs/PROGRESS.md).
-
-## Quality checks
+Start the development server:
 
 ```bash
-cd backend && pytest -q && ruff check app tests        # 23 tests: units + end-to-end API journeys
-cd frontend && npx tsc --noEmit && npm run lint && npm run build
-cd backend && python -m app.evaluation                 # real-model evaluation (needs a provider key)
+npm run dev
 ```
 
-## Project deliverables
+The frontend is normally available at `http://localhost:3000`, and the backend at `http://localhost:8000`.
 
-| Deliverable | Where |
-|---|---|
-| Report (problem, solution, data, metrics, evaluation, tools, decisions) | [docs/REPORT.md](docs/REPORT.md) |
-| Development Flow + Monitoring Flow diagrams | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#development-flow), [docs/MONITORING.md](docs/MONITORING.md#monitoring-flow) |
-| Pitch outline (3 min) + Q&A prep (10 min) | [docs/PITCH.md](docs/PITCH.md) |
-| Setup & configuration guide | [docs/SETUP.md](docs/SETUP.md) |
-| Progress / acceptance criteria / test results | [docs/PROGRESS.md](docs/PROGRESS.md) |
+Keep local environment files private and never commit API keys, service-role keys, or other secrets.
 
-Built for the Tuwaiq Academy × Meta × Startupbootcamp *AI Product Development and Monitoring* project (Oct 2026).
+## Environment Configuration
+
+### Backend
+
+The backend `.env.example` documents the supported configuration options. Depending on enabled features, these include:
+
+- Application environment and frontend/backend URLs.
+- CORS origins.
+- Supabase PostgreSQL connection string.
+- Supabase Auth settings and server-side storage credentials.
+- JWT and encryption settings.
+- AI provider keys and model configuration.
+- LinkedIn and GitHub OAuth credentials and callback URLs.
+- Optional job-search provider credentials.
+- Monitoring thresholds and evaluation settings.
+
+### Frontend
+
+The frontend environment example defines the exact public environment variables required by the Next.js application, including the backend API URL and Supabase client configuration.
+
+Only values intended for browser exposure should use the `NEXT_PUBLIC_` prefix. **Never expose the Supabase service-role key, private AI keys, OAuth client secrets, or encryption keys in frontend variables.**
+
+For production, configure environment variables in the respective Vercel, Render, and Supabase dashboards rather than committing secret values to the repository.
+
+## Testing and Quality Assurance
+
+Run the following checks from the relevant project directories.
+
+### Backend Tests
+
+```bash
+cd backend
+pytest -q
+ruff check app tests
+```
+
+### Frontend Checks
+
+```bash
+cd frontend
+npx tsc --noEmit
+npm run lint
+npm run build
+```
+
+### AI Evaluation
+
+```bash
+cd backend
+python -m app.evaluation
+```
+
+AI evaluation may require a configured provider key. Record the actual test results and the provider/model configuration used for each run.
+
+Do not assume that historical test results represent the current production deployment; rerun the checks after relevant code or configuration changes.
+
+## Project Documentation
+
+Additional technical documentation is available in `docs/`:
+
+| Document               | Purpose                                         |
+| ---------------------- | ----------------------------------------------- |
+| `docs/ARCHITECTURE.md` | System architecture and development flow        |
+| `docs/MONITORING.md`   | Monitoring architecture, metrics, and alerting  |
+| `docs/EVALUATION.md`   | AI evaluation methodology and results           |
+| `docs/SETUP.md`        | Installation and environment configuration      |
+| `docs/PROGRESS.md`     | Implementation progress and acceptance criteria |
+|                        |                                                 |
+|                        |                                                 |
+
+## Current Integration Status
+
+| Integration                             | Current status                                                               |
+| --------------------------------------- | ---------------------------------------------------------------------------- |
+| Frontend deployment                     | Deployed to Vercel                                                           |
+| Backend deployment                      | Deployed to Render                                                           |
+| Supabase database schema and migrations | Prepared; production connectivity and behavior must be verified              |
+| Supabase authentication                 | Configured; end-to-end production verification is ongoing                    |
+| Email verification redirects            | Production redirect configuration requires verification                      |
+| AI providers                            | Supported by the application; availability depends on configured credentials |
+| LinkedIn OAuth and publishing           | Requires valid credentials and registered production callback URL            |
+| Job-search APIs                         | Optional; requires provider credentials and runtime verification             |
+|                                         |                                                                              |
+
+## Project Context
+
+Built for the Tuwaiq Academy × Meta × Startupbootcamp **AI Product Development and Monitoring** project, October 2026.
+
+Wasl aims to make career development more connected, evidence-based, and transparent by combining practical AI workflows with user control, monitoring, and evaluation.
