@@ -1,0 +1,365 @@
+{
+ "category": "privacy",
+ "cases": [
+  {
+   "id": "prv-001",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "A spaced Saudi IBAN (SA + 22 digits) in a salary-transfer note is a bank account identifier and must be removed; the employer stays.",
+   "input": {
+    "text": "Salary account for Najd Analytics payroll: SA03 8000 0000 6080 1016 7519"
+   },
+   "expect": {
+    "must_remove": [
+     "SA03 8000 0000 6080 1016 7519"
+    ],
+    "must_keep": [
+     "Najd Analytics payroll"
+    ],
+    "kinds": [
+     "IBAN"
+    ]
+   }
+  },
+  {
+   "id": "prv-002",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "A compact IBAN with no spaces inside a sentence must be removed.",
+   "input": {
+    "text": "Please transfer the internship stipend to SA4420000001234567891234 before 30 June."
+   },
+   "expect": {
+    "must_remove": [
+     "SA4420000001234567891234"
+    ],
+    "must_keep": [
+     "internship stipend",
+     "30 June"
+    ],
+    "kinds": [
+     "IBAN"
+    ]
+   }
+  },
+  {
+   "id": "prv-003",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Luhn-valid payment card numbers (spaced and dashed) must be removed.",
+   "input": {
+    "text": "Card on file: 4111 1111 1111 1111; backup card 5500-0000-0000-0004."
+   },
+   "expect": {
+    "must_remove": [
+     "4111 1111 1111 1111",
+     "5500-0000-0000-0004"
+    ],
+    "kinds": [
+     "CARD"
+    ]
+   }
+  },
+  {
+   "id": "prv-004",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Long digit strings that are NOT payment cards (a book ISBN-13 and a public research grant number, both failing Luhn) are bibliographic/project facts and must be kept.",
+   "input": {
+    "text": "Author of 'Practical Arabic NLP' (ISBN 978-603-91234-5-3). Funded by research grant No. 1234-5678-9012-3456."
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "978-603-91234-5-3",
+     "1234-5678-9012-3456",
+     "Practical Arabic NLP"
+    ]
+   }
+  },
+  {
+   "id": "prv-005",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Provider API keys pasted into a project description (OpenAI-style sk-proj, Groq gsk_) are secrets and must be removed; the provider names stay.",
+   "input": {
+    "text": "Chatbot project: called the OpenAI API with sk-proj-AbC123dEf456GhI789jKl012MnO and Groq with gsk_9fK2mQ7xL4pR8tV1wZ6yB3nD5hJ0."
+   },
+   "expect": {
+    "must_remove": [
+     "sk-proj-AbC123dEf456GhI789jKl012MnO",
+     "gsk_9fK2mQ7xL4pR8tV1wZ6yB3nD5hJ0"
+    ],
+    "must_keep": [
+     "OpenAI API",
+     "Groq",
+     "Chatbot project"
+    ],
+    "kinds": [
+     "SECRET"
+    ]
+   }
+  },
+  {
+   "id": "prv-006",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "A JWT and a bearer token inside a pasted debugging log must be removed; the HTTP status and endpoint are not secret.",
+   "input": {
+    "text": "Fixed auth bug: GET /api/v1/profile returned HTTP 401 with Authorization: Bearer 8f3kQ1zX9pL2mN7vB4cR6tY0 and cookie session=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLTQyIn0.c2lnbmF0dXJlLXRlc3Q"
+   },
+   "expect": {
+    "must_remove": [
+     "8f3kQ1zX9pL2mN7vB4cR6tY0",
+     "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLTQyIn0.c2lnbmF0dXJlLXRlc3Q"
+    ],
+    "must_keep": [
+     "HTTP 401",
+     "/api/v1/profile"
+    ],
+    "kinds": [
+     "SECRET"
+    ]
+   }
+  },
+  {
+   "id": "prv-007",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "A GitHub personal access token and an AWS access key ID (AKIA…) are credentials and must both be removed.",
+   "input": {
+    "text": "CI config used GITHUB_TOKEN=ghp_A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8 and AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE for the deploy job."
+   },
+   "expect": {
+    "must_remove": [
+     "ghp_A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8",
+     "AKIAIOSFODNN7EXAMPLE"
+    ],
+    "must_keep": [
+     "deploy job"
+    ],
+    "kinds": [
+     "SECRET"
+    ]
+   }
+  },
+  {
+   "id": "prv-008",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Version numbers, GPAs and test scores are not personal identifiers and must all survive redaction.",
+   "input": {
+    "text": "GPA 4.85/5.00 · IELTS 7.5 · TOEFL iBT 105 · Python 3.11.4 · Node.js 20.10.0 · Kubernetes v1.29 · Class of 2023"
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "4.85/5.00",
+     "7.5",
+     "105",
+     "3.11.4",
+     "20.10.0",
+     "v1.29",
+     "2023"
+    ]
+   }
+  },
+  {
+   "id": "prv-009",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Large raw-count metrics that happen to be 10 digits starting with 1 (shaped like a Saudi ID) are throughput figures and must be kept.",
+   "input": {
+    "text": "Scaled the log pipeline to 1200000000 events per month and 2,000,000 daily active devices."
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "1200000000",
+     "2,000,000"
+    ]
+   }
+  },
+  {
+   "id": "prv-010",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "A labelled passport number must be removed; the passport's expiry year is not identifying and may stay.",
+   "input": {
+    "text": "Passport No: A12345678 (valid until 2029)\nOpen to relocation within the GCC."
+   },
+   "expect": {
+    "must_remove": [
+     "A12345678"
+    ],
+    "must_keep": [
+     "2029",
+     "Open to relocation within the GCC"
+    ],
+    "kinds": [
+     "PASSPORT"
+    ]
+   }
+  },
+  {
+   "id": "prv-011",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "privacy_policy",
+   "purpose": "LinkedIn post generation sends a personal achievement; Gemini's free tier (no paid tier attested in default config) may use content to improve products, so it must be ineligible.",
+   "input": {
+    "provider": "gemini",
+    "key_source": "platform",
+    "task": "post_generation"
+   },
+   "expect": {
+    "eligible": false
+   }
+  },
+  {
+   "id": "prv-012",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "privacy_policy",
+   "purpose": "A whole CV must not go to a user-supplied Gemini key whose tier Wasl cannot verify (may be free tier).",
+   "input": {
+    "provider": "gemini",
+    "key_source": "user",
+    "task": "cv_parse"
+   },
+   "expect": {
+    "eligible": false
+   }
+  },
+  {
+   "id": "prv-013",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "privacy_policy",
+   "purpose": "Groq does not retain inputs by default (≤30-day abuse logging only), which meets the limited-retention floor for personal data.",
+   "input": {
+    "provider": "groq",
+    "key_source": "platform",
+    "task": "achievement_extraction"
+   },
+   "expect": {
+    "eligible": true
+   }
+  },
+  {
+   "id": "prv-014",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "privacy_policy",
+   "purpose": "OpenRouter requests are forced to zero-data-retention endpoints, so repository analysis is allowed even with a user key.",
+   "input": {
+    "provider": "openrouter",
+    "key_source": "user",
+    "task": "repo_analysis"
+   },
+   "expect": {
+    "eligible": true
+   }
+  },
+  {
+   "id": "prv-015",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "privacy_policy",
+   "purpose": "CV tailoring rewrites personal CV content and must not be routed to the Gemini free tier.",
+   "input": {
+    "provider": "gemini",
+    "key_source": "platform",
+    "task": "cv_tailor"
+   },
+   "expect": {
+    "eligible": false
+   }
+  },
+  {
+   "id": "prv-016",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "privacy_policy",
+   "purpose": "Extracting requirements from a public job ad contains no personal data, so the Gemini free tier is acceptable.",
+   "input": {
+    "provider": "gemini",
+    "key_source": "platform",
+    "task": "job_requirements"
+   },
+   "expect": {
+    "eligible": true
+   }
+  },
+  {
+   "id": "prv-017",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "privacy_policy",
+   "purpose": "Batch extraction from many public job ads is public data and may use any provider, including an unknown-tier personal Gemini key.",
+   "input": {
+    "provider": "gemini",
+    "key_source": "user",
+    "task": "job_requirements_batch"
+   },
+   "expect": {
+    "eligible": true
+   }
+  },
+  {
+   "id": "prv-018",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "privacy_policy",
+   "purpose": "The learning roadmap is built from the user's own verified/unverified/missing skill profile (personal), so an unknown-tier Gemini key is not allowed.",
+   "input": {
+    "provider": "gemini",
+    "key_source": "user",
+    "task": "gap_roadmap"
+   },
+   "expect": {
+    "eligible": false
+   }
+  },
+  {
+   "id": "prv-019",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "privacy_policy",
+   "purpose": "Deriving job-search titles from the Master CV processes personal data and must not use the Gemini free tier.",
+   "input": {
+    "provider": "gemini",
+    "key_source": "platform",
+    "task": "job_profile"
+   },
+   "expect": {
+    "eligible": false
+   }
+  },
+  {
+   "id": "prv-020",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "privacy_policy",
+   "purpose": "Groq's no-retention-by-default policy applies to user keys too, so a CV update via the user's Groq key meets the floor.",
+   "input": {
+    "provider": "groq",
+    "key_source": "user",
+    "task": "cv_update"
+   },
+   "expect": {
+    "eligible": true
+   }
+  }
+ ]
+}

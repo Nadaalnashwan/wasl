@@ -1,0 +1,479 @@
+{
+ "category": "linkedin_content",
+ "cases": [
+  {
+   "id": "li-001",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "A celebratory post that restates the certification and its date with no added facts must pass.",
+   "input": {
+    "evidence": "AWS Certified Cloud Practitioner\nPassed the AWS Certified Cloud Practitioner exam in June 2025.\nAWS\n2025-06",
+    "output": "Excited to share that I'm now an AWS Certified Cloud Practitioner! I passed the exam in June 2025 after many evenings of study. #AWS #Cloud"
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "certified",
+     "2025"
+    ]
+   }
+  },
+  {
+   "id": "li-002",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "A team-credit hackathon post that keeps 'our team' and the exact placement must pass.",
+   "input": {
+    "evidence": "2nd place — Riyadh Data Hackathon 2025\nOur team won second place at the Riyadh Data Hackathon 2025 with a traffic-prediction model built in PyTorch.\nI was a member of the 4-person team and built the data-cleaning pipeline.\nPyTorch Python\n2025-03",
+    "output": "Proud of our team for winning second place at the Riyadh Data Hackathon 2025! We built a traffic-prediction model in PyTorch, and I handled the data-cleaning pipeline."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "second place",
+     "PyTorch"
+    ]
+   }
+  },
+  {
+   "id": "li-003",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "A post that reuses the exact before/after numbers and tool must pass.",
+   "input": {
+    "evidence": "Automated weekly sales report\nRebuilt the weekly sales report pipeline in Python at Najd Retail; report generation went from 6 hours to 1 hour.\nPython Pandas",
+    "output": "I rebuilt our weekly sales reporting pipeline in Python and cut generation time from 6 hours to 1 hour. Small automation, big relief for the team."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "6 hours",
+     "1 hour",
+     "Python"
+    ]
+   }
+  },
+  {
+   "id": "li-004",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "'X led to a 40% drop' is causal language, not a leadership claim; a faithful post using it must pass.",
+   "input": {
+    "evidence": "Catalogue API caching\nAdded a Redis caching layer to the product catalogue API at Wadi Labs; p95 load time dropped by 40%.\nRedis",
+    "output": "Adding a Redis caching layer to our catalogue API led to a 40% drop in p95 load time."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "40%",
+     "Redis"
+    ]
+   }
+  },
+  {
+   "id": "li-005",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "'Helps clinics manage appointments' describes what the app does, not the user managing people; the faithful post must pass.",
+   "input": {
+    "evidence": "Clinic booking app\nBuilt a Flutter booking app that lets small clinics schedule patient appointments.\nFlutter Firebase",
+    "output": "I built a Flutter app that helps small clinics manage their patient appointments."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "Flutter"
+    ]
+   }
+  },
+  {
+   "id": "li-006",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "A storytelling post with no numbers that only restates the workshop must pass.",
+   "input": {
+    "evidence": "Volunteer Python workshop\nOrganised a volunteer Python workshop for high-school students at my university.\nPython Mentoring",
+    "output": "I organised a volunteer Python workshop for high-school students at my university. Seeing them write their first lines of code was the highlight of my semester."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "Python"
+    ]
+   }
+  },
+  {
+   "id": "li-007",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Tone-only rewrite (storytelling) of the reporting achievement keeps every fact and must pass.",
+   "input": {
+    "evidence": "Automated weekly sales report\nRebuilt the weekly sales report pipeline in Python at Najd Retail; report generation went from 6 hours to 1 hour.\nPython Pandas",
+    "output": "Every Sunday the sales report took 6 hours. Not anymore: after I rebuilt the pipeline in Python, it's done in 1 hour."
+   },
+   "expect": {
+    "passed": true
+   }
+  },
+  {
+   "id": "li-008",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Tone-only rewrite (concise) of the certification post must pass.",
+   "input": {
+    "evidence": "AWS Certified Cloud Practitioner\nPassed the AWS Certified Cloud Practitioner exam in June 2025.\nAWS\n2025-06",
+    "output": "New credential: AWS Certified Cloud Practitioner (June 2025)."
+   },
+   "expect": {
+    "passed": true
+   }
+  },
+  {
+   "id": "li-009",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "With the user's contribution confirmed in the evidence, a first-person post about exactly that contribution must pass.",
+   "input": {
+    "evidence": "Smart parking (team repository)\nIoT system that detects free parking spots using YOLO object detection; backend in Node.js with MongoDB.\nContributors: 5 students.\nNode.js MongoDB\nContribution: I implemented the YOLO detection service and its REST endpoint.",
+    "contribution_confirmed": true,
+    "output": "For our smart parking project I implemented the YOLO detection service that spots free parking spaces."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "Computer Vision"
+    ]
+   }
+  },
+  {
+   "id": "li-010",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Inflating the measured improvement (40% → 60%) is a fabricated metric and must fail.",
+   "input": {
+    "evidence": "Catalogue API caching\nAdded a Redis caching layer to the product catalogue API at Wadi Labs; p95 load time dropped by 40%.\nRedis",
+    "output": "Our new Redis caching layer cut p95 load time by 60%!"
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "60",
+      "status": "unsupported"
+     }
+    ],
+    "supported": [
+     "Redis"
+    ]
+   }
+  },
+  {
+   "id": "li-011",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Turning 300 registrations into 3,000 members is a 10× inflation and must fail.",
+   "input": {
+    "evidence": "Club registration platform\nBuilt a Flask app with PostgreSQL that handles 300 member registrations per semester for the university robotics club.\nFlask PostgreSQL",
+    "output": "My Flask platform now serves 3,000 members of the university robotics club."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "3,000",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "li-012",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Inventing a famous employer for an internship the evidence attributes to an unnamed local startup must fail.",
+   "input": {
+    "evidence": "Pneumonia detection model\nTrained a CNN in TensorFlow on chest X-ray images reaching 92% validation accuracy during a summer internship at a local health-tech startup.\nTensorFlow Deep Learning",
+    "output": "During my internship at Google Health, I trained a TensorFlow CNN on chest X-rays that reached 92% validation accuracy."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Google"
+     }
+    ]
+   }
+  },
+  {
+   "id": "li-013",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Adding an award that does not exist in the evidence must fail.",
+   "input": {
+    "evidence": "Club registration platform\nBuilt a Flask app with PostgreSQL that handles 300 member registrations per semester for the university robotics club.\nFlask PostgreSQL",
+    "output": "I built a Flask and PostgreSQL platform for the robotics club, which earned me the Dean's Excellence Award."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "award",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "li-014",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Rewriting a 4-person team build as 'I single-handedly built' moves team credit to the individual and must not pass without confirmation.",
+   "input": {
+    "evidence": "Arabic speech-to-text assistant\nOur team of 4 built an Arabic speech-to-text assistant with Whisper and FastAPI for the SDAIA hackathon.\nFastAPI",
+    "output": "I single-handedly built an Arabic speech-to-text assistant with Whisper and FastAPI for the SDAIA hackathon."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "single-handedly",
+      "status": "needs_confirmation"
+     }
+    ]
+   }
+  },
+  {
+   "id": "li-015",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "A first-person 'I built' post about a team repository whose personal contribution is unconfirmed must require confirmation.",
+   "input": {
+    "evidence": "Smart parking (team repository)\nIoT system that detects free parking spots using YOLO object detection; backend in Node.js with MongoDB.\nContributors: 5 students.\nNode.js MongoDB",
+    "contribution_confirmed": false,
+    "output": "I built a smart parking system that detects free spots with YOLO and a Node.js backend."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "built",
+      "status": "needs_confirmation",
+      "reason": "contribution_unconfirmed"
+     }
+    ]
+   }
+  },
+  {
+   "id": "li-016",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "An honest team-framed post about the same unconfirmed repository (no personal authorship claim) must pass.",
+   "input": {
+    "evidence": "Smart parking (team repository)\nIoT system that detects free parking spots using YOLO object detection; backend in Node.js with MongoDB.\nContributors: 5 students.\nNode.js MongoDB",
+    "contribution_confirmed": false,
+    "output": "Our team's smart parking project detects free parking spots using YOLO object detection, with a Node.js and MongoDB backend."
+   },
+   "expect": {
+    "passed": true
+   }
+  },
+  {
+   "id": "li-017",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Adding an infrastructure technology the achievement never used (Kubernetes) must fail.",
+   "input": {
+    "evidence": "Clinic booking app\nBuilt a Flutter booking app that lets small clinics schedule patient appointments.\nFlutter Firebase",
+    "output": "I built a Flutter booking app for small clinics and deployed its backend on Kubernetes."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Kubernetes",
+      "status": "unsupported"
+     }
+    ],
+    "supported": [
+     "Flutter"
+    ]
+   }
+  },
+  {
+   "id": "li-018",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "An invented delivery timeframe ('in just 2 weeks') is an unsupported number and must fail.",
+   "input": {
+    "evidence": "Clinic booking app\nBuilt a Flutter booking app that lets small clinics schedule patient appointments.\nFlutter Firebase",
+    "output": "In just 2 weeks I built a Flutter booking app that lets small clinics schedule appointments."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "2 weeks",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "li-019",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Inventing an adoption figure ('used by 500 students') must fail.",
+   "input": {
+    "evidence": "Volunteer Python workshop\nOrganised a volunteer Python workshop for high-school students at my university.\nPython Mentoring",
+    "output": "My volunteer Python workshop material is now used by 500 students across the city."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "500",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "li-020",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Upgrading a foundational certificate (Cloud Practitioner) to a different, harder one (Solutions Architect) is a false credential and must fail.",
+   "input": {
+    "evidence": "AWS Certified Cloud Practitioner\nPassed the AWS Certified Cloud Practitioner exam in June 2025.\nAWS\n2025-06",
+    "output": "Thrilled to announce I'm now an AWS Certified Solutions Architect!"
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Solutions Architect"
+     }
+    ]
+   }
+  },
+  {
+   "id": "li-021",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Saying the user 'led' the hackathon team when the evidence says they were a member must fail as role inflation.",
+   "input": {
+    "evidence": "2nd place — Riyadh Data Hackathon 2025\nOur team won second place at the Riyadh Data Hackathon 2025 with a traffic-prediction model built in PyTorch.\nI was a member of the 4-person team and built the data-cleaning pipeline.\nPyTorch Python\n2025-03",
+    "output": "I led our 4-person team to second place at the Riyadh Data Hackathon 2025."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "led",
+      "status": "unsupported",
+      "reason": "role_inflated"
+     }
+    ]
+   }
+  },
+  {
+   "id": "li-022",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "An invented promotion must fail.",
+   "input": {
+    "evidence": "Automated weekly sales report\nRebuilt the weekly sales report pipeline in Python at Najd Retail; report generation went from 6 hours to 1 hour.\nPython Pandas",
+    "output": "After automating the weekly sales report in Python, I was promoted to Senior Analyst at Najd Retail."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "promoted",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "li-023",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "'I won second place' for a team placement claims individual credit and must not pass without confirmation.",
+   "input": {
+    "evidence": "2nd place — Riyadh Data Hackathon 2025\nOur team won second place at the Riyadh Data Hackathon 2025 with a traffic-prediction model built in PyTorch.\nI was a member of the 4-person team and built the data-cleaning pipeline.\nPyTorch Python\n2025-03",
+    "output": "I won second place at the Riyadh Data Hackathon 2025 with my traffic-prediction model."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "won",
+      "status": "needs_confirmation"
+     }
+    ]
+   }
+  },
+  {
+   "id": "li-024",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Raising validation accuracy from 92% to 99% is a fabricated metric and must fail.",
+   "input": {
+    "evidence": "Pneumonia detection model\nTrained a CNN in TensorFlow on chest X-ray images reaching 92% validation accuracy during a summer internship at a local health-tech startup.\nTensorFlow Deep Learning",
+    "output": "My TensorFlow CNN detects pneumonia on chest X-rays with 99% accuracy."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "99",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "li-025",
+   "category": "linkedin_content",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "An invented superlative ('the first Arabic speech assistant in Saudi Arabia') is an unsupported factual claim and must fail even though no number or skill changed.",
+   "input": {
+    "evidence": "Arabic speech-to-text assistant\nOur team of 4 built an Arabic speech-to-text assistant with Whisper and FastAPI for the SDAIA hackathon.\nFastAPI",
+    "output": "Our team of 4 built the first Arabic speech-to-text assistant in Saudi Arabia, using Whisper and FastAPI."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "first"
+     }
+    ]
+   }
+  }
+ ]
+}

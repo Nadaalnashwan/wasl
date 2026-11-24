@@ -1,0 +1,971 @@
+{
+ "category": "cv_parsing",
+ "cases": [
+  {
+   "id": "cvp-001",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Standard English CV header (name line, email, +966 mobile, LinkedIn) must lose every identifier while title, city, employer, dates, skill and metric survive for parsing.",
+   "input": {
+    "document": true,
+    "text": "Reem Al-Shehri\nData Scientist | Riyadh, Saudi Arabia\nreem.alshehri@example.com | +966 55 123 4567 | linkedin.com/in/reem-alshehri-ds\n\nEXPERIENCE\nData Scientist, Najd Analytics (Mar 2022 – Present)\n- Built a churn model in Python that cut monthly churn by 18%"
+   },
+   "expect": {
+    "must_remove": [
+     "Reem Al-Shehri",
+     "reem.alshehri@example.com",
+     "+966 55 123 4567",
+     "linkedin.com/in/reem-alshehri-ds"
+    ],
+    "must_keep": [
+     "Data Scientist",
+     "Riyadh",
+     "Najd Analytics",
+     "Mar 2022",
+     "Python",
+     "18%"
+    ],
+    "kinds": [
+     "NAME",
+     "EMAIL",
+     "PHONE",
+     "PROFILE_URL"
+    ]
+   }
+  },
+  {
+   "id": "cvp-002",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Local Saudi mobile written as 05XXXXXXXX with a 'Mobile:' label is personal data; the employer and the en-dash date range next to it are not.",
+   "input": {
+    "document": true,
+    "text": "Faisal Al-Otaibi\nMobile: 0551234567\nEmail: faisal.otaibi@example.com\n\nBackend Engineer — Tamkeen Systems (2021–2024)\n• Migrated 40 microservices to Python 3.11"
+   },
+   "expect": {
+    "must_remove": [
+     "Faisal Al-Otaibi",
+     "0551234567",
+     "faisal.otaibi@example.com"
+    ],
+    "must_keep": [
+     "Backend Engineer",
+     "Tamkeen Systems",
+     "2021–2024",
+     "40 microservices",
+     "Python 3.11"
+    ],
+    "kinds": [
+     "PHONE",
+     "EMAIL"
+    ]
+   }
+  },
+  {
+   "id": "cvp-003",
+   "category": "cv_parsing",
+   "lang": "mixed",
+   "kind": "pii_redact",
+   "purpose": "Saudi mobile written entirely in Arabic-Indic digits inside an English CV must be redacted exactly like its Latin-digit form.",
+   "input": {
+    "document": false,
+    "text": "Contact\nPhone: +٩٦٦ ٥٠ ٤٤٤ ٣٣٢٢\nLocation: Dammam\n\nQA Engineer at Khobar Logistics, 2020 - 2023"
+   },
+   "expect": {
+    "must_remove": [
+     "+٩٦٦ ٥٠ ٤٤٤ ٣٣٢٢"
+    ],
+    "must_keep": [
+     "Dammam",
+     "QA Engineer",
+     "Khobar Logistics",
+     "2020 - 2023"
+    ],
+    "kinds": [
+     "PHONE"
+    ]
+   }
+  },
+  {
+   "id": "cvp-004",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Labelled Saudi national ID and a date of birth are both personal data that must not reach an AI provider; graduation year and GPA must stay.",
+   "input": {
+    "document": false,
+    "text": "Personal Details\nNational ID: 1098765432\nDate of Birth: 14 March 1998\n\nEducation\nBSc Computer Science, King Saud University, 2020 (GPA 4.6/5)"
+   },
+   "expect": {
+    "must_remove": [
+     "1098765432",
+     "14 March 1998"
+    ],
+    "must_keep": [
+     "King Saud University",
+     "2020",
+     "GPA 4.6/5",
+     "BSc Computer Science"
+    ],
+    "kinds": [
+     "NATIONAL_ID"
+    ]
+   }
+  },
+  {
+   "id": "cvp-005",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Iqama number for a resident expat (10 digits starting with 2) must be removed, while the Iqama expiry year (useful for hiring eligibility) is not identifying.",
+   "input": {
+    "document": false,
+    "text": "Iqama No: 2456789012 (valid until 2027)\nSenior Accountant, Al-Waha Trading Co., Jeddah, 2018 – Present\n- Closed monthly books for 3 subsidiaries"
+   },
+   "expect": {
+    "must_remove": [
+     "2456789012"
+    ],
+    "must_keep": [
+     "2027",
+     "Senior Accountant",
+     "Al-Waha Trading Co.",
+     "Jeddah",
+     "2018 – Present"
+    ],
+    "kinds": [
+     "NATIONAL_ID"
+    ]
+   }
+  },
+  {
+   "id": "cvp-006",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "An unlabelled 10-digit Saudi ID embedded in a sentence is still an identifier and must be redacted.",
+   "input": {
+    "document": false,
+    "text": "Saudi citizen, ID 1122334455, available to start immediately. Data Engineer with Airflow and SQL experience at Sahab Cloud since 2022."
+   },
+   "expect": {
+    "must_remove": [
+     "1122334455"
+    ],
+    "must_keep": [
+     "Data Engineer",
+     "Sahab Cloud",
+     "2022",
+     "SQL"
+    ],
+    "kinds": [
+     "NATIONAL_ID"
+    ]
+   }
+  },
+  {
+   "id": "cvp-007",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "GitHub profile and a personal portfolio domain built from the candidate's name both identify the person and must be redacted.",
+   "input": {
+    "document": false,
+    "text": "Links: github.com/reemcodes · https://reemalshehri.dev\nProjects: Arabic OCR toolkit (PyTorch), retail demand forecaster (Prophet)"
+   },
+   "expect": {
+    "must_remove": [
+     "github.com/reemcodes",
+     "reemalshehri.dev"
+    ],
+    "must_keep": [
+     "Arabic OCR toolkit",
+     "PyTorch",
+     "retail demand forecaster"
+    ],
+    "kinds": [
+     "PROFILE_URL"
+    ]
+   }
+  },
+  {
+   "id": "cvp-008",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "P.O. Box is a postal address and must be removed; the city name on the same line is coarse location and may stay.",
+   "input": {
+    "document": false,
+    "text": "P.O. Box 12345, Riyadh 11564\nNetwork Administrator, Riyadh Health Cluster (2019 – 2024)"
+   },
+   "expect": {
+    "must_remove": [
+     "P.O. Box 12345"
+    ],
+    "must_keep": [
+     "Network Administrator",
+     "Riyadh Health Cluster",
+     "2019 – 2024"
+    ],
+    "kinds": [
+     "ADDRESS"
+    ]
+   }
+  },
+  {
+   "id": "cvp-009",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "A labelled street address with building number and district must be removed; experience lines below it must be untouched.",
+   "input": {
+    "document": false,
+    "text": "Address: 4521 King Fahd Road, Al Olaya District, Riyadh 12211\n\nProduct Designer, Wadi Labs, Jan 2021 – Jun 2024\n- Redesigned onboarding, raising activation from 41% to 58%"
+   },
+   "expect": {
+    "must_remove": [
+     "4521 King Fahd Road",
+     "Al Olaya District"
+    ],
+    "must_keep": [
+     "Product Designer",
+     "Wadi Labs",
+     "Jan 2021 – Jun 2024",
+     "41%",
+     "58%"
+    ],
+    "kinds": [
+     "ADDRESS"
+    ]
+   }
+  },
+  {
+   "id": "cvp-010",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "A 'Name:' form-style line (common in Saudi CV templates) must be redacted even when document-header detection is off.",
+   "input": {
+    "document": false,
+    "text": "Name: Abdullah Al-Ghamdi\nNationality: Saudi\nTarget role: Cybersecurity Analyst\nCertifications: CompTIA Security+ (2023)"
+   },
+   "expect": {
+    "must_remove": [
+     "Abdullah Al-Ghamdi"
+    ],
+    "must_keep": [
+     "Cybersecurity Analyst",
+     "CompTIA Security+",
+     "2023"
+    ],
+    "kinds": [
+     "NAME"
+    ]
+   }
+  },
+  {
+   "id": "cvp-011",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Many CVs start with a 'CURRICULUM VITAE' banner; the holder's name on the next line is still the CV header and must be removed.",
+   "input": {
+    "document": true,
+    "text": "CURRICULUM VITAE\nHessa Al-Dossari\nCivil Engineer\nhessa.d@example.com\n\nSite Engineer, Red Sea Builders, 2019 – 2023"
+   },
+   "expect": {
+    "must_remove": [
+     "Hessa Al-Dossari",
+     "hessa.d@example.com"
+    ],
+    "must_keep": [
+     "CURRICULUM VITAE",
+     "Civil Engineer",
+     "Red Sea Builders",
+     "2019 – 2023"
+    ],
+    "kinds": [
+     "NAME",
+     "EMAIL"
+    ]
+   }
+  },
+  {
+   "id": "cvp-012",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "A header line 'Name, CREDENTIAL' (post-nominal letters) still contains the holder's name, which must be removed while the PMP credential is kept.",
+   "input": {
+    "document": true,
+    "text": "Faisal Al-Otaibi, PMP\nProject Manager | Jeddah\n\nProject Manager, Hijaz Infrastructure, 2017 – Present\n- Delivered a SAR 40M road project 2 months ahead of schedule"
+   },
+   "expect": {
+    "must_remove": [
+     "Faisal Al-Otaibi"
+    ],
+    "must_keep": [
+     "PMP",
+     "Project Manager",
+     "Hijaz Infrastructure",
+     "SAR 40M",
+     "2 months"
+    ],
+    "kinds": [
+     "NAME"
+    ]
+   }
+  },
+  {
+   "id": "cvp-013",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "When the name is in an image and the extracted text starts with a job title, that title is not a name and must not be redacted (it also appears in the experience section).",
+   "input": {
+    "document": true,
+    "text": "Machine Learning Engineer\nnoura.dev@example.com\n\nExperience\nMachine Learning Engineer, Tuwaiq AI Studio, 2022 – Present\n- Shipped an Arabic NER model with 0.91 F1"
+   },
+   "expect": {
+    "must_remove": [
+     "noura.dev@example.com"
+    ],
+    "must_keep": [
+     "Machine Learning Engineer",
+     "Tuwaiq AI Studio",
+     "0.91 F1"
+    ],
+    "kinds": [
+     "EMAIL"
+    ]
+   }
+  },
+  {
+   "id": "cvp-014",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "With the account holder's known name supplied, the name must be redacted wherever it appears, but a company that shares the family name must stay.",
+   "input": {
+    "document": false,
+    "known_names": [
+     "Sara Al-Qahtani"
+    ],
+    "text": "Sales Operations Analyst at Al-Qahtani Trading Co. (2021 – 2024). Sara Al-Qahtani automated CRM reports in Power BI, saving 10 hours per week."
+   },
+   "expect": {
+    "must_remove": [
+     "Sara Al-Qahtani"
+    ],
+    "must_keep": [
+     "Al-Qahtani Trading Co.",
+     "Power BI",
+     "10 hours",
+     "2021 – 2024"
+    ],
+    "kinds": [
+     "NAME"
+    ]
+   }
+  },
+  {
+   "id": "cvp-015",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Phone written as '(+966) 50 123 4567' — a very common format in Gulf CVs — must be redacted even without a label.",
+   "input": {
+    "document": false,
+    "text": "reem.alshehri@example.com · (+966) 50 123 4567 · Riyadh\nHR Business Partner, Najm Insurance, 2020 – Present"
+   },
+   "expect": {
+    "must_remove": [
+     "reem.alshehri@example.com",
+     "50 123 4567"
+    ],
+    "must_keep": [
+     "Riyadh",
+     "HR Business Partner",
+     "Najm Insurance",
+     "2020 – Present"
+    ],
+    "kinds": [
+     "EMAIL",
+     "PHONE"
+    ]
+   }
+  },
+  {
+   "id": "cvp-016",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "00-prefixed international mobile and a labelled landline with extension must both be removed; a large ticket count metric must stay.",
+   "input": {
+    "document": false,
+    "text": "Cell 00966 50 765 4321 | Tel: 011 465 7788 ext. 204\nIT Support Lead, Qassim Polytechnic, 2016 – 2024\n- Cleared a backlog of 1,200 tickets in one quarter"
+   },
+   "expect": {
+    "must_remove": [
+     "00966 50 765 4321",
+     "011 465 7788"
+    ],
+    "must_keep": [
+     "IT Support Lead",
+     "Qassim Polytechnic",
+     "1,200 tickets",
+     "2016 – 2024"
+    ],
+    "kinds": [
+     "PHONE"
+    ]
+   }
+  },
+  {
+   "id": "cvp-017",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "A references section contains third parties' personal data (referee name, email, phone); all of it must be removed, while the referee's institution may stay.",
+   "input": {
+    "document": false,
+    "text": "References\nDr. Khalid Al-Mutairi, Associate Professor, KFUPM\nkhalid.mutairi@example.edu | +966 13 860 0000"
+   },
+   "expect": {
+    "must_remove": [
+     "Khalid Al-Mutairi",
+     "khalid.mutairi@example.edu",
+     "+966 13 860 0000"
+    ],
+    "must_keep": [
+     "Associate Professor",
+     "KFUPM"
+    ],
+    "kinds": [
+     "EMAIL",
+     "PHONE"
+    ]
+   }
+  },
+  {
+   "id": "cvp-018",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "An experience block dense with dates, money, percentages, scores and standards contains no personal data; nothing may be redacted (over-redaction would break parsing and claim checks).",
+   "input": {
+    "document": false,
+    "text": "Cloud Engineer, Sahab Cloud — Jan 2020 – Dec 2023\n- Kept 99.95% uptime across 3,000+ tenants\n- Cut AWS spend by SAR 2.4M per year\n- Reduced p95 latency from 1200 ms to 300 ms\n- Led the ISO 27001 audit; model F1 0.92; NPS +35"
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "Jan 2020 – Dec 2023",
+     "99.95%",
+     "3,000+",
+     "SAR 2.4M",
+     "1200 ms",
+     "300 ms",
+     "ISO 27001",
+     "0.92",
+     "+35",
+     "Sahab Cloud"
+    ]
+   }
+  },
+  {
+   "id": "cvp-019",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Email variants (mixed case, plus-addressing, multi-level TLD) must all be detected.",
+   "input": {
+    "document": false,
+    "text": "Primary: Reem.AlShehri@Example.COM\nAlternate: reem+jobs@example.co.uk\nPreferred contact: email"
+   },
+   "expect": {
+    "must_remove": [
+     "Reem.AlShehri@Example.COM",
+     "reem+jobs@example.co.uk"
+    ],
+    "must_keep": [
+     "Preferred contact: email"
+    ],
+    "kinds": [
+     "EMAIL"
+    ]
+   }
+  },
+  {
+   "id": "cvp-020",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "An anti-spam obfuscated email ('name [at] domain [dot] com') is still the candidate's email address and must be removed.",
+   "input": {
+    "document": false,
+    "text": "Email: reem.alshehri [at] example [dot] com\nUX Researcher, Jahez, 2022 – Present"
+   },
+   "expect": {
+    "must_remove": [
+     "reem.alshehri [at] example [dot] com"
+    ],
+    "must_keep": [
+     "UX Researcher",
+     "Jahez",
+     "2022 – Present"
+    ]
+   }
+  },
+  {
+   "id": "cvp-021",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Messaging/social handles (WhatsApp wa.me link with the phone number, Telegram, X) are direct contact identifiers and must be removed.",
+   "input": {
+    "document": false,
+    "text": "WhatsApp: wa.me/966551234567 · Telegram: t.me/reem_ds · X: x.com/reem_ds\nSpeaker at a Riyadh data meetup (2024)"
+   },
+   "expect": {
+    "must_remove": [
+     "wa.me/966551234567",
+     "t.me/reem_ds",
+     "x.com/reem_ds"
+    ],
+    "must_keep": [
+     "Riyadh data meetup",
+     "2024"
+    ],
+    "kinds": [
+     "PROFILE_URL"
+    ]
+   }
+  },
+  {
+   "id": "cvp-022",
+   "category": "cv_parsing",
+   "lang": "mixed",
+   "kind": "pii_redact",
+   "purpose": "A labelled national ID written in Arabic-Indic digits inside an English CV must be redacted.",
+   "input": {
+    "document": false,
+    "text": "National ID: ١٠٩٨٧٦٥٤٣٢\nPharmacist, Nahdi Medical, 2019 – 2024"
+   },
+   "expect": {
+    "must_remove": [
+     "١٠٩٨٧٦٥٤٣٢"
+    ],
+    "must_keep": [
+     "Pharmacist",
+     "Nahdi Medical",
+     "2019 – 2024"
+    ],
+    "kinds": [
+     "NATIONAL_ID"
+    ]
+   }
+  },
+  {
+   "id": "cvp-023",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Two-column PDF extraction often merges the name with the skills column on the first line; the name must go but the skills must survive.",
+   "input": {
+    "document": true,
+    "text": "Reem Al-Shehri Python SQL Tableau\nData Analyst\nAnalyst, Najd Retail, 2023 – Present"
+   },
+   "expect": {
+    "must_remove": [
+     "Reem Al-Shehri"
+    ],
+    "must_keep": [
+     "Python",
+     "SQL",
+     "Tableau",
+     "Data Analyst",
+     "Najd Retail"
+    ]
+   }
+  },
+  {
+   "id": "cvp-024",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Single-line pipe-separated header 'Name | Title | email' is the most common modern CV header; the name must be removed along with the email.",
+   "input": {
+    "document": true,
+    "text": "Omar Al-Harbi | Backend Developer | omar.harbi@example.com\nBackend Developer, Tamkeen Systems, 2022 – Present"
+   },
+   "expect": {
+    "must_remove": [
+     "Omar Al-Harbi",
+     "omar.harbi@example.com"
+    ],
+    "must_keep": [
+     "Backend Developer",
+     "Tamkeen Systems",
+     "2022 – Present"
+    ],
+    "kinds": [
+     "EMAIL"
+    ]
+   }
+  },
+  {
+   "id": "cvp-025",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Dash-formatted local mobile '055-123-4567' must be removed; a dotted month-year date range must not be mistaken for a phone number.",
+   "input": {
+    "document": false,
+    "text": "Phone 055-123-4567\nTeaching Assistant, Imam University, 09.2019 - 06.2021"
+   },
+   "expect": {
+    "must_remove": [
+     "055-123-4567"
+    ],
+    "must_keep": [
+     "Teaching Assistant",
+     "Imam University",
+     "09.2019 - 06.2021"
+    ],
+    "kinds": [
+     "PHONE"
+    ]
+   }
+  },
+  {
+   "id": "cvp-026",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "Classic three-way split: a skill used in a role is verified, a skill only in the skills list is unverified, and a skill absent from the CV is missing — even though the job asks for all of them.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer building APIs.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI",
+        "Designed PostgreSQL schemas for the billing service"
+       ]
+      }
+     ],
+     "skills": [
+      "Python",
+      "Docker",
+      "Kubernetes",
+      "FastAPI"
+     ]
+    },
+    "requirements": [
+     "Python",
+     "PostgreSQL",
+     "Docker",
+     "Kubernetes",
+     "Terraform"
+    ]
+   },
+   "expect": {
+    "verified": [
+     "Python",
+     "PostgreSQL"
+    ],
+    "unverified": [
+     "Docker",
+     "Kubernetes"
+    ],
+    "missing": [
+     "Terraform"
+    ]
+   }
+  },
+  {
+   "id": "cvp-027",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "Evidence written with service names/aliases (S3, Lambda, k8s) demonstrates the canonical skill (AWS, Kubernetes).",
+   "input": {
+    "cv": {
+     "experience": [
+      {
+       "id": "e1",
+       "title": "DevOps Engineer",
+       "organization": "Sahab Cloud",
+       "bullets": [
+        "Moved nightly batch jobs to AWS Lambda and S3",
+        "Ran 30 services on k8s with Helm"
+       ]
+      }
+     ],
+     "skills": []
+    },
+    "requirements": [
+     "AWS",
+     "Kubernetes",
+     "Azure"
+    ]
+   },
+   "expect": {
+    "verified": [
+     "AWS",
+     "Kubernetes"
+    ],
+    "missing": [
+     "Azure"
+    ]
+   }
+  },
+  {
+   "id": "cvp-028",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "JavaScript experience is not Java experience, and 'go-live'/'R&D' do not demonstrate the Go or R languages.",
+   "input": {
+    "cv": {
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Frontend Developer",
+       "organization": "Wadi Labs",
+       "bullets": [
+        "Built a JavaScript dashboard and coordinated the go-live with the R&D team"
+       ]
+      }
+     ],
+     "skills": [
+      "JavaScript"
+     ]
+    },
+    "requirements": [
+     "Java",
+     "JavaScript",
+     "Go",
+     "R"
+    ]
+   },
+   "expect": {
+    "verified": [
+     "JavaScript"
+    ],
+    "missing": [
+     "Java",
+     "Go",
+     "R"
+    ]
+   }
+  },
+  {
+   "id": "cvp-029",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "Skills claimed only in the summary are self-assertions (unverified); a library used in an actual bullet is verified.",
+   "input": {
+    "cv": {
+     "summary": "Experienced in machine learning and NLP.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Najd Retail",
+       "bullets": [
+        "Cleaned 2M sales rows with Pandas"
+       ]
+      }
+     ],
+     "skills": []
+    },
+    "requirements": [
+     "Machine Learning",
+     "NLP",
+     "Pandas"
+    ]
+   },
+   "expect": {
+    "verified": [
+     "Pandas"
+    ],
+    "unverified": [
+     "Machine Learning",
+     "NLP"
+    ]
+   }
+  },
+  {
+   "id": "cvp-030",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "Earned certifications count as evidence for the certified platform; a cloud the CV never mentions stays missing.",
+   "input": {
+    "cv": {
+     "certifications": [
+      {
+       "id": "c1",
+       "name": "AWS Certified Cloud Practitioner",
+       "issuer": "Amazon Web Services",
+       "date": "2024"
+      },
+      {
+       "id": "c2",
+       "name": "Microsoft Azure Fundamentals (AZ-900)",
+       "issuer": "Microsoft",
+       "date": "2025"
+      }
+     ],
+     "skills": [
+      "AWS"
+     ]
+    },
+    "requirements": [
+     "AWS",
+     "Azure",
+     "GCP"
+    ]
+   },
+   "expect": {
+    "verified": [
+     "AWS",
+     "Azure"
+    ],
+    "missing": [
+     "GCP"
+    ]
+   }
+  },
+  {
+   "id": "cvp-031",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "Technologies listed on a concrete project verify those skills; a language only in the skills list does not.",
+   "input": {
+    "cv": {
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Clinic booking app",
+       "description": "Mobile app for small clinics",
+       "technologies": [
+        "Flutter",
+        "Firebase"
+       ],
+       "bullets": [
+        "Published to Google Play"
+       ]
+      }
+     ],
+     "skills": [
+      "Flutter",
+      "Swift"
+     ]
+    },
+    "requirements": [
+     "Flutter",
+     "Firebase",
+     "Swift"
+    ]
+   },
+   "expect": {
+    "verified": [
+     "Flutter",
+     "Firebase"
+    ],
+    "unverified": [
+     "Swift"
+    ]
+   }
+  },
+  {
+   "id": "cvp-032",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "A graduation project described in education details is concrete evidence for the skills it used.",
+   "input": {
+    "cv": {
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Princess Nourah University",
+       "details": "Graduation project: Arabic sentiment analysis with NLP and PyTorch"
+      }
+     ],
+     "skills": []
+    },
+    "requirements": [
+     "NLP",
+     "PyTorch",
+     "TensorFlow"
+    ]
+   },
+   "expect": {
+    "verified": [
+     "NLP",
+     "PyTorch"
+    ],
+    "missing": [
+     "TensorFlow"
+    ]
+   }
+  },
+  {
+   "id": "cvp-033",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "A confirmed achievement with LangChain demonstrates LangChain; RAG, which nothing mentions, stays missing even though the job asks for it.",
+   "input": {
+    "cv": {
+     "skills": [
+      "Python"
+     ]
+    },
+    "achievements": [
+     {
+      "title": "Internal HR policy chatbot",
+      "description": "Built a chatbot over HR policy PDFs",
+      "technologies": [
+       "LangChain",
+       "Python"
+      ],
+      "skills": []
+     }
+    ],
+    "requirements": [
+     "LangChain",
+     "RAG",
+     "Python"
+    ]
+   },
+   "expect": {
+    "verified": [
+     "LangChain",
+     "Python"
+    ],
+    "missing": [
+     "RAG"
+    ]
+   }
+  }
+ ]
+}

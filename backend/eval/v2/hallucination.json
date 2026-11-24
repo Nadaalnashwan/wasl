@@ -1,0 +1,595 @@
+{
+ "category": "hallucination",
+ "cases": [
+  {
+   "id": "hal-001",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Role inflation: evidence says the user participated in the migration; claiming they led it must fail.",
+   "input": {
+    "evidence": "I participated in the migration of the billing system to AWS at Tamkeen Systems in 2024.",
+    "output": "I led the migration of the billing system to AWS at Tamkeen Systems in 2024."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "led",
+      "status": "unsupported",
+      "reason": "role_inflated"
+     }
+    ],
+    "supported": [
+     "AWS",
+     "2024"
+    ]
+   }
+  },
+  {
+   "id": "hal-002",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Supported control for hal-001: 'was part of the team that migrated' keeps the participant role and must pass.",
+   "input": {
+    "evidence": "I participated in the migration of the billing system to AWS at Tamkeen Systems in 2024.",
+    "output": "I was part of the team that migrated Tamkeen Systems' billing system to AWS in 2024."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "AWS",
+     "2024"
+    ]
+   }
+  },
+  {
+   "id": "hal-003",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Negation: evidence explicitly says Python was NOT used; claiming Python experience on that project is a contradiction.",
+   "input": {
+    "evidence": "The sales analysis was done entirely in Excel; I did not use Python for this project.",
+    "output": "Applied my Python experience to analyse the sales data for this project."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Python",
+      "status": "contradicted",
+      "reason": "skill_negated"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-004",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Supported control for hal-003: restating the negation ('without writing any Python') is faithful and must pass.",
+   "input": {
+    "evidence": "The sales analysis was done entirely in Excel; I did not use Python for this project.",
+    "output": "I analysed the sales data entirely in Excel, without writing any Python."
+   },
+   "expect": {
+    "passed": true
+   }
+  },
+  {
+   "id": "hal-005",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Unit change: 10 days is not 10 months; same number, different unit must fail.",
+   "input": {
+    "evidence": "Delivered the employee onboarding portal in 10 days.",
+    "output": "Delivered the employee onboarding portal over 10 months."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "10 months",
+      "status": "unsupported",
+      "reason": "number_unit_mismatch"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-006",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Supported control for hal-005: same number and unit with different wording must pass.",
+   "input": {
+    "evidence": "Delivered the employee onboarding portal in 10 days.",
+    "output": "Shipped the employee onboarding portal within 10 days."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "10 days"
+    ]
+   }
+  },
+  {
+   "id": "hal-007",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Team vs individual: a result the evidence credits to the team cannot be claimed as 'I personally' without confirmation.",
+   "input": {
+    "evidence": "Our team reduced checkout errors by 30% after redesigning the payment form.",
+    "output": "I personally reduced checkout errors by 30% by redesigning the payment form."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "personally",
+      "status": "needs_confirmation",
+      "reason": "team_vs_individual"
+     }
+    ],
+    "supported": [
+     "30%"
+    ]
+   }
+  },
+  {
+   "id": "hal-008",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Supported control for hal-007: keeping team credit must pass.",
+   "input": {
+    "evidence": "Our team reduced checkout errors by 30% after redesigning the payment form.",
+    "output": "Our team cut checkout errors by 30% with a redesigned payment form."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "30%"
+    ]
+   }
+  },
+  {
+   "id": "hal-009",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Colleague's award: the evidence says a colleague won; 'I won' is a contradiction.",
+   "input": {
+    "evidence": "I co-authored the poster. My colleague Lama Al-Harbi won the Best Paper award at the conference.",
+    "output": "I won the Best Paper award at the conference."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "won",
+      "status": "contradicted",
+      "reason": "attributed_to_other"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-010",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Supported control for hal-009: congratulating the colleague who won (and stating the user co-authored the poster) is faithful and must pass.",
+   "input": {
+    "evidence": "I co-authored the poster. My colleague Lama Al-Harbi won the Best Paper award at the conference.",
+    "output": "I co-authored our poster, and I'm proud that my colleague Lama Al-Harbi won the Best Paper award at the conference."
+   },
+   "expect": {
+    "passed": true
+   }
+  },
+  {
+   "id": "hal-011",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Attended an AWS course ≠ AWS-certified; claiming the certification must fail.",
+   "input": {
+    "evidence": "Attended a 3-day AWS Cloud Practitioner Essentials course in March 2025.",
+    "output": "AWS Certified Cloud Practitioner (2025)."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "certified",
+      "status": "unsupported",
+      "reason": "credential_attended_only"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-012",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Supported control for hal-011: describing the attended training accurately must pass.",
+   "input": {
+    "evidence": "Attended a 3-day AWS Cloud Practitioner Essentials course in March 2025.",
+    "output": "Attended AWS Cloud Practitioner Essentials training (3 days, March 2025)."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "AWS",
+     "2025"
+    ]
+   }
+  },
+  {
+   "id": "hal-013",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Studied Kubernetes ≠ deployed it in production; claiming production deployment must fail.",
+   "input": {
+    "evidence": "Studied Kubernetes fundamentals through an online course in 2024.",
+    "output": "Deployed Kubernetes clusters in production for customer-facing services."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Kubernetes",
+      "status": "unsupported",
+      "reason": "skill_studied_only"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-014",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Planned certification ≠ completed; 'PMP-certified' from 'I plan to take the PMP exam' must fail.",
+   "input": {
+    "evidence": "I plan to take the PMP certification exam next year.",
+    "output": "PMP-certified project manager."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "certified",
+      "status": "unsupported",
+      "reason": "credential_planned_only"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-015",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Team size ≠ direct reports: 'worked with a team of 20' cannot become 'managed 20 engineers'.",
+   "input": {
+    "evidence": "Worked with a team of 20 engineers on the ERP rollout at Hijaz Infrastructure.",
+    "output": "Managed 20 engineers during the ERP rollout at Hijaz Infrastructure."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "managed",
+      "status": "unsupported",
+      "reason": "team_size_as_reports"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-016",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "10 seconds ≠ 10%: an absolute time saving rewritten as a percentage must fail.",
+   "input": {
+    "evidence": "Cut the report generation time by 10 seconds per request.",
+    "output": "Cut the report generation time by 10% per request."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "10%",
+      "status": "unsupported",
+      "reason": "number_unit_mismatch"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-017",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Supported paraphrase with the same before/after numbers and units must pass.",
+   "input": {
+    "evidence": "Automated the weekly sales report; preparation time went from 6 hours to 1 hour.",
+    "output": "Automating the weekly sales report brought preparation down from 6 hours to just 1 hour."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "6 hours",
+     "1 hour"
+    ]
+   }
+  },
+  {
+   "id": "hal-018",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "30% faster rewritten as '3x faster' is a different, much larger claim and must fail.",
+   "input": {
+    "evidence": "Optimised the CSV import job, making it 30% faster.",
+    "output": "Optimised the CSV import job, making it 3x faster."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "3",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-019",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Currency change: SAR 50,000 is not $50,000 (≈3.75× larger); the claim must fail.",
+   "input": {
+    "evidence": "Renegotiated software licences, saving the company SAR 50,000 per year.",
+    "output": "Renegotiated software licences, saving the company $50,000 per year."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "50,000"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-020",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Magnitude inflation: 1,000 users rewritten as 10k users must fail.",
+   "input": {
+    "evidence": "The study-planner app reached 1,000 users in its first semester.",
+    "output": "The study-planner app reached 10k users in its first semester."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "10",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-021",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Invented experience length: a role starting in 2023 does not support '5 years of experience'.",
+   "input": {
+    "evidence": "Data Analyst, Najd Retail, 2023 – Present. Built Power BI dashboards for 14 store managers.",
+    "output": "Data analyst with 5 years of experience building Power BI dashboards."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "5 years",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-022",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Degree inflation: a bachelor's degree does not support a master's.",
+   "input": {
+    "evidence": "Bachelor's degree in Information Systems, King Saud University, 2022.",
+    "output": "Master's degree in Information Systems from King Saud University (2022)."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "master",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-023",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Submitted ≠ published: a paper submitted to a workshop cannot be described as published.",
+   "input": {
+    "evidence": "Submitted a paper on Arabic dialect identification to a NeurIPS 2025 workshop.",
+    "output": "Published a paper on Arabic dialect identification at NeurIPS 2025."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "published",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-024",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Title inflation: a Data Analyst cannot be described as Head of Data.",
+   "input": {
+    "evidence": "Data Analyst at Najd Retail since 2023, reporting to the analytics manager.",
+    "output": "Head of Data at Najd Retail since 2023."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "head of",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-025",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Attending a conference ≠ speaking at it; the speaker claim must fail even though no number or skill changed.",
+   "input": {
+    "evidence": "Attended the LEAP 2025 technology conference in Riyadh.",
+    "output": "Spoke at the LEAP 2025 technology conference in Riyadh."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "spoke"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-026",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "'Doubled revenue' (a 100% increase) is not supported by a 20% increase, even though the output contains no digit.",
+   "input": {
+    "evidence": "The new pricing page increased online revenue by 20% in Q3.",
+    "output": "The new pricing page doubled online revenue in Q3."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "doubled"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-027",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Different count noun: 500 downloads are not 500 users.",
+   "input": {
+    "evidence": "The Quran recitation tracker app reached 500 downloads on Google Play.",
+    "output": "The Quran recitation tracker app reached 500 users on Google Play."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "500",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-028",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Placement upgrade: second place rewritten as first place must fail.",
+   "input": {
+    "evidence": "Our team won second place at the Hajj Hackathon 2024.",
+    "output": "Our team won first place at the Hajj Hackathon 2024."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "first place",
+      "status": "unsupported"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-029",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Multi-fact faithful paraphrase (leadership, team size in words, exact download count, timeframe) must pass.",
+   "input": {
+    "evidence": "Led a team of 4 students to build a Flutter app for campus parking; it reached 1,200 downloads in its first semester.",
+    "output": "I led four classmates in building a Flutter campus-parking app that hit 1,200 downloads in its first semester."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "led",
+     "Flutter",
+     "1,200"
+    ]
+   }
+  },
+  {
+   "id": "hal-030",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Negated platform: evidence says the model ran without AWS; 'deployed on AWS' is a contradiction.",
+   "input": {
+    "evidence": "Ran the inference service on a local university server, without AWS or any other cloud provider.",
+    "output": "Deployed the inference service on AWS."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "AWS",
+      "status": "contradicted",
+      "reason": "skill_negated"
+     }
+    ]
+   }
+  }
+ ]
+}

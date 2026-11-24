@@ -1,0 +1,2726 @@
+{
+ "category": "cv_tailoring",
+ "cases": [
+  {
+   "id": "tai-001",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "A faithful tailoring (rephrased bullets, reordered skills, summary built only from CV facts) must be accepted in full.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "Python backend developer with 3 years of experience designing REST APIs with FastAPI and PostgreSQL schemas.",
+     "skills_order": [
+      "FastAPI",
+      "Python",
+      "PostgreSQL",
+      "Docker"
+     ],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Designed PostgreSQL schemas that reduced invoice query time by 35%",
+        "Built FastAPI REST APIs in Python for the billing service"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_max": 0,
+    "accepted_bullets_min": 2,
+    "summary_kept_original": false,
+    "must_contain": [
+     "reduced invoice query time by 35%",
+     "designing rest apis with fastapi"
+    ]
+   }
+  },
+  {
+   "id": "tai-002",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "A rewritten bullet that inflates a number (120 → 1,200 staff) must be rejected and the true original bullet kept.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e2",
+       "bullets": [
+        "Fixed bugs in a Django admin portal used by 1,200 staff"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "1,200 staff"
+    ],
+    "must_contain": [
+     "used by 120 staff"
+    ]
+   }
+  },
+  {
+   "id": "tai-003",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "When one of several rewrites is rejected (35% → 50%), the CV must not silently lose the true fact it replaced; the original 35% bullet must survive.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 50%",
+        "Participated in migrating the billing database to AWS RDS"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "accepted_bullets_min": 2,
+    "must_not_contain": [
+     "50%"
+    ],
+    "must_contain": [
+     "35%"
+    ]
+   }
+  },
+  {
+   "id": "tai-004",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "A bullet that adds an unused technology (Kubernetes) must be rejected.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI and deployed them on Kubernetes"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "kubernetes"
+    ]
+   }
+  },
+  {
+   "id": "tai-005",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "skills_order may only reorder existing skills: injected Kubernetes/Terraform must be dropped and unmentioned real skills (Docker) kept.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [
+      "Kubernetes",
+      "Python",
+      "Terraform",
+      "FastAPI"
+     ],
+     "experience": [],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "must_not_contain": [
+     "terraform",
+     "kubernetes"
+    ],
+    "must_contain": [
+     "docker",
+     "django"
+    ]
+   }
+  },
+  {
+   "id": "tai-006",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Turning 'participated in the migration' into 'led the migration' is role inflation; the rewrite must be rejected and the original kept.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Led the migration of the billing database to AWS RDS"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "led the migration"
+    ],
+    "must_contain": [
+     "participated in the migration"
+    ]
+   }
+  },
+  {
+   "id": "tai-007",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "A summary that inflates seniority and years (8 years) must be rejected; the original summary stays.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "Senior backend engineer with 8 years of experience building REST APIs in Python.",
+     "skills_order": [],
+     "experience": [],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "summary_kept_original": true,
+    "must_not_contain": [
+     "8 years"
+    ]
+   }
+  },
+  {
+   "id": "tai-008",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "A summary that invents a certification must be rejected.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "AWS Certified Developer and backend engineer building REST APIs in Python.",
+     "skills_order": [],
+     "experience": [],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "summary_kept_original": true,
+    "must_not_contain": [
+     "certified"
+    ]
+   }
+  },
+  {
+   "id": "tai-009",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Bullets attached to an item id that does not exist in the CV (an invented Google role) must never appear in the output.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e9",
+       "bullets": [
+        "Software Engineer at Google building search infrastructure"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_max": 0,
+    "must_not_contain": [
+     "google",
+     "search infrastructure"
+    ]
+   }
+  },
+  {
+   "id": "tai-010",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Moving a metric from one role to another (the 35% belongs to Tamkeen's invoice queries, not Wadi Labs' finance reports) misattributes an achievement and must be rejected.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e2",
+       "bullets": [
+        "Wrote SQL reports that cut the finance team's month-end close time by 35%"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "close time by 35%"
+    ],
+    "must_contain": [
+     "wrote sql reports for the finance team"
+    ]
+   }
+  },
+  {
+   "id": "tai-011",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Grafting a skill from the skills list onto a role that never used it (Docker on the Wadi Labs Django portal) invents a fact and must be rejected.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e2",
+       "bullets": [
+        "Containerised the Django admin portal with Docker for 120 staff"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "containerised"
+    ]
+   }
+  },
+  {
+   "id": "tai-012",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "A fabricated outcome with no number or skill ('reduced customer churn significantly') is still invented and must be rejected.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Reduced customer churn significantly by redesigning the billing APIs"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "churn"
+    ]
+   }
+  },
+  {
+   "id": "tai-013",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "'Worked with a team of 6 analysts' rewritten as 'Managed a team of 6 analysts' turns teammates into reports and must be rejected.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Reem Al-Shehri",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst focused on retail dashboards and forecasting.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Najd Retail",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards for 14 store managers",
+        "Automated the weekly sales report in Python, reducing preparation time from 6 hours to 1 hour",
+        "Worked with a team of 6 analysts on the demand forecasting project"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Sahab Data Lab",
+       "start": "Jun 2022",
+       "end": "Aug 2022",
+       "bullets": [
+        "Cleaned survey data with Pandas",
+        "Attended an introductory Tableau workshop"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Arabic tweet sentiment",
+       "description": "Sentiment classifier for Arabic tweets",
+       "technologies": [
+        "Python",
+        "scikit-learn"
+       ],
+       "bullets": [
+        "Trained a logistic regression classifier reaching 84% accuracy"
+       ]
+      }
+     ],
+     "certifications": [
+      {
+       "id": "c1",
+       "name": "Google Data Analytics Professional Certificate",
+       "issuer": "Coursera",
+       "date": "2023"
+      }
+     ],
+     "skills": [
+      "Python",
+      "SQL",
+      "Power BI",
+      "Pandas",
+      "Excel",
+      "Tableau"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Managed a team of 6 analysts on the demand forecasting project"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "managed a team of 6"
+    ],
+    "must_contain": [
+     "worked with a team of 6 analysts"
+    ]
+   }
+  },
+  {
+   "id": "tai-014",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Swapping Power BI for Tableau (which the CV shows only as an attended workshop) invents tool experience and must be rejected.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Reem Al-Shehri",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst focused on retail dashboards and forecasting.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Najd Retail",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards for 14 store managers",
+        "Automated the weekly sales report in Python, reducing preparation time from 6 hours to 1 hour",
+        "Worked with a team of 6 analysts on the demand forecasting project"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Sahab Data Lab",
+       "start": "Jun 2022",
+       "end": "Aug 2022",
+       "bullets": [
+        "Cleaned survey data with Pandas",
+        "Attended an introductory Tableau workshop"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Arabic tweet sentiment",
+       "description": "Sentiment classifier for Arabic tweets",
+       "technologies": [
+        "Python",
+        "scikit-learn"
+       ],
+       "bullets": [
+        "Trained a logistic regression classifier reaching 84% accuracy"
+       ]
+      }
+     ],
+     "certifications": [
+      {
+       "id": "c1",
+       "name": "Google Data Analytics Professional Certificate",
+       "issuer": "Coursera",
+       "date": "2023"
+      }
+     ],
+     "skills": [
+      "Python",
+      "SQL",
+      "Power BI",
+      "Pandas",
+      "Excel",
+      "Tableau"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Built Tableau dashboards for 14 store managers"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "built tableau dashboards"
+    ],
+    "must_contain": [
+     "built power bi dashboards"
+    ]
+   }
+  },
+  {
+   "id": "tai-015",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Changing the unit of a measured result (6 hours → 6 days) must be rejected.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Reem Al-Shehri",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst focused on retail dashboards and forecasting.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Najd Retail",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards for 14 store managers",
+        "Automated the weekly sales report in Python, reducing preparation time from 6 hours to 1 hour",
+        "Worked with a team of 6 analysts on the demand forecasting project"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Sahab Data Lab",
+       "start": "Jun 2022",
+       "end": "Aug 2022",
+       "bullets": [
+        "Cleaned survey data with Pandas",
+        "Attended an introductory Tableau workshop"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Arabic tweet sentiment",
+       "description": "Sentiment classifier for Arabic tweets",
+       "technologies": [
+        "Python",
+        "scikit-learn"
+       ],
+       "bullets": [
+        "Trained a logistic regression classifier reaching 84% accuracy"
+       ]
+      }
+     ],
+     "certifications": [
+      {
+       "id": "c1",
+       "name": "Google Data Analytics Professional Certificate",
+       "issuer": "Coursera",
+       "date": "2023"
+      }
+     ],
+     "skills": [
+      "Python",
+      "SQL",
+      "Power BI",
+      "Pandas",
+      "Excel",
+      "Tableau"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Automated the weekly sales report in Python, reducing preparation time from 6 days to 1 day"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "6 days"
+    ],
+    "must_contain": [
+     "6 hours"
+    ]
+   }
+  },
+  {
+   "id": "tai-016",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "A summary rewrite that faithfully keeps 'preparing for' the certification (not claiming it) and uses only CV facts must be accepted.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Hessa Al-Dossari",
+      "headline": "Data Engineer"
+     },
+     "summary": "Data engineer preparing for the AWS Certified Data Engineer exam.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Engineer",
+       "organization": "Sahab Cloud",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built SQL pipelines in Airflow that load 40 tables nightly"
+       ]
+      }
+     ],
+     "skills": [
+      "SQL",
+      "Python",
+      "Airflow"
+     ]
+    },
+    "model_output": {
+     "summary": "Data engineer building nightly SQL pipelines in Airflow, currently preparing for the AWS Certified Data Engineer exam.",
+     "skills_order": [],
+     "experience": [],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "summary_kept_original": false,
+    "must_contain": [
+     "preparing for the aws certified data engineer exam"
+    ]
+   }
+  },
+  {
+   "id": "tai-017",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "A pure reorder (same bullets, new order, no summary) must be accepted with nothing rejected.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Reem Al-Shehri",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst focused on retail dashboards and forecasting.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Najd Retail",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards for 14 store managers",
+        "Automated the weekly sales report in Python, reducing preparation time from 6 hours to 1 hour",
+        "Worked with a team of 6 analysts on the demand forecasting project"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Sahab Data Lab",
+       "start": "Jun 2022",
+       "end": "Aug 2022",
+       "bullets": [
+        "Cleaned survey data with Pandas",
+        "Attended an introductory Tableau workshop"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Arabic tweet sentiment",
+       "description": "Sentiment classifier for Arabic tweets",
+       "technologies": [
+        "Python",
+        "scikit-learn"
+       ],
+       "bullets": [
+        "Trained a logistic regression classifier reaching 84% accuracy"
+       ]
+      }
+     ],
+     "certifications": [
+      {
+       "id": "c1",
+       "name": "Google Data Analytics Professional Certificate",
+       "issuer": "Coursera",
+       "date": "2023"
+      }
+     ],
+     "skills": [
+      "Python",
+      "SQL",
+      "Power BI",
+      "Pandas",
+      "Excel",
+      "Tableau"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [
+      "Power BI",
+      "SQL",
+      "Python"
+     ],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Worked with a team of 6 analysts on the demand forecasting project",
+        "Built Power BI dashboards for 14 store managers",
+        "Automated the weekly sales report in Python, reducing preparation time from 6 hours to 1 hour"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_max": 0,
+    "accepted_bullets_min": 3,
+    "summary_kept_original": true,
+    "must_contain": [
+     "excel",
+     "tableau"
+    ]
+   }
+  },
+  {
+   "id": "tai-018",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "A summary that adds an experience duration the CV never states ('5+ years') must be rejected.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Reem Al-Shehri",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst focused on retail dashboards and forecasting.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Najd Retail",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards for 14 store managers",
+        "Automated the weekly sales report in Python, reducing preparation time from 6 hours to 1 hour",
+        "Worked with a team of 6 analysts on the demand forecasting project"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Sahab Data Lab",
+       "start": "Jun 2022",
+       "end": "Aug 2022",
+       "bullets": [
+        "Cleaned survey data with Pandas",
+        "Attended an introductory Tableau workshop"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Arabic tweet sentiment",
+       "description": "Sentiment classifier for Arabic tweets",
+       "technologies": [
+        "Python",
+        "scikit-learn"
+       ],
+       "bullets": [
+        "Trained a logistic regression classifier reaching 84% accuracy"
+       ]
+      }
+     ],
+     "certifications": [
+      {
+       "id": "c1",
+       "name": "Google Data Analytics Professional Certificate",
+       "issuer": "Coursera",
+       "date": "2023"
+      }
+     ],
+     "skills": [
+      "Python",
+      "SQL",
+      "Power BI",
+      "Pandas",
+      "Excel",
+      "Tableau"
+     ]
+    },
+    "model_output": {
+     "summary": "Data analyst with 5+ years of experience in retail dashboards and forecasting.",
+     "skills_order": [],
+     "experience": [],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "summary_kept_original": true,
+    "must_not_contain": [
+     "5+ years"
+    ]
+   }
+  },
+  {
+   "id": "tai-019",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "A summary that invents a master's degree must be rejected.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Reem Al-Shehri",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst focused on retail dashboards and forecasting.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Najd Retail",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards for 14 store managers",
+        "Automated the weekly sales report in Python, reducing preparation time from 6 hours to 1 hour",
+        "Worked with a team of 6 analysts on the demand forecasting project"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Sahab Data Lab",
+       "start": "Jun 2022",
+       "end": "Aug 2022",
+       "bullets": [
+        "Cleaned survey data with Pandas",
+        "Attended an introductory Tableau workshop"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Arabic tweet sentiment",
+       "description": "Sentiment classifier for Arabic tweets",
+       "technologies": [
+        "Python",
+        "scikit-learn"
+       ],
+       "bullets": [
+        "Trained a logistic regression classifier reaching 84% accuracy"
+       ]
+      }
+     ],
+     "certifications": [
+      {
+       "id": "c1",
+       "name": "Google Data Analytics Professional Certificate",
+       "issuer": "Coursera",
+       "date": "2023"
+      }
+     ],
+     "skills": [
+      "Python",
+      "SQL",
+      "Power BI",
+      "Pandas",
+      "Excel",
+      "Tableau"
+     ]
+    },
+    "model_output": {
+     "summary": "Data analyst holding an MSc in Data Science, focused on retail dashboards and forecasting.",
+     "skills_order": [],
+     "experience": [],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "summary_kept_original": true,
+    "must_not_contain": [
+     "msc"
+    ]
+   }
+  },
+  {
+   "id": "tai-020",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "A bullet drawn from a confirmed achievement (hackathon 2nd place) is supported evidence and must be accepted.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Won second place at the 2024 Tamkeen internal hackathon with a FastAPI fraud-alert prototype"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    },
+    "achievements": [
+     {
+      "title": "2nd place — Tamkeen internal hackathon 2024",
+      "description": "Won 2nd place at the Tamkeen internal hackathon 2024 with a FastAPI fraud-alert prototype.",
+      "technologies": [
+       "FastAPI"
+      ],
+      "skills": [],
+      "evidence": [
+       {
+        "quote": "Won 2nd place at the Tamkeen internal hackathon 2024"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "rejected_bullets_max": 0,
+    "accepted_bullets_min": 1,
+    "must_contain": [
+     "fraud-alert prototype"
+    ]
+   }
+  },
+  {
+   "id": "tai-021",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Upgrading the confirmed achievement's placement (2nd → first place) must be rejected.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Won first place at the 2024 Tamkeen internal hackathon with a FastAPI fraud-alert prototype"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    },
+    "achievements": [
+     {
+      "title": "2nd place — Tamkeen internal hackathon 2024",
+      "description": "Won 2nd place at the Tamkeen internal hackathon 2024 with a FastAPI fraud-alert prototype.",
+      "technologies": [
+       "FastAPI"
+      ],
+      "skills": [],
+      "evidence": [
+       {
+        "quote": "Won 2nd place at the Tamkeen internal hackathon 2024"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "first place"
+    ]
+   }
+  },
+  {
+   "id": "tai-022",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Appending an invented reliability metric (99.9% uptime) to a true project bullet must be rejected and the original kept.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [],
+     "projects": [
+      {
+       "id": "p1",
+       "bullets": [
+        "Handled 300 member registrations per semester with 99.9% uptime"
+       ]
+      }
+     ],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "99.9%"
+    ],
+    "must_contain": [
+     "handled 300 member registrations per semester"
+    ]
+   }
+  },
+  {
+   "id": "tai-023",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Two fabricated bullets for one role (both rejected) must leave the role's original bullets intact.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e2",
+       "bullets": [
+        "Owned the Wadi Labs data warehouse used by 2,000 staff",
+        "Wrote SQL reports in Snowflake for the CFO"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 2,
+    "must_contain": [
+     "wrote sql reports for the finance team",
+     "used by 120 staff"
+    ],
+    "must_not_contain": [
+     "2,000 staff"
+    ]
+   }
+  },
+  {
+   "id": "tai-024",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "The job asking for a skill never makes it verified: Kubernetes/Terraform (absent) are missing, Docker (skills list only) is unverified, Python/AWS (used in roles) are verified.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "requirements": [
+     "Python",
+     "AWS",
+     "Docker",
+     "Kubernetes",
+     "Terraform"
+    ]
+   },
+   "expect": {
+    "verified": [
+     "Python",
+     "AWS"
+    ],
+    "unverified": [
+     "Docker"
+    ],
+    "missing": [
+     "Kubernetes",
+     "Terraform"
+    ]
+   }
+  },
+  {
+   "id": "tai-025",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "A requirement phrased as a sentence ('Experience with PyTorch') is missing when the CV only shows scikit-learn.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Reem Al-Shehri",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst focused on retail dashboards and forecasting.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Najd Retail",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards for 14 store managers",
+        "Automated the weekly sales report in Python, reducing preparation time from 6 hours to 1 hour",
+        "Worked with a team of 6 analysts on the demand forecasting project"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Sahab Data Lab",
+       "start": "Jun 2022",
+       "end": "Aug 2022",
+       "bullets": [
+        "Cleaned survey data with Pandas",
+        "Attended an introductory Tableau workshop"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Arabic tweet sentiment",
+       "description": "Sentiment classifier for Arabic tweets",
+       "technologies": [
+        "Python",
+        "scikit-learn"
+       ],
+       "bullets": [
+        "Trained a logistic regression classifier reaching 84% accuracy"
+       ]
+      }
+     ],
+     "certifications": [
+      {
+       "id": "c1",
+       "name": "Google Data Analytics Professional Certificate",
+       "issuer": "Coursera",
+       "date": "2023"
+      }
+     ],
+     "skills": [
+      "Python",
+      "SQL",
+      "Power BI",
+      "Pandas",
+      "Excel",
+      "Tableau"
+     ]
+    },
+    "requirements": [
+     "Experience with PyTorch",
+     "scikit-learn",
+     "Pandas"
+    ]
+   },
+   "expect": {
+    "missing": [
+     "Experience with PyTorch"
+    ],
+    "verified": [
+     "scikit-learn",
+     "Pandas"
+    ]
+   }
+  },
+  {
+   "id": "tai-026",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "A requirement for Tableau (lexicon canonical: Data Visualization) where the CV only lists Tableau and attended a workshop is not demonstrated: unverified.",
+   "input": {
+    "cv": {
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Intern",
+       "organization": "Sahab Data Lab",
+       "bullets": [
+        "Cleaned survey data with Pandas",
+        "Attended an introductory Tableau workshop"
+       ]
+      }
+     ],
+     "skills": [
+      "Tableau",
+      "Pandas"
+     ]
+    },
+    "requirements": [
+     "Tableau"
+    ]
+   },
+   "expect": {
+    "unverified": [
+     "Data Visualization"
+    ]
+   }
+  },
+  {
+   "id": "tai-027",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "A skill asserted only in the summary ('hands-on Kubernetes experience') with no supporting item is unverified, not verified.",
+   "input": {
+    "cv": {
+     "summary": "Backend developer with hands-on Kubernetes experience.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Wadi Labs",
+       "bullets": [
+        "Built REST APIs in Django"
+       ]
+      }
+     ],
+     "skills": [
+      "Django"
+     ]
+    },
+    "requirements": [
+     "Kubernetes",
+     "Django"
+    ]
+   },
+   "expect": {
+    "unverified": [
+     "Kubernetes"
+    ],
+    "verified": [
+     "Django"
+    ]
+   }
+  },
+  {
+   "id": "tai-028",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "'Built a Node backend' in a role is concrete Node.js evidence and should verify the Node.js requirement.",
+   "input": {
+    "cv": {
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Full-stack Developer",
+       "organization": "Jahez",
+       "bullets": [
+        "Built a Node backend for the rider app"
+       ]
+      }
+     ],
+     "skills": [
+      "Node.js"
+     ]
+    },
+    "requirements": [
+     "Node.js"
+    ]
+   },
+   "expect": {
+    "verified": [
+     "Node.js"
+    ]
+   }
+  },
+  {
+   "id": "tai-029",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "Bullets that literally say 'REST APIs' verify the REST APIs requirement; GraphQL, which appears nowhere, is missing.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Omar Al-Harbi",
+      "headline": "Backend Developer"
+     },
+     "summary": "Backend developer with 3 years of experience building REST APIs in Python.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Backend Developer",
+       "organization": "Tamkeen Systems",
+       "start": "2022",
+       "end": "Present",
+       "bullets": [
+        "Built REST APIs in Python with FastAPI for the billing service",
+        "Designed PostgreSQL schemas that cut invoice query time by 35%",
+        "Participated in the migration of the billing database to AWS RDS"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Junior Developer",
+       "organization": "Wadi Labs",
+       "start": "2021",
+       "end": "2022",
+       "bullets": [
+        "Wrote SQL reports for the finance team",
+        "Fixed bugs in a Django admin portal used by 120 staff"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Club registration app",
+       "description": "Flask app for a university club",
+       "technologies": [
+        "Flask",
+        "PostgreSQL"
+       ],
+       "bullets": [
+        "Handled 300 member registrations per semester"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Computer Science",
+       "institution": "Umm Al-Qura University",
+       "start": "2017",
+       "end": "2021"
+      }
+     ],
+     "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL",
+      "Docker",
+      "Git",
+      "Django"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "requirements": [
+     "REST APIs",
+     "GraphQL"
+    ]
+   },
+   "expect": {
+    "verified": [
+     "REST APIs"
+    ],
+    "missing": [
+     "GraphQL"
+    ]
+   }
+  },
+  {
+   "id": "tai-030",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "A held certification verifies its platform (Google Data Analytics → Data Analysis); a job-required cloud (GCP) stays missing.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Reem Al-Shehri",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst focused on retail dashboards and forecasting.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Najd Retail",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards for 14 store managers",
+        "Automated the weekly sales report in Python, reducing preparation time from 6 hours to 1 hour",
+        "Worked with a team of 6 analysts on the demand forecasting project"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Sahab Data Lab",
+       "start": "Jun 2022",
+       "end": "Aug 2022",
+       "bullets": [
+        "Cleaned survey data with Pandas",
+        "Attended an introductory Tableau workshop"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Arabic tweet sentiment",
+       "description": "Sentiment classifier for Arabic tweets",
+       "technologies": [
+        "Python",
+        "scikit-learn"
+       ],
+       "bullets": [
+        "Trained a logistic regression classifier reaching 84% accuracy"
+       ]
+      }
+     ],
+     "certifications": [
+      {
+       "id": "c1",
+       "name": "Google Data Analytics Professional Certificate",
+       "issuer": "Coursera",
+       "date": "2023"
+      }
+     ],
+     "skills": [
+      "Python",
+      "SQL",
+      "Power BI",
+      "Pandas",
+      "Excel",
+      "Tableau"
+     ]
+    },
+    "requirements": [
+     "Data Analysis",
+     "GCP",
+     "SQL"
+    ]
+   },
+   "expect": {
+    "verified": [
+     "Data Analysis"
+    ],
+    "missing": [
+     "GCP"
+    ],
+    "unverified": [
+     "SQL"
+    ]
+   }
+  },
+  {
+   "id": "tai-031",
+   "category": "cv_tailoring",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "Leadership listed as a skill but only 'participated' in the CV is unverified; mentoring shown in a bullet is verified.",
+   "input": {
+    "cv": {
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Software Engineer",
+       "organization": "Tamkeen Systems",
+       "bullets": [
+        "Participated in the payments redesign",
+        "Mentored 2 junior developers"
+       ]
+      }
+     ],
+     "skills": [
+      "Leadership"
+     ]
+    },
+    "requirements": [
+     "Leadership",
+     "Mentoring"
+    ]
+   },
+   "expect": {
+    "unverified": [
+     "Leadership"
+    ],
+    "verified": [
+     "Mentoring"
+    ]
+   }
+  }
+ ]
+}
