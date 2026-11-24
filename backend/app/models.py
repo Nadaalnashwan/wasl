@@ -10,7 +10,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -404,6 +404,9 @@ class AlertIncident(Base, TimestampMixin):
     """An alert rule that fired. One open incident per rule key; deduplicated while open, resolved on recovery."""
 
     __tablename__ = "alert_incidents"
+    # at most ONE open incident per rule key, enforced by the database (several workers may evaluate alerts)
+    __table_args__ = (Index("ux_alert_incidents_open_key", "key", unique=True,
+                            postgresql_where=text("status = 'open'"), sqlite_where=text("status = 'open'")),)
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     key: Mapped[str] = mapped_column(String(60), index=True)
     severity: Mapped[str] = mapped_column(String(20))  # info | warning | critical
@@ -421,3 +424,16 @@ class AlertIncident(Base, TimestampMixin):
     notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     recovery_notified: Mapped[bool] = mapped_column(Boolean, default=False)
     last_error: Mapped[str] = mapped_column(String(300), default="")
+
+
+class SchedulerLease(Base):
+    """Leader lease so only one backend worker runs a scheduled job per interval, and a shared record of the
+    last run (each worker's in-memory state would otherwise disagree)."""
+
+    __tablename__ = "scheduler_leases"
+    name: Mapped[str] = mapped_column(String(40), primary_key=True)
+    holder: Mapped[str] = mapped_column(String(80), default="")
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_error: Mapped[str] = mapped_column(String(120), default="")
+    runs: Mapped[int] = mapped_column(Integer, default=0)

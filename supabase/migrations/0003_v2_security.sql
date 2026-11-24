@@ -16,16 +16,30 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 create index if not exists ix_users_role on public.users (role);
 
--- authenticated/anon clients must never write role (or id/email, which mirror auth.users)
-revoke update (role) on public.users from authenticated, anon;
+-- Client keys (anon/authenticated through the Data API) may only edit harmless profile fields. Supabase grants ALL
+-- on public tables by default and a column-level REVOKE does not override a table-level grant, so the table-level
+-- write privileges are revoked and only the editable columns are granted back. The backend creates profile rows.
+revoke insert, update, delete on public.users from anon, authenticated;
+grant update (full_name, headline, locale, ai_mode, allow_platform_fallback, allow_cross_provider)
+  on public.users to authenticated;
+
+-- Second, independent layer: a trigger that rejects identity/role changes from client roles even if a future
+-- grant re-opens the columns. SECURITY INVOKER on purpose: inside a SECURITY DEFINER function current_user is the
+-- function owner, which would make the check always pass. JWT claims are NOT consulted (they are caller-supplied
+-- request settings); only the database role of the connection matters.
+create or replace function public.wasl_is_client_role() returns boolean
+language sql stable security invoker set search_path = '' as $$
+  select current_user in ('anon', 'authenticated')
+$$;
 
 create or replace function public.wasl_protect_role() returns trigger
-language plpgsql security definer set search_path = public as $$
+language plpgsql security invoker set search_path = '' as $$
 begin
-  if new.role is distinct from old.role
-     and current_user not in ('postgres', 'service_role', 'supabase_admin')
-     and coalesce(current_setting('request.jwt.claim.role', true), '') <> 'service_role' then
-    raise exception 'role changes are not permitted from this connection';
+  if public.wasl_is_client_role() and (
+       new.role is distinct from old.role or new.id is distinct from old.id
+       or new.email is distinct from old.email or new.password_hash is distinct from old.password_hash) then
+    raise exception 'role and identity fields cannot be changed from a client connection'
+      using errcode = '42501';
   end if;
   return new;
 end $$;
@@ -34,12 +48,11 @@ drop trigger if exists trg_wasl_protect_role on public.users;
 create trigger trg_wasl_protect_role before update on public.users
   for each row execute function public.wasl_protect_role();
 
--- inserts from clients must not self-assign admin
+-- inserts from client roles (if ever re-granted) can never self-assign admin
 create or replace function public.wasl_default_role() returns trigger
-language plpgsql security definer set search_path = public as $$
+language plpgsql security invoker set search_path = '' as $$
 begin
-  if current_user not in ('postgres', 'service_role', 'supabase_admin')
-     and coalesce(current_setting('request.jwt.claim.role', true), '') <> 'service_role' then
+  if public.wasl_is_client_role() then
     new.role := 'user';
   end if;
   return new;
@@ -48,6 +61,13 @@ end $$;
 drop trigger if exists trg_wasl_default_role on public.users;
 create trigger trg_wasl_default_role before insert on public.users
   for each row execute function public.wasl_default_role();
+
+revoke all on function public.wasl_protect_role(), public.wasl_default_role() from public, anon, authenticated;
+
+-- ------------------------------------------------------------------ schema drift fix
+-- posts.images exists in the backend model since v1 (LinkedIn image attachments) but was never added to the
+-- Supabase migrations; without it every posts query fails on a database built only from these files.
+alter table public.posts add column if not exists images json not null default '[]';
 
 -- ------------------------------------------------------------------ AI traceability (ai_events)
 alter table public.ai_events add column if not exists returned_model varchar(120) not null default '';
@@ -99,11 +119,26 @@ create table if not exists public.alert_incidents (
 );
 create index if not exists ix_alert_incidents_key on public.alert_incidents (key);
 create index if not exists ix_alert_incidents_status on public.alert_incidents (status);
+-- at most one OPEN incident per rule key, even with several backend workers evaluating alerts concurrently
+create unique index if not exists ux_alert_incidents_open_key on public.alert_incidents (key) where status = 'open';
 alter table public.alert_incidents enable row level security;  -- no policies: backend only
+
+-- ------------------------------------------------------------------ scheduler lease (backend only)
+-- one worker runs the alert cycle per interval; also the shared "last run" shown in the admin console
+create table if not exists public.scheduler_leases (
+  name varchar(40) primary key,
+  holder varchar(80) not null default '',
+  expires_at timestamptz not null default now(),
+  last_run_at timestamptz,
+  last_error varchar(120) not null default '',
+  runs integer not null default 0
+);
+alter table public.scheduler_leases enable row level security;  -- no policies: backend only
 
 -- ------------------------------------------------------------------ least privilege for client keys
 -- Monitoring / secrets tables already have RLS with no policies (0001). Also remove table grants so a
 -- misconfigured policy in the future cannot expose them to the public API keys.
 revoke all on public.ai_events, public.http_events, public.quality_events, public.error_logs, public.eval_runs,
-  public.admin_audit_log, public.alert_incidents, public.integrations, public.user_api_keys, public.oauth_states
+  public.admin_audit_log, public.alert_incidents, public.integrations, public.user_api_keys, public.oauth_states,
+  public.job_listings, public.job_search_cache, public.job_api_calls, public.scheduler_leases
   from anon, authenticated;

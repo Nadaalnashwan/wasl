@@ -157,7 +157,6 @@ REQUIRED_CONTRADICTIONS = [
 ]
 
 
-import pytest  # noqa: E402
 
 
 @pytest.mark.parametrize("evidence,output,reason", REQUIRED_CONTRADICTIONS)

@@ -256,7 +256,9 @@ def compute(
             "outputs_with_unsupported": sum(1 for e in evs if int(e.details.get("unsupported_count", 0)) > 0),
             # None (not 0.0) when nothing was checked: zero claims is "no data", not "perfect"
             "unsupported_rate": round(n_unsup / n_checked, 4) if n_checked else None,
-            "acknowledged": sum(1 for e in evs if e.details.get("acknowledged")),
+            # outputs approved with user-authored assertions for flagged claims (legacy: generic acknowledgement)
+            "acknowledged": sum(1 for e in evs if e.details.get("acknowledged") or e.details.get("user_asserted")),
+            "user_asserted": sum(int(e.details.get("user_asserted", 0) or 0) for e in evs),
             "by_task": {},
         }
         for e in evs:
@@ -264,7 +266,10 @@ def compute(
             bt["claims_checked"] += int(e.details.get("claims_checked", 0))
             bt["unsupported"] += int(e.details.get("unsupported_count", 0))
     approved = [e for e in q if e.kind == "claim_check" and _stage(e) == "approved"]
-    escaped = sum(int(e.details.get("unsupported_count", 0)) for e in approved if not e.details.get("acknowledged"))
+    # escaped = flagged claims in approved output that the user did NOT individually assert (legacy events that
+    # carry the v1 generic acknowledgement are treated as asserted, as they were at the time)
+    escaped = sum(max(0, int(e.details.get("unsupported_count", 0)) - int(e.details.get("user_asserted", 0) or 0))
+                  for e in approved if not e.details.get("acknowledged"))
     escaped += sum(int(e.details.get("unsupported_count", 0)) for e in q if e.kind == "claim_check" and _stage(e) == "final"
                    and e.task == "cv_tailor")  # tailored CV final re-check: anything flagged bypassed enforcement
     verifier_versions = sorted({(e.details or {}).get("verifier_version", "claims-v1") for e in q if e.kind == "claim_check"})

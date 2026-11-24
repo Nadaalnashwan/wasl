@@ -16,14 +16,17 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
+import socket
 from datetime import UTC, datetime, timedelta
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.models import AIEvent, AlertIncident, EvalRun, HTTPEvent
+from app.models import AIEvent, AlertIncident, EvalRun, HTTPEvent, SchedulerLease
 
 log = logging.getLogger("wasl.alerts")
 
@@ -71,7 +74,7 @@ def evaluate_rules(m: dict) -> list[dict]:
     if q.get("unsupported_escaped", 0) > 0:
         out.append(_rule("critical", "claims_escaped", "Unsupported claims reached approved output", q["unsupported_escaped"], 0,
                          q["claims_by_stage"]["approved"]["claims_checked"] + q["claims_by_stage"]["final"]["claims_checked"],
-                         "Serious quality incident: an unacknowledged unsupported claim passed enforcement. Reproduce with the evaluation suite."))
+                         "Serious quality incident: an unsupported claim without a user assertion passed enforcement. Reproduce with the evaluation suite."))
 
     unavailable = q["claims_by_stage"]["final"]["unavailable"]
     if unavailable >= 3:
@@ -173,7 +176,16 @@ async def run_cycle(db: Session, *, window_hours: int = 24) -> dict:
         if inc is None:
             inc = AlertIncident(key=key, severity=a["level"], title=a["title"], value=a["value"], threshold=a["threshold"],
                                 sample_size=a["sample_size"], investigate=a["investigate"], last_seen_at=now)
-            db.add(inc)
+            try:
+                with db.begin_nested():  # the unique open-key index rejects a duplicate from a concurrent worker
+                    db.add(inc)
+                    db.flush()
+            except IntegrityError:
+                inc = db.scalar(select(AlertIncident).where(AlertIncident.key == key, AlertIncident.status == "open"))
+                if inc is None:
+                    continue
+                inc.last_seen_at = now
+                continue  # the other worker owns first notification
             opened.append(key)
         else:
             inc.value, inc.sample_size, inc.last_seen_at, inc.severity = a["value"], a["sample_size"], now, a["level"]
@@ -205,10 +217,64 @@ async def run_cycle(db: Session, *, window_hours: int = 24) -> dict:
 
 
 _scheduler_state = {"running": False, "last_run": None, "last_error": None}
+LEASE_NAME = "alerts"
+_HOLDER = f"{socket.gethostname()}:{os.getpid()}"[:80]
 
 
-def scheduler_status() -> dict:
-    return {**_scheduler_state, "interval_minutes": settings.alert_eval_interval_minutes, "channel": channel()}
+def acquire_lease(db: Session, name: str = LEASE_NAME, *, holder: str = _HOLDER, ttl_seconds: int | None = None,
+                  now: datetime | None = None) -> bool:
+    """Take (or renew) the named lease. Exactly one holder wins while the lease is valid, across processes and
+    hosts, because the check-and-set is a single conditional UPDATE (or a primary-key INSERT)."""
+    now = now or datetime.now(UTC)
+    ttl = ttl_seconds if ttl_seconds is not None else max(60, int(settings.alert_eval_interval_minutes * 60 * 0.9))
+    until = now + timedelta(seconds=ttl)
+    res = db.execute(update(SchedulerLease)
+                     .where(SchedulerLease.name == name, (SchedulerLease.expires_at < now) | (SchedulerLease.holder == holder))
+                     .values(holder=holder, expires_at=until))
+    if res.rowcount == 1:
+        db.commit()
+        return True
+    db.rollback()
+    if db.get(SchedulerLease, name) is not None:
+        return False  # someone else holds a valid lease
+    try:
+        db.add(SchedulerLease(name=name, holder=holder, expires_at=until))
+        db.commit()
+        return True
+    except IntegrityError:
+        db.rollback()
+        return False
+
+
+def record_run(db: Session, error: str = "", name: str = LEASE_NAME) -> None:
+    lease = db.get(SchedulerLease, name)
+    if lease is not None:
+        lease.last_run_at, lease.last_error, lease.runs = datetime.now(UTC), error[:120], (lease.runs or 0) + 1
+        db.commit()
+
+
+def scheduler_status(db: Session | None = None) -> dict:
+    out = {**_scheduler_state, "interval_minutes": settings.alert_eval_interval_minutes, "channel": channel()}
+    if db is not None:
+        lease = db.get(SchedulerLease, LEASE_NAME)
+        if lease is not None:  # shared across workers: the authoritative last run
+            out.update({"last_run": lease.last_run_at.isoformat() if lease.last_run_at else None,
+                        "last_error": lease.last_error or None, "leader": lease.holder, "runs": lease.runs})
+    return out
+
+
+async def run_scheduled_cycle(db: Session) -> dict | None:
+    """One scheduler tick: run the alert cycle only if this worker holds the lease."""
+    if not acquire_lease(db):
+        return None
+    try:
+        result = await run_cycle(db)
+        record_run(db)
+        return result
+    except Exception as exc:
+        db.rollback()
+        record_run(db, type(exc).__name__)
+        raise
 
 
 async def scheduler_loop() -> None:  # pragma: no cover - exercised in deployment
@@ -221,8 +287,8 @@ async def scheduler_loop() -> None:  # pragma: no cover - exercised in deploymen
         await asyncio.sleep(settings.alert_eval_interval_minutes * 60)
         db = SessionLocal()
         try:
-            await run_cycle(db)
-            _scheduler_state["last_run"], _scheduler_state["last_error"] = datetime.now(UTC).isoformat(), None
+            if await run_scheduled_cycle(db) is not None:
+                _scheduler_state["last_run"], _scheduler_state["last_error"] = datetime.now(UTC).isoformat(), None
         except Exception as exc:  # noqa: BLE001 - keep the loop alive
             log.exception("alert cycle failed")
             _scheduler_state["last_error"] = type(exc).__name__

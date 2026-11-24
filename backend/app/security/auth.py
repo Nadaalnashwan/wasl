@@ -53,14 +53,27 @@ def _jwks_client() -> jwt.PyJWKClient:
     return jwt.PyJWKClient(f"{settings.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json", cache_keys=True)
 
 
+def _supabase_issuer() -> str | None:
+    return f"{settings.supabase_url.rstrip('/')}/auth/v1" if settings.supabase_url else None
+
+
 def _decode_supabase(token: str) -> dict:
+    """Verify a Supabase access token: signature, expiry, audience 'authenticated' and issuer <SUPABASE_URL>/auth/v1.
+
+    The algorithm is chosen from the server-side configuration, never trusted blindly from the token: HS256 only
+    with the project's legacy JWT secret, otherwise ES256/RS256 against the project's JWKS.
+    """
     header = jwt.get_unverified_header(token)
+    issuer = _supabase_issuer()
+    opts = {"require": ["exp", "sub", "aud"]}
     if header.get("alg") == "HS256":
         if not settings.supabase_jwt_secret:
             raise jwt.InvalidTokenError("SUPABASE_JWT_SECRET not configured")
-        return jwt.decode(token, settings.supabase_jwt_secret, algorithms=["HS256"], audience="authenticated")
+        return jwt.decode(token, settings.supabase_jwt_secret, algorithms=["HS256"], audience="authenticated",
+                          issuer=issuer, options=opts)
     key = _jwks_client().get_signing_key_from_jwt(token)
-    return jwt.decode(token, key.key, algorithms=["ES256", "RS256"], audience="authenticated")
+    return jwt.decode(token, key.key, algorithms=["ES256", "RS256"], audience="authenticated", issuer=issuer,
+                      options=opts)
 
 
 def _unauthorized(detail: str = "Not authenticated") -> HTTPException:

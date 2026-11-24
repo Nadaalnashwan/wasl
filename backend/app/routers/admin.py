@@ -53,7 +53,7 @@ def health(db: Session = Depends(get_db)):
         "ai_providers_configured": providers,
         "privacy": {"personal_min_privacy": settings.ai_personal_min_privacy, "pii_redaction": settings.ai_redact_pii,
                     "groq_zdr_attested": settings.groq_zdr_enabled, "gemini_paid_tier_attested": settings.gemini_paid_tier},
-        "alerts": alerts.scheduler_status(),
+        "alerts": alerts.scheduler_status(db) if db_ok else alerts.scheduler_status(),
         "registry_version": model_registry.REGISTRY_VERSION,
     }
 
@@ -122,7 +122,7 @@ def list_alerts(status: str | None = Query(None, pattern="^(open|resolved)$"), d
     rows = db.scalars(stmt).all()
     return {
         "channel": alerts.channel(),
-        "scheduler": alerts.scheduler_status(),
+        "scheduler": alerts.scheduler_status(db),
         "thresholds": {
             "failure_rate": settings.alert_failure_rate, "p95_latency_ms": settings.alert_p95_latency_ms,
             "raw_unsupported_claim_rate": settings.alert_unsupported_claim_rate, "fallback_rate": settings.alert_fallback_rate,

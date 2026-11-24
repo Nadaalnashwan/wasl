@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import re
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -9,7 +10,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
@@ -88,11 +89,63 @@ class PostPatch(BaseModel):
     tone: Tone | None = None
 
 
+class ClaimAssertion(BaseModel):
+    """A factual statement written BY THE USER for one flagged claim (e.g. where the 50-person figure comes from).
+
+    It is stored as a user assertion, never as verified evidence."""
+
+    model_config = ConfigDict(extra="forbid")
+    claim: str = Field(min_length=1, max_length=300)       # the flagged value, as reported by the verifier
+    statement: str = Field(min_length=20, max_length=600)  # user-authored basis / source for that claim
+
+
 class PublishIn(BaseModel):
     confirm: bool = False
     confirm_not_published: bool = False
-    # required when the final text still has unsupported / contradicted / unconfirmed claims
+    # required for every unsupported / needs-confirmation claim still in the final text; contradicted claims
+    # cannot be asserted away and must be edited
+    claim_assertions: list[ClaimAssertion] = Field(default_factory=list, max_length=30)
+    # v1 field: a single generic checkbox. Accepted for compatibility but NEVER sufficient on its own.
     acknowledge_unverified_claims: bool = False
+
+
+# statements that only restate a generic confirmation are not factual basis for a claim
+_GENERIC_ASSERTIONS = re.compile(
+    r"^\s*(i\s+)?(confirm|agree|accept|approve|acknowledge)\b|\b(this|it|that)\s+is\s+(true|accurate|correct)\b|"
+    r"^\s*(true|yes|ok|okay|correct|accurate|verified|confirmed|نعم|صحيح|أؤكد|موافق)[\s.!]*$", re.I)
+
+
+def _norm_claim(v: str) -> str:
+    return " ".join(str(v).lower().split())
+
+
+def evaluate_assertions(report: dict, assertions: list[ClaimAssertion]) -> tuple[str | None, list[dict], list[dict]]:
+    """Decide whether flagged claims may be published.
+
+    Returns (error_code | None, missing_claims, accepted_assertions).
+      * contradicted           -> 'contradicted_claims'   (evidence says otherwise: must be edited)
+      * unavailable            -> 'verification_unavailable' (retry; never published unverified)
+      * unsupported / needs_confirmation without a specific user statement -> 'unverified_claims'
+    """
+    flagged = [c for c in (report.get("unsupported") or []) if c.get("status") != "ambiguous"]
+    if any(c.get("status") == "contradicted" for c in flagged):
+        return "contradicted_claims", [c for c in flagged if c.get("status") == "contradicted"], []
+    if (report.get("summary") or {}).get("unavailable") or report.get("status") == "unavailable":
+        return "verification_unavailable", [], []
+    by_claim = {_norm_claim(a.claim): a for a in assertions}
+    missing, accepted = [], []
+    for c in flagged:
+        a = by_claim.get(_norm_claim(c.get("value", "")))
+        stmt = a.statement.strip() if a else ""
+        specific = (bool(stmt) and len(stmt.split()) >= 4 and not _GENERIC_ASSERTIONS.search(stmt)
+                    and _norm_claim(stmt) != _norm_claim(c.get("value", "")))
+        if not specific:
+            missing.append(c)
+        else:
+            accepted.append({"claim": c.get("value"), "type": c.get("type"), "reason": c.get("reason"),
+                             "status": c.get("status"), "statement": stmt[:600], "basis": "user_asserted",
+                             "asserted_at": datetime.now(UTC).isoformat()})
+    return ("unverified_claims" if missing else None), missing, accepted
 
 
 def post_out(p: Post) -> dict:
@@ -593,13 +646,20 @@ async def publish(
             ad = achievement_dict(a)
             report = check_claims(p.content, evidence_text(ad), contribution_confirmed=_contribution_confirmed(ad))
     blocking = int(report.get("blocking_count", report.get("unsupported_count", 0)) or 0)
-    if blocking and not body.acknowledge_unverified_claims:
-        raise HTTPException(
-            409,
-            {"message": "This post still contains claims that are not supported by your evidence. Edit them, or "
-                        "confirm that every statement is accurate before publishing.",
-             "code": "unverified_claims", "claim_check": report},
-        )
+    user_assertions: list[dict] = []
+    if blocking:
+        code, missing, user_assertions = evaluate_assertions(report, body.claim_assertions)
+        if code is not None:
+            messages = {
+                "contradicted_claims": "Your evidence contradicts part of this post. Edit those statements before "
+                                       "publishing; they cannot be confirmed.",
+                "verification_unavailable": "Claims could not be checked right now. Try again before publishing.",
+                "unverified_claims": "Some claims are not supported by your evidence. Edit them, or for each one write "
+                                     "where the fact comes from. Your statement is saved as your own assertion, "
+                                     "not as verified evidence.",
+            }
+            raise HTTPException(409, {"message": messages[code], "code": code, "claim_check": report,
+                                      "missing": missing})
 
     integ = db.scalar(
         select(Integration).where(
@@ -746,9 +806,12 @@ async def publish(
         raise
 
     p.status = "published"
-    # approved stage: fabrication-type claims here are user-acknowledged, never silent (blocked above otherwise)
+    # approved stage: every flagged claim here carries a user-authored assertion (blocked above otherwise)
+    if user_assertions:
+        # keep the user's own statements next to the report: clearly user-asserted, never "verified"
+        p.claim_check = {**report, "user_assertions": user_assertions}
     record_claim_check("post_generation", report, stage="approved", user_id=user.id,
-                       acknowledged=bool(blocking and body.acknowledge_unverified_claims))
+                       user_asserted=len(user_assertions))
     p.linkedin_post_urn = urn
     p.publish_error = None
     p.published_at = datetime.now(UTC)

@@ -8,7 +8,8 @@ from pathlib import Path
 
 _tmp = Path(tempfile.mkdtemp(prefix="wasl-test-"))
 os.environ.update({
-    "DATABASE_URL": f"sqlite:///{(_tmp / 'test.db').as_posix()}",
+    # WASL_TEST_DATABASE_URL lets CI run the whole suite on PostgreSQL built from supabase/migrations
+    "DATABASE_URL": os.environ.get("WASL_TEST_DATABASE_URL") or f"sqlite:///{(_tmp / 'test.db').as_posix()}",
     "AI_ENABLE_FAKE_PROVIDER": "true",
     "AI_PROVIDER_PRIORITY": "fake",
     "GROQ_API_KEY": "", "GEMINI_API_KEY": "", "OPENROUTER_API_KEY": "",

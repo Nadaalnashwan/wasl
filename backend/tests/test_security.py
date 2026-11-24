@@ -96,6 +96,43 @@ def test_revoked_admin_loses_access_immediately(client):
         db.close()
 
 
+def test_supabase_admin_grant_requires_verified_matching_identity(client, monkeypatch):
+    """On Supabase a grant needs --user-id and a confirmed auth.users identity with the same email."""
+    import scripts.admin as admin_cli
+    from app.models import User
+
+    _user(client, "sb-owner@test.dev")
+    db = SessionLocal()
+    try:
+        uid = db.query(User).filter(User.email == "sb-owner@test.dev").one().id
+    finally:
+        db.close()
+    monkeypatch.setattr(admin_cli.settings, "auth_mode", "supabase")
+    identity: dict = {}
+    monkeypatch.setattr(admin_cli, "_auth_identity", lambda _db, _id: identity.get(_id))
+
+    def role() -> str:
+        d = SessionLocal()
+        try:
+            return d.get(User, uid).role
+        finally:
+            d.close()
+
+    assert admin_cli.set_role("sb-owner@test.dev", "admin") == 1                      # no --user-id
+    assert admin_cli.set_role("sb-owner@test.dev", "admin", user_id="someone-else") == 1
+    assert admin_cli.set_role("sb-owner@test.dev", "admin", user_id=uid) == 1          # no auth identity
+    identity[uid] = {"email": "attacker@test.dev", "email_confirmed_at": "2026-01-01"}
+    assert admin_cli.set_role("sb-owner@test.dev", "admin", user_id=uid) == 1          # email mismatch
+    identity[uid] = {"email": "SB-Owner@test.dev", "email_confirmed_at": None}
+    assert admin_cli.set_role("sb-owner@test.dev", "admin", user_id=uid) == 1          # unconfirmed
+    assert role() == "user"
+    identity[uid] = {"email": "SB-Owner@test.dev", "email_confirmed_at": "2026-01-01"}
+    assert admin_cli.set_role("sb-owner@test.dev", "admin", user_id=uid) == 0
+    assert role() == "admin"
+    assert admin_cli.set_role("sb-owner@test.dev", "user") == 0                        # revoke needs no id
+    assert role() == "user"
+
+
 def test_public_health_leaks_no_configuration(client):
     assert client.get("/api/health").json() == {"status": "ok"}
 
@@ -332,6 +369,61 @@ async def test_alert_cycle_opens_dedupes_and_resolves(monkeypatch):
         db.close()
 
 
+def test_alert_lease_allows_one_worker_per_interval():
+    from datetime import UTC, datetime, timedelta
+
+    from app.models import SchedulerLease
+
+    db1, db2 = SessionLocal(), SessionLocal()
+    try:
+        db1.query(SchedulerLease).delete()
+        db1.commit()
+        now = datetime.now(UTC)
+        assert alerts.acquire_lease(db1, "t", holder="worker-1", ttl_seconds=300, now=now) is True
+        assert alerts.acquire_lease(db2, "t", holder="worker-2", ttl_seconds=300, now=now) is False   # leader holds it
+        assert alerts.acquire_lease(db1, "t", holder="worker-1", ttl_seconds=300, now=now) is True    # renew
+        later = now + timedelta(seconds=301)
+        assert alerts.acquire_lease(db2, "t", holder="worker-2", ttl_seconds=300, now=later) is True  # expired -> takeover
+        assert alerts.acquire_lease(db1, "t", holder="worker-1", ttl_seconds=300, now=later) is False
+    finally:
+        db1.close()
+        db2.close()
+
+
+@pytest.mark.asyncio
+async def test_scheduled_cycle_skips_without_lease_and_db_rejects_duplicate_open_incident(monkeypatch):
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy.exc import IntegrityError
+
+    from app.models import SchedulerLease
+
+    db = SessionLocal()
+    try:
+        db.query(SchedulerLease).delete()
+        db.add(SchedulerLease(name=alerts.LEASE_NAME, holder="other-host:1", expires_at=datetime.now(UTC) + timedelta(minutes=5)))
+        db.commit()
+        assert await alerts.run_scheduled_cycle(db) is None  # another worker is the leader
+        status = alerts.scheduler_status(db)
+        assert status["leader"] == "other-host:1"
+        # the database itself refuses a second OPEN incident for the same key (race between workers)
+        db.add(AlertIncident(key="dup_rule", severity="warning", title="t"))
+        db.commit()
+        db.add(AlertIncident(key="dup_rule", severity="warning", title="t"))
+        with pytest.raises(IntegrityError):
+            db.commit()
+        db.rollback()
+        db.query(AlertIncident).filter(AlertIncident.key == "dup_rule").update({"status": "resolved"})
+        db.commit()
+        db.add(AlertIncident(key="dup_rule", severity="warning", title="t"))  # resolved ones don't block a new one
+        db.commit()
+        db.query(AlertIncident).filter(AlertIncident.key == "dup_rule").delete()
+        db.query(SchedulerLease).delete()
+        db.commit()
+    finally:
+        db.close()
+
+
 def test_alert_rules_ignore_tiny_samples_but_not_escapes():
     from app.monitoring.metrics import compute
 
@@ -363,3 +455,76 @@ def test_publish_blocks_unverified_claims_without_acknowledgement(client, auth):
     r = client.post(f"/api/posts/{p['id']}/publish", json={"confirm": True}, headers=auth)
     assert r.status_code == 409 and r.json()["detail"]["code"] == "unverified_claims"
     assert check_claims("I led a team of 50.", "Built a parser in Python for 120 students.")["passed"] is False
+
+
+def test_flagged_claims_need_specific_user_assertions_not_a_generic_checkbox(client, auth, monkeypatch):
+    """Unsupported claims are published only with a user-written basis per claim, stored as user-asserted.
+    A generic acknowledgement, generic wording or a contradicted claim never passes. LinkedIn is mocked."""
+    from app.models import Integration, Post
+    from app.security.crypto import encrypt
+    from app.services import linkedin
+
+    published: list[str] = []
+
+    async def fake_publish(token, person_id, text, images=None):
+        published.append(text)
+        return "urn:li:share:test-only"
+
+    monkeypatch.setattr(linkedin, "publish", fake_publish)
+    me = client.get("/api/auth/me", headers=auth).json()
+    db = SessionLocal()
+    try:
+        if not db.query(Integration).filter_by(user_id=me["id"], provider="linkedin").first():
+            db.add(Integration(user_id=me["id"], provider="linkedin", access_token_enc=encrypt("fake-token"),
+                               account_id="person-test", scopes="w_member_social"))
+            db.commit()
+    finally:
+        db.close()
+
+    a = client.post("/api/achievements?auto_cv_update=false", json={"title": "Parser", "category": "project",
+                    "description": "Built a parser in Python for 120 students."}, headers=auth).json()["achievement"]
+    p = client.post("/api/posts/generate", json={"achievement_id": a["id"]}, headers=auth).json()
+    client.patch(f"/api/posts/{p['id']}", json={"content": "I built a parser in Python used by 120 students and 50 teachers."}, headers=auth)
+    url = f"/api/posts/{p['id']}/publish"
+
+    r = client.post(url, json={"confirm": True, "acknowledge_unverified_claims": True}, headers=auth)
+    assert r.status_code == 409 and r.json()["detail"]["code"] == "unverified_claims"   # generic checkbox: not enough
+    missing = r.json()["detail"]["missing"]
+    assert missing and all(m["status"] in ("unsupported", "needs_confirmation") for m in missing)
+    generic = [{"claim": m["value"], "statement": "I confirm this is accurate and true."} for m in missing]
+    r = client.post(url, json={"confirm": True, "claim_assertions": generic}, headers=auth)
+    assert r.status_code == 409 and r.json()["detail"]["code"] == "unverified_claims"   # generic wording: not enough
+    assert not published
+
+    specific = [{"claim": m["value"], "statement": "The 50 teachers figure comes from the faculty pilot report in March."}
+                for m in missing]
+    r = client.post(url, json={"confirm": True, "claim_assertions": specific}, headers=auth)
+    assert r.status_code == 200, r.text
+    assert published
+    db = SessionLocal()
+    try:
+        cc = db.get(Post, p["id"]).claim_check
+        assert cc["user_assertions"] and all(x["basis"] == "user_asserted" for x in cc["user_assertions"])
+        assert cc["passed"] is False  # never relabelled as verified
+    finally:
+        db.close()
+    from app.monitoring.metrics import compute
+    db = SessionLocal()
+    try:
+        assert compute(db, 1)["quality"]["unsupported_escaped"] == 0  # asserted claims are not "escaped"
+    finally:
+        db.close()
+
+    # contradicted claims cannot be asserted away
+    b = client.post("/api/achievements?auto_cv_update=false", json={"title": "Dashboards", "category": "project",
+                    "description": "Sara built the dashboard. I wrote the SQL queries for it."}, headers=auth).json()["achievement"]
+    p2 = client.post("/api/posts/generate", json={"achievement_id": b["id"]}, headers=auth).json()
+    client.patch(f"/api/posts/{p2['id']}", json={"content": "I built the dashboard."}, headers=auth)
+    r = client.post(f"/api/posts/{p2['id']}/publish", json={"confirm": True}, headers=auth)
+    detail = r.json()["detail"]
+    if detail["code"] == "contradicted_claims":
+        assertions = [{"claim": m["value"], "statement": "I really did build the entire dashboard myself in 2025."} for m in detail["missing"]]
+        r = client.post(f"/api/posts/{p2['id']}/publish", json={"confirm": True, "claim_assertions": assertions}, headers=auth)
+        assert r.status_code == 409 and r.json()["detail"]["code"] == "contradicted_claims"
+    else:  # the verifier must at least refuse to treat it as supported
+        assert r.status_code == 409
