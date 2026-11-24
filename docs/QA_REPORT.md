@@ -22,6 +22,11 @@ client credentials** in this environment. Every result below was produced by a c
 | Frontend lint / types / build | `npm run lint` · `npx tsc --noEmit` · `npm run build` | pass · pass · pass (Next.js 16.4.6) |
 | Dependency audit | `npm audit --omit=dev` | 0 vulnerabilities |
 | Live AI evaluation / benchmark | `python -m app.evaluation` | **not run** — no provider keys |
+| GitHub Actions CI | `.github/workflows/ci.yml` | run [45444530875](https://github.com/Nadaalnashwan/wasl/actions/runs/45444530875) on `220f062`: backend, frontend and supabase-migrations jobs all **success** |
+
+Correction to the previous report: the commit it described (`57008ca`) **failed** backend lint in CI (a duplicate
+`import pytest` in `tests/test_security.py`); the local "pass" was recorded before that line was added. It was
+fixed in `95f2cc5`, and a YAML quoting error introduced in `23c42c1` was fixed in `220f062`.
 
 ## Browser, responsive and accessibility (production build, `scripts/qa-visual.mjs`)
 
