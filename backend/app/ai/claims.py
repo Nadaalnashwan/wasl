@@ -30,7 +30,13 @@ from dataclasses import asdict, dataclass, field
 
 from app.ai.skills import find_skills
 
-VERIFIER_VERSION = "claims-v2.0"
+VERIFIER_VERSION = "claims-v2.1"
+
+
+def _aw(*words: str) -> str:
+    """Arabic whole-word alternatives. Arabic has no \\b, so 'لم' must not match inside 'المواعيد' and 'قاد' must not
+    match inside 'القادمة'. Allows one conjunction/preposition prefix letter (و ف ب ل)."""
+    return "(?<![؀-ۿ])(?:[وفبل])?(?:" + "|".join(words) + ")(?![؀-ۿ])"
 
 BLOCKING = {"unsupported", "contradicted", "needs_confirmation", "unavailable"}
 FABRICATION = {"unsupported", "contradicted"}
@@ -41,36 +47,49 @@ AR = r"؀-ۿ"
 CREDENTIAL_TERMS = [
     "phd", "doctorate", "master's", "masters", "mba", "bachelor", "certified", "certification", "certificate", "award",
     "first place", "1st place", "second place", "winner", "won", "patent", "published", "promoted", "founder", "co-founder",
-    "head of", "director", "دكتوراه", "ماجستير", "بكالوريوس", "شهادة", "معتمد", "جائزة", "المركز الأول", "فزت", "فاز",
+    "head of", "director", "msc", "m.sc", "bsc", "b.sc", "diploma", "دكتوراه", "ماجستير", "بكالوريوس", "دبلوم",
+    "شهادة", "معتمد", "جائزة", "المركز الأول", "المركز الثاني", "فزت", "فاز",
 ]
+# outcome / prestige words that must appear in the evidence when the text uses them
+_PRESTIGE = re.compile(r"\b(best|top|award-winning|first-ever|largest|highest|#1|number one|record-breaking|world-class|leading|"
+                       r"keynote|spoke at|speaker at|presented at|published in|featured in|doubled|tripled|halved|quadrupled)\b|"
+                       + _aw("أفضل", "الأفضل", "الأولى", "متحدث", "متحدثة", "ضاعفت"), re.I)
+_PLACE = re.compile(r"\b(first|1st|second|2nd|third|3rd)\s+place\b|المركز\s+(الأول|الثاني|الثالث)", re.I)
+_TITLE = re.compile(r"\b((?:[A-Z][A-Za-z+#.-]*\s){1,3}(?:Engineer|Architect|Manager|Scientist|Analyst|Developer|Consultant|Director|"
+                    r"Lead|Designer|Specialist|Officer|Administrator|Researcher))\b")
+_ORG = re.compile(r"\b(?:at|for|with|joined|from)\s+((?:[A-Z][\w&.-]*)(?:\s+[A-Z][\w&.-]*){0,3})")
 _CERT_TERMS = {"certified", "certification", "certificate", "شهادة", "معتمد"}
 _AWARD_TERMS = {"award", "first place", "1st place", "second place", "winner", "won", "جائزة", "المركز الأول", "فزت", "فاز"}
-_CERT_EARNED = re.compile(r"\b(certified|certification|certificate|passed|earned|obtained|achieved|awarded|licensed)\b|حصلت|اجتزت|نلت|معتمد", re.I)
-_ATTENDED = re.compile(r"\b(attended|course|class|training|workshop|bootcamp|webinar|enrolled|studying|tutorial)\b|حضرت|دورة|ورشة|التحقت|تدريب", re.I)
+_CERT_EARNED = re.compile(r"\b(certified|certification|certificate|passed|earned|obtained|achieved|awarded|licensed)\b|" + _aw("حصلت", "اجتزت", "نلت", "معتمد", "معتمدة"), re.I)
+_ATTENDED = re.compile(r"\b(attended|course|class|training|workshop|bootcamp|webinar|enrolled|studying|tutorial)\b|" + _aw("حضرت", "دورة", "ورشة", "التحقت", "تدريب"), re.I)
 _PLANNED = re.compile(r"\b(plan(?:ning|ned)? to|will|aim(?:ing)? to|intend(?:ing)? to|hope to|going to|next (?:year|month|semester)|"
-                      r"preparing for|working towards|pursuing)\b|أخطط|سوف|سأ|أنوي|أسعى", re.I)
-_NEGATION = re.compile(r"\b(not|no|never|without|didn't|did not|haven't|have not|wasn't|was not|none|lack(?:ed|ing)?)\b|لم|لا |بدون|دون|ليس", re.I)
+                      r"preparing for|working towards|pursuing)\b|" + _aw("أخطط", "سوف", "أنوي", "أسعى", "أستعد"), re.I)
+_NEGATION = re.compile(r"\b(not|no|never|without|didn't|did not|haven't|have not|wasn't|was not|none|lack(?:ed|ing)?)\b|" + _aw("لم", "لا", "بدون", "دون", "ليس", "لن"), re.I)
 _STUDY = re.compile(r"\b(studied|study|studying|learn(?:ed|ing|t)?|course|class|tutorial|introduction to|intro to|attended|workshop|"
-                    r"reading about|familiar with|exposure to|basics of)\b|درست|أتعلم|تعلمت|دورة|ورشة|مقدمة", re.I)
+                    r"reading about|familiar with|exposure to|basics of)\b|" + _aw("درست", "أتعلم", "تعلمت", "دورة", "ورشة", "مقدمة"), re.I)
 _USAGE = re.compile(r"\b(experienced|experience (?:in|with)|expert|expertise|proficient|professional(?:ly)?|deployed|production|"
-                    r"built|developed|implemented|engineered|architected|years of|hands-on|maintained|operated|ran)\b|خبرة|محترف|نشرت|طورت|بنيت", re.I)
-_STRONG_ROLE = re.compile(r"\b(led|lead|leading|managed|manage|managing|headed|directed|spearheaded|supervised|oversaw|owned|"
-                          r"in charge of|team lead|tech lead)\b|قاد|قدت|أدار|أدرت|ترأس|أشرف|أشرفت", re.I)
+                    r"built|developed|implemented|engineered|architected|years of|hands-on|maintained|operated|ran)\b|" + _aw("خبرة", "محترف", "نشرت", "طورت", "بنيت"), re.I)
+_STRONG_ROLE = re.compile(r"\b(?:(?:led|lead|leads|leading)(?!\s+to\b)|headed|directed|spearheaded|supervised|oversaw|"
+                          r"in charge of|team lead|tech lead|"
+                          r"(?:managed|manage|manages|managing)(?=(?:\s+\w+){0,3}?\s+(?:team|teams|people|engineers|developers|staff|"
+                          r"project|projects|group|department|squad|interns|employees|members|\d+)\b))\b|"
+                          + _aw("قاد", "قدت", "قادت", "أدار", "أدرت", "أدارت", "ترأس", "ترأست", "أشرف", "أشرفت"), re.I)
 _WEAK_ROLE = re.compile(r"\b(participated|participant|contributed|contributor|assisted|helped|supported|member of|part of|involved in|"
-                        r"took part)\b|شارك|شاركت|ساهم|ساهمت|ساعد|ساعدت|عضو", re.I)
+                        r"took part)\b|" + _aw("شارك", "شاركت", "ساهم", "ساهمت", "ساعد", "ساعدت", "عضو", "عضوة"), re.I)
 _MANAGE_PEOPLE = re.compile(r"\b(managed|managing|supervised|supervising|led|leading|oversaw|directed|headed)\b(?:\s+\w+){0,3}?\s+(\d+)\s*"
                             r"(?:people|employees|engineers|developers|staff|members|reports|persons|interns)?|أدرت\s+(\d+)|أشرفت على\s+(\d+)", re.I)
 _TEAM_SIZE = re.compile(r"\b(team of|group of|squad of|worked with|alongside|with a team of|(\d+)-person team)\b|فريق من|مع فريق", re.I)
-_INDIVIDUAL = re.compile(r"\b(personally|single-handedly|singlehandedly|by myself|on my own|alone|solely|i alone|entire|entirely)\b|بمفردي|وحدي|بنفسي|لوحدي", re.I)
-_I_WON = re.compile(r"\b(i|i've|i have)\s+(won|achieved|secured|earned|took)\b|\bmy (award|win|first place)\b|فزت|حققت", re.I)
-_TEAM = re.compile(r"\b(our team|the team|we|our group|team won|team achieved|together|collectively|my team)\b|فريقنا|الفريق|نحن|فزنا|حققنا", re.I)
+_INDIVIDUAL = re.compile(r"\b(personally|single-handedly|singlehandedly|by myself|on my own|alone|solely|i alone|entire|entirely)\b|"
+                         + _aw("بمفردي", "وحدي", "بنفسي", "لوحدي"), re.I)
+_I_WON = re.compile(r"\b(i|i've|i have)\s+(won|achieved|secured|earned|took)\b|\bmy (award|win|first place)\b|" + _aw("فزت", "حققت"), re.I)
+_TEAM = re.compile(r"\b(our team|the team|we|our group|team won|team achieved|together|collectively|my team)\b|" + _aw("فريقنا", "الفريق", "نحن", "فزنا", "حققنا"), re.I)
 _OTHER_PERSON = re.compile(r"\b(my colleague|a colleague|colleague|teammate|my friend|classmate|he|she|my manager|my supervisor|another student)\b"
-                           r"|زميلي|زميلتي|صديقي|مديري", re.I)
+                           r"|" + _aw("زميلي", "زميلتي", "صديقي", "مديري"), re.I)
 _FIRST_PERSON_BUILD = re.compile(r"\b(i|i've|i have)\s+(built|created|developed|designed|wrote|implemented|launched|shipped|made)\b|"
-                                 r"\bmy (project|app|system|tool)\b|بنيت|طورت|صممت|أنشأت", re.I)
+                                 r"\bmy (project|app|system|tool)\b|" + _aw("بنيت", "طورت", "صممت", "أنشأت"), re.I)
 
 _NUM = re.compile(
-    r"(?P<cur>[$£€])?(?<![\w.])(?P<val>\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)\s*"
+    r"(?P<cur>[$£€])?(?<![\w.])(?P<val>\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)\s*-?\s*"
     rf"(?P<suf>%|٪|k\b|m\b|x\b|\+)?\s*(?P<w1>[A-Za-z{AR}$]+)?(?:\s+(?P<w2>[A-Za-z{AR}]+))?",
     re.I,
 )
@@ -189,6 +208,16 @@ def extract_atoms(text: str) -> list[Atom]:
                 atoms.append(Atom("credential", c, s))
         if _STRONG_ROLE.search(s):
             atoms.append(Atom("role", _STRONG_ROLE.search(s).group(0), s))
+        for m in _PRESTIGE.finditer(s):
+            atoms.append(Atom("prestige", m.group(0).lower(), s))
+        for m in _PLACE.finditer(s):
+            atoms.append(Atom("place", m.group(0).lower(), s))
+        for m in _TITLE.finditer(s):
+            atoms.append(Atom("title", m.group(1), s))
+        for m in _ORG.finditer(s):
+            org = m.group(1)
+            if not find_skills(org) and org.split()[0] not in {"I", "My", "The", "A", "An", "Our", "This"}:
+                atoms.append(Atom("entity", org, s))
         if _INDIVIDUAL.search(s) or _I_WON.search(s):
             m = _INDIVIDUAL.search(s) or _I_WON.search(s)
             atoms.append(Atom("attribution", m.group(0), s))
@@ -235,6 +264,23 @@ def _label(a: Atom) -> str:
     return f"{a.value}%" if lab == "%" else f"{a.value} {lab}".strip()
 
 
+_STOP = set("""a an the and or of for to in on at by with from into over this that these those our my we i you it its was were is are be been
+has have had as per via than then more most less new using used use built build made make across within up down out off
+data team work worked working project projects system systems service services""".split())
+
+
+def _content(s: str) -> set[str]:
+    return {w for w in re.findall(rf"[A-Za-z{AR}]{{4,}}", s.lower()) if w not in _STOP}
+
+
+def _shares_context(claim_sentence: str, evidence_sentence: str) -> bool:
+    """A number is only supported if the evidence sentence it comes from talks about the same thing."""
+    c, e = _content(claim_sentence), _content(evidence_sentence)
+    if not c or not e:
+        return True
+    return bool({w[:5] for w in c} & {w[:5] for w in e})
+
+
 def _q(s: str) -> dict:
     return {"source": "evidence", "quote": s[:220]}
 
@@ -248,7 +294,10 @@ def _judge(a: Atom, ev: _Evidence, contribution_confirmed: bool | None) -> tuple
             return "supported", [], [_q(same[0].sentence)]
         exact = [n for n in same if n.unit == a.unit]
         if exact:
-            return "supported", [], [_q(exact[0].sentence)]
+            ctx = [n for n in exact if _shares_context(a.sentence, n.sentence)]
+            if ctx or a.unit in ("year_date", "time:year"):
+                return "supported", [], [_q((ctx or exact)[0].sentence)]
+            return "unsupported", ["number_wrong_context"], [_q(exact[0].sentence)]
         loose = [n for n in same if n.unit.startswith("noun:") and a.unit.startswith("noun:")
                  or n.unit in ("", "year_date") and a.unit.startswith("noun:")]
         if loose:
@@ -262,6 +311,8 @@ def _judge(a: Atom, ev: _Evidence, contribution_confirmed: bool | None) -> tuple
         if not sents:
             return "unsupported", ["skill_not_in_evidence"], []
         if all(_NEGATION.search(s) for s in sents):
+            if _NEGATION.search(a.sentence):  # the text restates the negation ("without writing any Python")
+                return "supported", [], [_q(sents[0])]
             return "contradicted", ["skill_negated"], [_q(sents[0])]
         if _USAGE.search(a.sentence) and not _STUDY.search(a.sentence) and all(_STUDY.search(s) and not _USAGE.search(s) for s in sents):
             return "unsupported", ["skill_studied_only"], [_q(sents[0])]
@@ -275,6 +326,10 @@ def _judge(a: Atom, ev: _Evidence, contribution_confirmed: bool | None) -> tuple
                       and not (_ATTENDED.search(s) and not re.search(r"certif|شهادة|معتمد|passed|اجتزت", s, re.I))]
             if earned and not all(_PLANNED.search(s) for s in earned):
                 return "supported", [], [_q(earned[0])]
+            if any(_PLANNED.search(s) for s in hits) and _PLANNED.search(a.sentence):
+                return "supported", [], [_q(next(s for s in hits if _PLANNED.search(s)))]
+            if _ATTENDED.search(a.sentence) and not re.search(r"\bcertified\b|معتمد", a.sentence, re.I) and any(_ATTENDED.search(s) for s in ev.sents):
+                return "supported", [], [_q(next(s for s in ev.sents if _ATTENDED.search(s)))]
             if any(_PLANNED.search(s) for s in hits):
                 return "unsupported", ["credential_planned_only"], [_q(next(s for s in hits if _PLANNED.search(s)))]
             att = [s for s in ev.sents if _ATTENDED.search(s)]
@@ -287,6 +342,8 @@ def _judge(a: Atom, ev: _Evidence, contribution_confirmed: bool | None) -> tuple
             if not award_sents:
                 return "unsupported", ["credential_not_in_evidence"], []
             if all(_OTHER_PERSON.search(s) and not re.search(r"\b(i|we|our)\b|فزت|فزنا|فريقنا", s, re.I) for s in award_sents):
+                if _OTHER_PERSON.search(a.sentence) and not _I_WON.search(a.sentence):
+                    return "supported", [], [_q(award_sents[0])]  # the text credits the colleague, too
                 return "contradicted", ["attributed_to_other"], [_q(award_sents[0])]
             if _I_WON.search(a.sentence) and all(_TEAM.search(s) for s in award_sents) and not contribution_confirmed:
                 return "needs_confirmation", ["team_vs_individual"], [_q(award_sents[0])]
@@ -296,6 +353,25 @@ def _judge(a: Atom, ev: _Evidence, contribution_confirmed: bool | None) -> tuple
         if all(_PLANNED.search(s) for s in hits) and not _PLANNED.search(a.sentence):
             return "unsupported", ["credential_planned_only"], [_q(hits[0])]
         return "supported", [], [_q(hits[0])]
+
+    if a.kind == "place":
+        rank = lambda t: {"first": 1, "1st": 1, "second": 2, "2nd": 2, "third": 3, "3rd": 3, "الأول": 1, "الثاني": 2, "الثالث": 3}.get(  # noqa: E731
+            (_PLACE.search(t).group(1) or _PLACE.search(t).group(2) or "").lower())
+        want = rank(a.value)
+        ev_places = [s for s in ev.sents if _PLACE.search(s)]
+        if any(rank(s) == want for s in ev_places):
+            return "supported", [], [_q(next(s for s in ev_places if rank(s) == want))]
+        if ev_places:
+            return "contradicted", ["place_mismatch"], [_q(ev_places[0])]
+        return "unsupported", ["credential_not_in_evidence"], []
+
+    if a.kind in ("prestige", "title", "entity"):
+        term = a.value
+        hits = [s for s in ev.sents if re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", s, re.I)]
+        if hits:
+            return "supported", [], [_q(hits[0])]
+        reason = {"prestige": "prestige_not_in_evidence", "title": "title_not_in_evidence", "entity": "entity_not_in_evidence"}[a.kind]
+        return "unsupported", [reason], []
 
     if a.kind == "role":
         mp = _MANAGE_PEOPLE.search(a.sentence)

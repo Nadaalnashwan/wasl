@@ -140,3 +140,28 @@ def test_exports_produce_valid_files():
     arabic = {**SAMPLE_CV, "contact": {"full_name": "سارة علي"}, "summary": "مطورة برمجيات خلفية لديها خبرة في بايثون"}
     assert to_pdf(arabic).startswith(b"%PDF")
     assert to_docx(arabic).startswith(b"PK")
+
+
+# The ten contradiction scenarios required by the v2 brief (also in eval/v2/hallucination.json).
+REQUIRED_CONTRADICTIONS = [
+    ("I participated in the Smart Campus project.", "I led the Smart Campus project.", "role_inflated"),
+    ("I did not use Python in this project; it was built in Java.", "Experienced in Python development.", "skill_negated"),
+    ("Completed the inventory dashboard project in 10 days.", "Completed the inventory dashboard project in 10 months.", "number_unit_mismatch"),
+    ("Our team achieved a 30% reduction in support tickets.", "I personally achieved a 30% reduction in support tickets.", "team_vs_individual"),
+    ("My colleague Ahmed won first place at the Riyadh Hackathon.", "I won first place at the Riyadh Hackathon.", "attributed_to_other"),
+    ("I attended an AWS cloud fundamentals course.", "AWS-certified professional.", "credential_attended_only"),
+    ("I studied Kubernetes in an online course.", "Professionally deployed Kubernetes clusters in production.", "skill_studied_only"),
+    ("I plan to complete the PMP certification next year.", "Completed the PMP certification.", "credential_planned_only"),
+    ("Worked with a team of 20 engineers on the billing platform.", "Managed 20 employees on the billing platform.", "team_size_as_reports"),
+    ("Reduced processing time by 10 seconds.", "Improved performance by 10%.", "number_unit_mismatch"),
+]
+
+
+import pytest  # noqa: E402
+
+
+@pytest.mark.parametrize("evidence,output,reason", REQUIRED_CONTRADICTIONS)
+def test_required_contradictions_are_blocked(evidence, output, reason):
+    r = check_claims(output, evidence)
+    assert r["passed"] is False
+    assert any(reason in c["reasons"] for c in r["claims"]), r["claims"]

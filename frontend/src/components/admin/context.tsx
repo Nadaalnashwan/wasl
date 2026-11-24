@@ -64,11 +64,13 @@ export function useAdminAccess() {
 
 /** Turns an admin-API error into the right console state. Returns true when the error was an access failure. */
 export function adminFetchGuard(error: unknown, deny: () => void): boolean {
-  if (error instanceof ApiError && (error.status === 403 || error.status === 401)) {
+  if (!(error instanceof ApiError)) return false;
+  if (error.status === 403) {
     deny();
     return true;
   }
-  return false;
+  // 401: lib/api clears the expired session and the shell redirects to /login — nothing to render meanwhile
+  return error.status === 401;
 }
 
 /* ------------------------------------------------------------------ data */

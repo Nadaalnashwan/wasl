@@ -5,13 +5,13 @@
 ```mermaid
 flowchart LR
   subgraph Browser["Browser — Next.js 16 (client components)"]
-    UI["Pages: Dashboard · Studio · CV · Tailor · Gap · Discovery · Monitoring · Settings"]
+    UI["User app: Overview · Achievements · Master CV · Studio · Jobs · Tailor · Gap · Settings<br/>Admin app (/admin, proxy-gated): Monitoring console"]
     APIc["lib/api.ts (Bearer token only)"]
     UI --> APIc
   end
   subgraph Backend["FastAPI (backend/app)"]
     MW["monitor_requests middleware<br/>(route template, status, latency)"]
-    R["Routers: auth · achievements · posts · cv · career · discovery · integrations · settings · monitoring"]
+    R["Routers: auth · achievements · discovery · posts · cv · career · jobs · integrations · settings · admin (require_admin)"]
     subgraph AI["AI layer"]
       G1["content graph (LangGraph)"]
       G2["discovery graph (LangGraph)"]
@@ -19,11 +19,11 @@ flowchart LR
       RT["AI Model Router<br/>router.run_structured()"]
       AD["Adapters: Groq · Gemini · OpenRouter"]
       GU["guard.py (prompt-injection)"]
-      CC["claims.py (unsupported-claim check)"]
+      CC["claims.py v2 (claim verification) · pii.py (redaction at provider boundary)"]
       SK["skills.py (deterministic matching)"]
     end
     REC["monitoring/recorder.py"]
-    MET["monitoring/metrics.py + alerts"]
+    MET["monitoring/metrics.py + alerts.py (scheduler, incidents, Slack/webhook)"]
   end
   DB[("SQLite (local) / Supabase Postgres + RLS")]
   ST[("Local disk / Supabase Storage (private)")]
@@ -65,7 +65,7 @@ wasl/
 │  │  │  └─ workflows/           content.py · discovery.py · career.py  (LangGraph)
 │  │  ├─ routers/                one file per product area
 │  │  ├─ services/               documents (validation/extraction/storage), export (PDF/DOCX), linkedin, github, cv_updates
-│  │  ├─ monitoring/             recorder.py (writes), metrics.py (aggregation + alerts)
+│  │  ├─ monitoring/             recorder.py (writes), metrics.py (aggregation), alerts.py (independent alerting)
 │  │  └─ evaluation.py           offline evaluation runner
 │  ├─ eval/dataset.json          reproducible evaluation dataset
 │  ├─ scripts/seed_demo.py       local demo account (sample data, labelled)
@@ -74,7 +74,7 @@ wasl/
 │  ├─ app/                       routes (landing, auth, (app)/* pages)
 │  ├─ components/                ui/ (shadcn-style), sketch/ (illustrations), domain components
 │  └─ lib/                       api client, auth/theme/toast providers, i18n (en/ar), types
-├─ supabase/migrations/0001_init.sql   schema + RLS + storage bucket/policies
+├─ supabase/migrations/0001_init.sql   schema + RLS + storage bucket/policies (0002 jobs, 0003 v2 security)
 └─ docs/
 ```
 
@@ -107,7 +107,7 @@ Model choice (verified 2026-10-20 against the providers' live model lists): Groq
 `users` (incl. AI prefs) · `achievements` (status pending/confirmed/rejected, evidence, fingerprint) · `posts` (draft/publishing/published/failed/uncertain) ·
 `cvs` (one `master` per user + `tailored`) · `cv_versions` · `cv_suggestions` (separate draft, pending/accepted/edited/rejected/stale) ·
 `job_analyses` · `integrations` (encrypted tokens) · `oauth_states` · `user_api_keys` (encrypted) · `uploads` · `repo_snapshots` ·
-monitoring: `ai_events` · `http_events` · `quality_events` · `error_logs` · `eval_runs`.
+monitoring: `ai_events` · `http_events` · `quality_events` · `error_logs` · `eval_runs` · `alert_incidents` · `admin_audit_log` (admin-only; see `docs/MONITORING.md`).
 
 **Master-CV invariant:** the Master CV changes only through (a) explicit save in the editor, (b) Accept / Edit of a suggestion,
 (c) version restore. Every change increments `version` and snapshots `cv_versions`. Pending suggestions built on an older
@@ -118,7 +118,9 @@ version become `stale` and cannot be accepted.
 | Concern | Implementation |
 |---|---|
 | Authentication | Local scrypt + HS256 JWT, or Supabase Auth tokens verified via JWKS / JWT secret |
-| Data isolation | every query filtered by `user_id` (`deps.owned` returns 404 for foreign ids) + Postgres RLS `user_id = auth.uid()` |
+| Data isolation | enforced in backend code — every query filtered by `user_id` (`deps.owned` returns 404 for foreign ids) because the direct DB connection can bypass RLS; Postgres RLS `user_id = auth.uid()` is defence in depth |
+| Admin access | `users.role` read from the DB per request; `require_admin` on `/api/admin/*`; roles changed only via `scripts/admin.py` (`docs/SECURITY.md`) |
+| AI privacy | PII redaction + provider privacy policy in `ai/router.py` (`docs/PRIVACY.md`) |
 | Secrets | provider keys only in backend env; BYOK keys & OAuth tokens Fernet-encrypted; never returned (only `…last4`) |
 | OAuth | server-side code exchange, one-time random `state` (10 min), tokens never reach the browser |
 | Uploads | extension allow-list, magic-byte check, 5 MB limit, page limit, encrypted PDFs rejected, private storage paths |
@@ -146,7 +148,7 @@ flowchart TD
   H --> I["Real-model evaluation<br/>python -m app.evaluation → eval_runs + eval/results/latest.md"]
   I -->|quality regression| J["Adjust prompt / guard / model tier"] --> C
   I --> K["Deploy: Supabase migration → backend env → frontend env"]
-  K --> L["Monitoring dashboard + alerts on real traffic"]
+  K --> L["Admin monitoring console + scheduled alerts on real traffic"]
   L -->|alert / regression| M["Diagnose with error ids, error types, per-provider stats"] --> A
 ```
 

@@ -4,14 +4,39 @@
     {
       "name": "wasl-api",
       "runtimeExecutable": "backend/.venv/Scripts/python.exe",
-      "runtimeArgs": ["-m", "uvicorn", "app.main:app", "--app-dir", "backend", "--port", "8000", "--reload", "--reload-dir", "backend/app"],
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "app.main:app",
+        "--app-dir",
+        "backend",
+        "--port",
+        "8000",
+        "--reload",
+        "--reload-dir",
+        "backend/app"
+      ],
       "port": 8000
     },
     {
       "name": "wasl-web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "frontend", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        "frontend",
+        "run",
+        "dev"
+      ],
       "port": 3000
+    },
+    {
+      "name": "wasl-api-mac",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && DATABASE_URL=sqlite:///./qa_v2.db ALERT_EVAL_INTERVAL_MINUTES=0 .venv/bin/python -m uvicorn app.main:app --port 8000"
+      ],
+      "port": 8000
     }
   ]
 }

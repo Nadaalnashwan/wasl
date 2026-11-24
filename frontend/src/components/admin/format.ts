@@ -108,8 +108,7 @@ export function humanize(s: string): string {
 }
 
 /** Complete UTC bucket axis for a window, matching the backend keys ("YYYY-MM-DD HH:00" hourly for ≤2 days, else "YYYY-MM-DD"). */
-export function bucketAxis(days: Days | number, now = new Date()): string[] {
-  const hourly = days <= 2;
+export function bucketAxis(days: Days | number, now = new Date(), hourly = days <= 2): string[] {
   const out: string[] = [];
   const step = hourly ? 3600_000 : 86400_000;
   const end = now.getTime();
@@ -135,4 +134,20 @@ export function bucketLabel(bucket: string): string {
   const [, m, d] = date.split("-").map(Number);
   const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][(m || 1) - 1];
   return time ? `${d} ${month} ${time}` : `${d} ${month}`;
+}
+
+/** Timeseries rows on a complete bucket axis; buckets the API did not return are null (gaps), not zero. */
+export function timeRows(ts: { bucket: string; requests: number; failed: number; p95_ms: number | null; tokens: number }[], days: number) {
+  const byBucket = new Map(ts.map((x) => [x.bucket, x]));
+  const keys = Array.from(new Set([...bucketAxis(days), ...byBucket.keys()])).sort();
+  return keys.map((b) => {
+    const x = byBucket.get(b);
+    return {
+      bucket: b,
+      requests: x ? x.requests : null,
+      failed: x ? x.failed : null,
+      p95_ms: x ? x.p95_ms : null,
+      tokens: x ? x.tokens : null,
+    };
+  });
 }

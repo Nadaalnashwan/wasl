@@ -52,6 +52,9 @@ class DiscoveryState(TypedDict, total=False):
     provider: str
 
 
+_AMBIGUOUS_TERMS = {"go", "r", "c", "java", "rust", "swift", "dart", "express", "spring", "node", "rest", "ml", "ai"}
+
+
 def fingerprint(title: str) -> str:
     norm = re.sub(r"[^\w\s]", "", title.lower())
     norm = " ".join(sorted(set(norm.split())))
@@ -99,18 +102,35 @@ def _verify(state: DiscoveryState) -> DiscoveryState:
     out = []
     for a in state["extraction"].achievements:
         quotes = [q for q in a.evidence_quotes if q.strip()]
-        verified = [q for q in quotes if _squash(q) and _squash(q) in src_sq]
+        # whole-token match: "100 users" must not verify against "1100 users"
+        # (Latin/digit boundaries only, so Arabic quotes still match words with an attached conjunction like "وبنيت")
+        verified = [q for q in quotes if _squash(q) and re.search(r"(?<![0-9a-z])" + re.escape(_squash(q)) + r"(?![0-9a-z])", src_sq)]
         ratio = len(verified) / len(quotes) if quotes else 0.0
 
-        def supported(term: str) -> bool:
-            c = canonical(term)
-            return c.lower() in src_skills or _squash(term) in src_sq
+        def literal(term: str) -> bool:
+            t = _squash(term)
+            if not t:
+                return False
+            if t in _AMBIGUOUS_TERMS:  # "Go" the language vs "go live": require the exact casing in the original text
+                return re.search(r"(?<![\w.+#-])" + re.escape(term.strip()) + r"(?![\w+#-])", src_all) is not None
+            return re.search(r"(?<!\w)" + re.escape(t) + r"(?!\w)", src_sq) is not None
 
-        techs = [canonical(t) for t in a.technologies if supported(t)]
+        def supported(term: str) -> bool:
+            # A term is supported if it literally appears (whole word, so "Java" ≠ "JavaScript", "Go" ≠ "go live"),
+            # or if it is itself a canonical lexicon skill detected in the source (so "Kubernetes" matches "k8s").
+            # A specific tool is never supported by a different tool of the same family (Tableau ≠ Power BI).
+            if literal(term):
+                return True
+            c = canonical(term)
+            return c.lower() == term.strip().lower() and c.lower() in src_skills and term.strip().lower() not in _AMBIGUOUS_TERMS
+
+        techs = [t.strip() if canonical(t).lower() != t.strip().lower() else canonical(t) for t in a.technologies if supported(t)]
         skills = [canonical(s) for s in a.skills if supported(s)]
         dropped = [t for t in [*a.technologies, *a.skills] if not supported(t)]
         conf = round(a.confidence * (0.5 + 0.5 * ratio), 2)
-        needs_conf = a.needs_contribution_confirmation or state["source_type"] == "github"
+        # repositories and team documents never prove personal contribution
+        team_doc = bool(re.search(r"\b(we|our team|the team|our group|together)\b|فريقنا|قمنا", src, re.I))
+        needs_conf = a.needs_contribution_confirmation or state["source_type"] == "github" or team_doc
         out.append({
             "title": a.title.strip(),
             "description": a.description.strip(),

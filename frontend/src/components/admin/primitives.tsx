@@ -143,7 +143,7 @@ export function KpiStrip({ children, cols = 4, className }: { children: React.Re
 export function TableWrap({ children, className, label }: { children: React.ReactNode; className?: string; label?: string }) {
   return (
     <div className={cn("overflow-x-auto rounded-xl border border-border bg-surface", className)} role="region" aria-label={label} tabIndex={label ? 0 : undefined}>
-      <table className="w-full min-w-max border-collapse text-sm">{children}</table>
+      <table className="w-full border-collapse text-sm">{children}</table>
     </div>
   );
 }

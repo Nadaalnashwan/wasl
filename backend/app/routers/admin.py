@@ -44,6 +44,7 @@ def health(db: Session = Depends(get_db)):
     providers = [p for p in platform_providers() if p != "fake"]
     return {
         "checked_at": datetime.now(UTC).isoformat(),
+        "environment": settings.app_env,
         "backend": "ok",
         "database": {"ok": db_ok, "engine": "sqlite" if settings.is_sqlite else "postgres", "error": db_error},
         "monitoring": {"last_http_event": _iso(last_http), "last_ai_event": _iso(last_ai),

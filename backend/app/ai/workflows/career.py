@@ -300,6 +300,15 @@ def _enforce(state: CareerState) -> CareerState:
             report["kept_original"].append({"field": "summary", "unsupported": chk["unsupported"]})
             report["rejected"].append({"field": "summary", "text": t.summary[:500], "unsupported": chk["unsupported"]})
 
+    ach_text = "\n".join(achievement_text(a) for a in state.get("achievements") or [])
+
+    def item_evidence(item) -> str:
+        # A rewritten bullet must be supported by ITS OWN item (plus confirmed achievements), not by the whole CV:
+        # otherwise a metric or skill from one role can silently migrate to another.
+        parts = [getattr(item, f, "") for f in ("title", "organization", "name", "description", "start", "end", "link")]
+        parts += list(getattr(item, "bullets", []) or []) + list(getattr(item, "technologies", []) or [])
+        return "\n".join(p for p in parts if p) + "\n" + ach_text
+
     for sec_name in ("experience", "projects"):
         items = {i.id: i for i in getattr(out, sec_name)}
         order = []
@@ -309,8 +318,10 @@ def _enforce(state: CareerState) -> CareerState:
                 continue
             order.append(sec.id)
             good = []
+            original_bullets = list(items[sec.id].bullets)
+            ev_item = item_evidence(items[sec.id])
             for b in sec.bullets:
-                chk = check_claims(b, evidence)
+                chk = check_claims(b, ev_item)
                 report["claims"].append(chk)
                 if chk["passed"]:
                     good.append(b)
@@ -319,7 +330,13 @@ def _enforce(state: CareerState) -> CareerState:
                     report["rejected_bullets"] += 1
                     report["rejected"].append({"field": f"{sec_name}:{sec.id}", "text": b[:500], "unsupported": chk["unsupported"]})
             if good:
-                items[sec.id].bullets = good
+                # never lose a true original fact because its rewrite was rejected: keep originals that no accepted
+                # rewrite covers
+                rejected_here = len(sec.bullets) - len(good)
+                kept = [o for o in original_bullets if not any(similarity(o, g) >= 0.5 for g in good)] if rejected_here else []
+                if kept:
+                    report["kept_original"].append({"field": f"{sec_name}:{sec.id}", "bullets_kept": len(kept)})
+                items[sec.id].bullets = good + kept
             else:
                 report["kept_original"].append({"field": f"{sec_name}:{sec.id}"})
         # relevant items first, others keep original order

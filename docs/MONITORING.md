@@ -1,82 +1,82 @@
-# Monitoring & Evaluation
+# Monitoring and alerting
 
-Every number on the Monitoring page is computed by `backend/app/monitoring/metrics.py` from rows written by the running
-product. Nothing is sampled, mocked or pre-filled; an empty database shows an empty state.
+Monitoring is an **administrative** feature. Normal users never see operational data: the user navigation,
+dashboard, landing page and settings contain no monitoring links or metrics. Admins use `/admin/monitoring`
+(server-gated, see `docs/SECURITY.md`), backed by `/api/admin/*`.
 
-## Monitoring Flow
+## What is recorded
 
-```mermaid
-flowchart LR
-  subgraph Product["Product (FastAPI request)"]
-    U["User action<br/>e.g. Generate post"] --> MW["HTTP middleware<br/>main.monitor_requests"]
-    MW --> RT["Router + LangGraph workflow"]
-    RT --> AR["AI Model Router<br/>run_structured()"]
-    AR -->|each provider attempt| P["Groq / Gemini / OpenRouter"]
-    RT --> CC["Claim checker / evidence verifier"]
-    RT --> TT["deps.track_task()"]
-    RT --> UX["User decisions<br/>Accept · Edit · Reject · Confirm · Publish"]
-  end
+| Table | One row per | Content (metadata only) |
+|---|---|---|
+| `ai_events` | provider **attempt** | task, provider, requested + returned model, registry/pricing version, attempt, fallback, status, error class, HTTP status, latency, tokens, estimated cost, privacy level, redaction count |
+| `http_events` | API request | method, **route template** (no ids/query), status, latency |
+| `quality_events` | product outcome | task completion (+ end-to-end duration), claim checks per **stage**, CV review decisions, achievement feedback, publish results, injection flags (counts) |
+| `error_logs` | unhandled error | route, error class, scrubbed message (secrets + PII removed) |
+| `eval_runs` | evaluation run | kind (deterministic / live / benchmark), dataset + verifier version, provider, model, summary |
+| `alert_incidents` | alert episode | rule key, severity, value, threshold, sample size, lifecycle, delivery status |
+| `admin_audit_log` | admin action | role grants/revokes, admin API access, denied attempts, test alerts |
 
-  subgraph Record["Recorder (monitoring/recorder.py)<br/>own DB session · metadata only · scrubbed"]
-    E1[("http_events<br/>route template, status, latency")]
-    E2[("ai_events<br/>request_id, task, provider, model, attempt,<br/>status, error_type, latency, tokens, fallback")]
-    E3[("quality_events<br/>claim_check, task_completed/failed,<br/>cv_suggestion_decision, achievement_feedback,<br/>publish_result, injection_detected")]
-    E4[("error_logs<br/>error id, type, scrubbed message")]
-    E5[("eval_runs<br/>offline evaluation results")]
-  end
+Monitoring writes use their own short-lived session; a failed telemetry write never fails the user's request.
 
-  MW --> E1
-  MW -. unhandled exception .-> E4
-  AR --> E2
-  CC --> E3
-  TT --> E3
-  UX --> E3
-  EV["python -m app.evaluation<br/>eval/dataset.json"] --> E5
+## Metric definitions
 
-  subgraph Compute["metrics.compute(window, scope)"]
-    AGG["group attempts by request_id →<br/>failure rate, fallback rate, retries<br/>percentiles p50/p95/p99<br/>tokens by provider/task<br/>unsupported-claim rate<br/>CV acceptance, extraction precision<br/>task success, 5xx rate"]
-    AL["evaluate_alerts()<br/>threshold rules (ALERT_* env)"]
-    AGG --> AL
-  end
-  E1 & E2 & E3 & E4 & E5 --> AGG
-  AL --> API["GET /api/monitoring/metrics"]
-  AGG --> API
-  API --> DASH["Monitoring dashboard<br/>KPIs · alerts with 'how to investigate' · charts · tables"]
-```
+A **logical request** is one `run_structured` call (all attempts sharing a `request_id`); an **attempt** is one
+provider call. Rates with no data are returned as `null` and shown as *N/A* — never as 0 or "healthy".
 
-## Metric catalog — what, why, how it helps
+| Metric | Definition (denominator) |
+|---|---|
+| AI failure rate | logical requests with no successful attempt ÷ logical requests |
+| Attempt error rate | failed attempts ÷ attempts |
+| Fallback rate | successful requests answered by a non-primary provider ÷ successful requests |
+| Attempt latency p50/p95/p99 | successful attempts only (provider time) |
+| End-to-end latency | sum of all attempts of a successful logical request (includes retries) |
+| Workflow duration | wall time of the whole user task (`track_task`), e.g. tailor = requirements + matching + tailoring + enforcement |
+| Raw unsupported-claim rate | unsupported + contradicted claims ÷ claims checked in the **model's output before enforcement** (first post draft, all proposed CV changes, all tailored bullets) |
+| Post-enforcement rate | same, in what users **receive** (post after the revise step, applied CV changes, accepted tailored bullets) |
+| Unsupported blocked | raw unsupported − post-enforcement unsupported |
+| Unsupported escaped | unsupported claims in **approved** output (published posts) that the user did **not** explicitly acknowledge, plus anything still flagged when the final tailored CV is re-verified. Target: 0. |
+| Estimated cost | Σ attempts (tokens × list price), retries and fallbacks included; `null` when a model has no verified price. **Not a bill**: free-tier platform keys cost $0 and BYOK is billed to the user. Split by task, model, provider and platform vs BYOK. |
 
-| Metric | Source | Why it matters | How it helps investigate |
-|---|---|---|---|
-| **AI requests / attempts / retried** | `ai_events` grouped by `request_id` | load and retry pressure | many attempts per request ⇒ unstable provider |
-| **AI failure rate** | requests with no successful attempt | what users actually feel | alert > `ALERT_FAILURE_RATE` (20%); check *Error types* |
-| **Error types** | `ai_events.error_type` | root cause class | `rate_limit` = free-tier quota · `auth` = bad/expired key · `validation` = model broke the schema · `timeout` = slow provider · `no_provider` = no key configured |
-| **p50 / p95 / p99 latency** (+ end-to-end p95 over time) | successful attempts; sum of attempts per request | tail latency drives UX; averages hide it | rising p95 with flat volume ⇒ provider slowdown; compare per-provider p95 |
-| **Fallback rate** | successful requests served by a non-primary candidate | early warning before failures show | alert > 30%; look at primary provider's recent failures |
-| **Tokens by provider & task** | `prompt_tokens`, `completion_tokens` | cost / free-tier budget | find the task that burns quota (e.g. CV parsing) |
-| **Unsupported-claim rate** | `quality_events(kind=claim_check)` | hallucination proxy — core product promise | alert > 10%; which task? tighten prompt, force revise |
-| **CV update acceptance rate** | Accept/Edit vs Reject decisions | usefulness of AI-drafted CV changes | many rejects ⇒ proposals irrelevant or badly phrased |
-| **Extraction precision (proxy)** | confirmed vs rejected AI-discovered achievements | quality of discovery agent | low ⇒ extraction too eager; review prompt/confidence |
-| **Task success rate** | `task_completed` vs `task_failed` per task | end-to-end health incl. DB + validation | isolates which user journey is broken |
-| **Prompt-injection flags** | `injection_detected` events | security signal | spikes ⇒ someone probing uploads/READMEs |
-| **API 5xx rate, 4xx, per-route p95** | `http_events` (route templates, no ids) | application health | 5xx ⇒ bug; each user error message carries an id found in *Recent server errors* |
-| **Evaluation results** | `eval_runs` | quality before release | compare runs when changing prompts or models |
+How claims are judged is documented in `backend/app/ai/claims.py` and `docs/EVALUATION.md`.
 
-## Example investigation
+## Dashboard
 
-1. Alert: *AI request failure rate is high — 42% (threshold 20%)*.
-2. *Error types*: `rate_limit` dominates; *Providers* table: `groq` success 55%, `gemini` 0 attempts.
-3. Diagnosis: Groq free-tier quota exhausted and no second provider configured → fallback impossible.
-4. Fix: add `GEMINI_API_KEY` (router falls back automatically) or lower token budgets; fallback rate rises, failure rate drops.
+`/admin/monitoring` — Overview, Application health, AI performance, AI quality, Evaluation, Providers & models,
+Cost & usage, Alerts & incidents, Audit log; filters for 1/7/30/90 days, provider, model and task; sample sizes next
+to every rate; definitions inline.
 
-## Privacy
+## Alerting (independent of the dashboard)
 
-`ai_events` store sizes and counts (input characters, token counts), never prompt or completion text. CV contents, API keys and OAuth
-tokens are never logged. Error messages pass through `recorder.scrub()` (API-key patterns, bearer tokens, emails redacted).
-Scope **Whole platform** shows aggregates only; **My requests** filters to the current user.
+`app/monitoring/alerts.py`. An in-process scheduler evaluates every rule every `ALERT_EVAL_INTERVAL_MINUTES`
+(default 5; set 0 and run `python -m scripts.run_alerts` from cron on multi-instance deployments). Admins can also
+trigger "Evaluate now". Each rule opens **one** incident per key; while it keeps firing it is updated, not
+duplicated; reminders respect `ALERT_COOLDOWN_MINUTES`; when it clears the incident resolves and a recovery
+message is sent. Delivery: Slack incoming webhook (`ALERT_SLACK_WEBHOOK_URL`) or any JSON webhook
+(`ALERT_WEBHOOK_URL`), three attempts with backoff, status stored per incident. With neither set, incidents are
+persisted and shown in the console with "external delivery disabled".
 
-## Alerts
+| Rule | Fires when (24 h window) | Severity |
+|---|---|---|
+| `ai_failure_rate` | ≥ `ALERT_MIN_SAMPLE` (20) requests and failure rate > 10 % | critical |
+| `provider_outage:<p>` | ≥ 20 attempts on a provider and its success rate < 50 % | critical |
+| `p95_latency` | ≥ 20 successes and attempt p95 > 20 s | warning |
+| `fallback_rate` | ≥ 20 successes and fallback rate > 25 % | warning |
+| `rate_limits` | ≥ 10 rate-limit errors | warning |
+| `raw_unsupported_claims` | ≥ 20 claims checked and raw rate > 8 % | warning |
+| `claims_escaped` | **any** unacknowledged unsupported claim in approved output | critical |
+| `verifier_failures` | ≥ 3 outputs where the claim verifier could not run | warning |
+| `http_5xx` | ≥ 20 requests and 5xx rate > 5 % | critical |
+| `cost_spike` | today's estimated cost > `ALERT_DAILY_COST_USD` ($5) | warning |
+| `monitoring_silent` | traffic in the last 7 days but no HTTP events for 6 h | warning |
+| `eval_regression:<metric>` | latest deterministic eval run drops > 2 points vs the previous one | warning |
+| `privacy_no_provider` | a personal-data task found no privacy-eligible provider in the last hour | critical |
 
-Defined in `metrics.evaluate_alerts()`; thresholds come from env (`ALERT_FAILURE_RATE`, `ALERT_P95_LATENCY_MS`,
-`ALERT_UNSUPPORTED_CLAIM_RATE`, `ALERT_FALLBACK_RATE`). Minimum sample sizes prevent alerts on tiny data. Alerts are shown on the
-dashboard with an *investigate* hint; wiring them to email/Slack is a documented next step.
+Why these thresholds: v1 alerted at a 10 % unsupported rate measured on a mix of stages, which both hid blocked
+fabrications and alerted on small samples. v2 alerts on the **raw** model rate (early warning while users are
+still protected) at 8 %, treats a single **escape** as an incident, and requires 20 samples for every rate rule so
+a handful of requests cannot page anyone. The 20 s latency threshold is a conservative upper bound, not a
+measured baseline: no production traffic was available in the v2 working environment. Re-baseline it from the
+console's p95 after a week of real traffic.
+
+Alert payloads contain rule keys, numbers and sample sizes only — never user identifiers, emails, CV text,
+prompts or tokens.

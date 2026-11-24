@@ -1,0 +1,7 @@
+{
+  "case_pass_rate": 0.9415,
+  "claim_detection_recall": 0.9767,
+  "claim_detection_precision": 1.0,
+  "pii_recall": 0.9841,
+  "cases": 205
+}

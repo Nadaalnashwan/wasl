@@ -14,14 +14,29 @@ import re
 import unicodedata
 
 INJECTION_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
-    ("override_instructions", re.compile(r"\b(ignore|disregard|forget|override)\b.{0,40}\b(previous|prior|above|all|earlier|system)\b.{0,30}\b(instructions?|prompts?|rules?|directions?)", re.I)),
-    ("role_hijack", re.compile(r"\b(you are now|act as|pretend to be|from now on you)\b", re.I)),
-    ("system_prompt_probe", re.compile(r"\b(system prompt|developer message|hidden instructions?|reveal your (prompt|instructions))\b", re.I)),
-    ("fake_role_tag", re.compile(r"^\s*(system|assistant|developer)\s*:", re.I | re.M)),
+    # "ignore previous instructions" — needs an instruction noun AND a prior/system qualifier, so a CV line like
+    # "Configured ESLint to override all legacy rules" is not flagged
+    ("override_instructions", re.compile(r"\b(ignore|disregard|forget|override|bypass)\b.{0,40}\b(previous|prior|above|earlier|system|your|the)\b.{0,30}"
+                                         r"\b(instructions?|prompts?|directions?|guidelines?)\b|\b(ignore|disregard|forget)\s+(all\s+)?(previous|prior|above)\s+rules\b", re.I)),
+    # "you are now …" / "act as an AI…" — plain "Act as the main point of contact" is ordinary CV language
+    ("role_hijack", re.compile(r"\b(you are now|pretend to be|from now on,? you|act as (?:an?|the)\s+(?:ai|assistant|model|chatbot|recruiter|"
+                               r"hiring manager|system|screening tool|llm)|if you are an? (?:ai|llm|language model|bot|assistant|model)|"
+                               r"as an ai (?:model|screener|assistant))\b", re.I)),
+    # probing for hidden prompts — mentioning that you WROTE a system prompt is not a probe
+    ("system_prompt_probe", re.compile(r"\b(reveal|show|print|repeat|leak|output|tell me|what is|what are)\b.{0,25}\b(system prompt|developer message|"
+                                       r"hidden instructions?|your instructions|your prompt)\b", re.I)),
+    ("fake_role_tag", re.compile(r"(^|\|)\s*(system|assistant|developer)\s*:|\[(system|assistant|inst|developer)\]|<\|?(system|im_start|assistant)\|?>",
+                                 re.I | re.M)),
     ("delimiter_escape", re.compile(r"</?\s*untrusted_data\s*>", re.I)),
     ("tool_exfiltration", re.compile(r"\b(send|post|upload|exfiltrate)\b.{0,40}\b(api[ _-]?key|token|password|secret)s?\b", re.I)),
-    ("claim_injection", re.compile(r"\b(add|include|state|claim)\b.{0,30}\b(phd|doctorate|ceo|10\+? years|certified|award)\b.{0,40}\b(to|in) (the|my|this) (cv|resume|post)\b", re.I)),
-    ("arabic_override", re.compile(r"(تجاهل|انس)\s.{0,30}(التعليمات|الأوامر)")),
+    ("claim_injection", re.compile(r"\b(add|include|state|claim|write|output|insert|say)\b.{0,40}\b(phd|doctorate|ceo|\d+\+? years? of|"
+                                   r"years of experience|certified|award)\b", re.I)),
+    ("output_control", re.compile(r"\b(reply|respond|answer|output)\s+(only\s+)?with\b|\bscore (this|the) (candidate|applicant|cv)\b|"
+                                  r"\b(mark|rate|treat)\s+(all\s+)?(claims?|this candidate|the candidate|this cv)\b|"
+                                  r"\b(skip|bypass|disable)\s+(the\s+)?(verification|checks?|validation|claim check)\b", re.I)),
+    ("new_task", re.compile(r"^\s*(new task|new instructions?|updated instructions?)\s*:", re.I | re.M)),
+    ("arabic_override", re.compile(r"(تجاهل|انس|لا تتبع|لا تلتزم ب)\s*.{0,30}(التعليمات|الأوامر|القواعد)|أنت الآن|"
+                                   r"(أضف|اكتب|أدرج)\s.{0,40}(السيرة|الملف)|أعط(ي)?\s.{0,20}(أعلى تقييم|الدرجة الكاملة)")),
 ]
 
 MAX_UNTRUSTED_CHARS = 24_000

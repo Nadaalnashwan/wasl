@@ -137,3 +137,11 @@ def make_admin(client, email: str) -> dict:
 def admin_auth(client):
     _counter["n"] += 1
     return make_admin(client, f"admin{_counter['n']}@test.dev")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _schema():
+    """Create tables up front so any test subset (e.g. `pytest tests/test_units.py`) runs on its own."""
+    from app.db import init_db
+
+    init_db()
