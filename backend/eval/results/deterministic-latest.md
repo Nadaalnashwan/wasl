@@ -1,6 +1,6 @@
 # Wasl deterministic evaluation — wasl-eval-v2.0
 
-Verifier: `claims-v2.1` · Commit: `9f5f17f` · Run: 2026-11-24T03:35:10.283633+00:00
+Verifier: `claims-v2.1` · Commit: `4a28acf` · Run: 2026-11-24T03:36:13.671379+00:00
 
 No AI provider is called: each case runs a fixed adversarial input through the production verification, enforcement and redaction code. These are NOT live model-quality numbers.
 

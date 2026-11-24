@@ -4,7 +4,7 @@
 
 Wasl is an AI-powered career development platform that helps users turn verified achievements into professional LinkedIn posts, maintain a Master CV, tailor CVs to job descriptions, and identify skills to develop for their target careers.
 
-Wasl combines AI-powered career tools with evidence verification, user approval workflows, and a Monitoring & Evaluation system designed to make AI outputs more trustworthy and observable.
+Wasl combines AI-powered career tools with evidence verification and user approval workflows. Contact details are redacted before text reaches an AI provider, every AI-written claim is checked against your own evidence, and your Master CV only changes when you approve. Operational monitoring and evaluation live in a separate, administrator-only console.
 
 **Live application:** [https://wasl-ruddy.vercel.app](https://wasl-ruddy.vercel.app)
 
@@ -289,8 +289,9 @@ Run the following checks from the relevant project directories.
 
 ```bash
 cd backend
-pytest -q
-ruff check app tests
+pytest -q                      # 115 tests: units, journeys, authorization matrix, PII payloads, alerts
+ruff check app scripts tests
+python -m app.eval_v2          # deterministic AI regression suite (no LLM calls)
 ```
 
 ### Frontend Checks
@@ -306,10 +307,10 @@ npm run build
 
 ```bash
 cd backend
-python -m app.evaluation
+python -m app.evaluation --max-calls 60     # live providers, bounded call budget
 ```
 
-AI evaluation may require a configured provider key. Record the actual test results and the provider/model configuration used for each run.
+Live evaluation requires a configured provider key. Record the actual test results and the provider/model configuration used for each run.
 
 Do not assume that historical test results represent the current production deployment; rerun the checks after relevant code or configuration changes.
 
@@ -324,8 +325,12 @@ Additional technical documentation is available in `docs/`:
 | `docs/EVALUATION.md`   | AI evaluation methodology and results           |
 | `docs/SETUP.md`        | Installation and environment configuration      |
 | `docs/PROGRESS.md`     | Implementation progress and acceptance criteria |
-|                        |                                                 |
-|                        |                                                 |
+| `docs/SECURITY.md`     | Authorization, admin provisioning, ownership, secrets review |
+| `docs/PRIVACY.md`      | PII redaction and provider privacy policy       |
+| `docs/AI_MODEL_REGISTRY.md` | Per-task models, routing, pricing, traceability |
+| `docs/DESIGN_SYSTEM.md` | v2 design tokens, components and rules         |
+| `docs/WASL_V2_IMPLEMENTATION.md` | v2 audit, changes and instructor-feedback traceability |
+| `docs/QA_REPORT.md`    | Test, build and browser QA evidence             |
 
 ## Current Integration Status
 

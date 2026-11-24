@@ -233,6 +233,7 @@ function AuthProvider({
     configureApi(getToken, clear);
 
     // Restore the existing session when the app loads.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- session restore syncs with external auth storage
     void refresh();
 
     if (AUTH_MODE !== "supabase" || !supabase) {

@@ -674,8 +674,8 @@ export function I18nProvider({
     try {
       const saved = localStorage.getItem("wasl.locale") as Locale | null;
 
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate persisted preference after mount
       if (saved === "ar" || saved === "en") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate persisted preference after mount
         setLocaleState(saved);
       }
     } catch {}
