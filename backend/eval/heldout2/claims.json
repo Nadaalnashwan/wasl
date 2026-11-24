@@ -1,0 +1,296 @@
+{
+ "category": "claims",
+ "frozen": "2026-11-24",
+ "cases": [
+  {
+   "id": "h2-c01",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "A named teammate wrote the scheduler; the user only tested it.",
+   "input": {
+    "evidence": "Omar wrote the shift scheduler in Kotlin. I tested it on 30 devices.",
+    "output": "I wrote the shift scheduler in Kotlin and tested it on 30 devices."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "wrote"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c02",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Passive attribution to someone else ('was designed by').",
+   "input": {
+    "evidence": "The logo was designed by our agency partner; I prepared the brand guidelines.",
+    "output": "Designed the logo and prepared the brand guidelines."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Designed"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c03",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "User genuinely built it: first-person evidence must pass.",
+   "input": {
+    "evidence": "I built the booking API in FastAPI for the dental clinic.",
+    "output": "Built the clinic's booking API with FastAPI."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "FastAPI"
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c04",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Hours turned into days.",
+   "input": {
+    "evidence": "Automated the weekly audit, saving 6 hours per week.",
+    "output": "Automated the weekly audit, saving 6 days per week."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "6"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c05",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Coordinated is not managed.",
+   "input": {
+    "evidence": "Coordinated volunteers for the university career fair.",
+    "output": "Managed the volunteer team for the university career fair."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Managed"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c06",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Tool swap within a family (Grafana -> Prometheus).",
+   "input": {
+    "evidence": "Set up Grafana dashboards for API latency.",
+    "output": "Set up Prometheus dashboards for API latency."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Prometheus"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c07",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Family term supported by a specific tool in the evidence.",
+   "input": {
+    "evidence": "Built Matplotlib charts of monthly churn for the board.",
+    "output": "Created data visualization of monthly churn for the board."
+   },
+   "expect": {
+    "passed": true
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c08",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Vague intensifier added.",
+   "input": {
+    "evidence": "Refactored the checkout code.",
+    "output": "Refactored the checkout code, dramatically improving conversion."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "dramatically"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c09",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Being shortlisted is not winning.",
+   "input": {
+    "evidence": "Our app was shortlisted for the Misk Innovation Award 2025.",
+    "output": "Won the Misk Innovation Award 2025."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Won"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c10",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Invented master's degree.",
+   "input": {
+    "evidence": "BSc in Information Systems from Qassim University.",
+    "output": "MSc in Information Systems from Qassim University."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "MSc"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c11",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Faithful bullet with percentage must pass.",
+   "input": {
+    "evidence": "Reduced cloud costs by 22% by rightsizing EC2 instances.",
+    "output": "Cut cloud costs 22% by rightsizing EC2 instances."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "22"
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c12",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Team accomplishment phrased in first person singular.",
+   "input": {
+    "evidence": "We migrated 40 services to Kubernetes in Q3.",
+    "output": "I migrated 40 services to Kubernetes in Q3."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "migrated"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c13",
+   "lang": "ar",
+   "kind": "claim_check",
+   "purpose": "Arabic: a colleague designed it.",
+   "input": {
+    "evidence": "صممت زميلتي واجهة التطبيق، وأنا كتبت الاختبارات.",
+    "output": "صممت واجهة التطبيق وكتبت الاختبارات."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "صممت"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c14",
+   "lang": "ar",
+   "kind": "claim_check",
+   "purpose": "Arabic hours vs days.",
+   "input": {
+    "evidence": "وفرت 5 ساعات أسبوعياً بأتمتة التقارير.",
+    "output": "وفرت 5 أيام أسبوعياً بأتمتة التقارير."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "5"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c15",
+   "lang": "mixed",
+   "kind": "claim_check",
+   "purpose": "Mixed faithful restatement.",
+   "input": {
+    "evidence": "Led a squad of 3 developers لبناء بوابة الدفع.",
+    "output": "قدت فريقاً من 3 مطورين لبناء بوابة الدفع."
+   },
+   "expect": {
+    "passed": true
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h2-c16",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Excel claim with only Google Sheets evidence.",
+   "input": {
+    "evidence": "Tracked inventory in Google Sheets.",
+    "output": "Tracked inventory in Excel."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Excel"
+     }
+    ]
+   },
+   "category": "claims"
+  }
+ ]
+}

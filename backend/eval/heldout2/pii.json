@@ -1,0 +1,116 @@
+{
+ "category": "pii",
+ "frozen": "2026-11-24",
+ "cases": [
+  {
+   "id": "h2-p01",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Name on first line followed by email on the same line with a dash.",
+   "input": {
+    "text": "Abdullah Al-Zahrani - abdullah.z@example.org\nCloud Engineer, Riyadh",
+    "document": true
+   },
+   "expect": {
+    "must_remove": [
+     "Abdullah Al-Zahrani",
+     "abdullah.z@example.org"
+    ],
+    "must_keep": [
+     "Cloud Engineer",
+     "Riyadh"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h2-p02",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Phone with dots and an extension.",
+   "input": {
+    "text": "Office: +966.11.555.0199 ext 204. Managed 3 vendors."
+   },
+   "expect": {
+    "must_remove": [
+     "+966.11.555.0199"
+    ],
+    "must_keep": [
+     "3 vendors"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h2-p03",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Version numbers and years must not be mistaken for IDs.",
+   "input": {
+    "text": "Upgraded Django 3.2 to 5.1 in 2024 across 12 services; build 20240611 passed."
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "3.2",
+     "5.1",
+     "2024",
+     "12 services"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h2-p04",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Labelled residence permit.",
+   "input": {
+    "text": "Residence permit #: 2012345678 (valid)"
+   },
+   "expect": {
+    "must_remove": [
+     "2012345678"
+    ],
+    "must_keep": []
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h2-p05",
+   "lang": "ar",
+   "kind": "pii_redact",
+   "purpose": "Arabic labelled national ID with Arabic-Indic digits.",
+   "input": {
+    "text": "رقم الهوية: ١٠٢٣٤٥٦٧٨٩ — محاسب"
+   },
+   "expect": {
+    "must_remove": [
+     "١٠٢٣٤٥٦٧٨٩"
+    ],
+    "must_keep": [
+     "محاسب"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h2-p06",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Slack webhook URL secret.",
+   "input": {
+    "text": "Alerts go to https://hooks.slack.com/services/T000FAKE/B000FAKE/XXXXFAKEXXXXFAKEXXXX for the team."
+   },
+   "expect": {
+    "must_remove": [
+     "hooks.slack.com/services/T000FAKE/B000FAKE/XXXXFAKEXXXXFAKEXXXX"
+    ],
+    "must_keep": [
+     "for the team"
+    ]
+   },
+   "category": "pii"
+  }
+ ]
+}
