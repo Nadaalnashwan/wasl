@@ -69,7 +69,10 @@ jobs:
         run: supabase/tests/run_local.sh
       - name: Model / migration drift
         working-directory: backend
-        run: PYTHONPATH=. DATABASE_URL=sqlite:///:memory: python ../supabase/tests/schema_drift.py postgresql+psycopg://postgres@localhost:5432/wasl_migration_test
+        env:
+          PYTHONPATH: "."
+          DATABASE_URL: "sqlite:///:memory:"
+        run: python ../supabase/tests/schema_drift.py postgresql+psycopg://postgres@localhost:5432/wasl_migration_test
       - name: Backend tests on the migrated PostgreSQL schema
         working-directory: backend
         run: |
