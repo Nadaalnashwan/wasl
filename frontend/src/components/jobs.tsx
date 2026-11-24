@@ -162,7 +162,7 @@ export function CompanyMark({ job, size = "md" }: { job: Job; size?: "sm" | "md"
   if (job.company_logo && !broken) {
     return (
       // eslint-disable-next-line @next/next/no-img-element -- remote logos from many hosts; next/image would need each domain configured
-      <img src={job.company_logo} alt="" onError={() => setBroken(true)} className={cn(box, "shrink-0 rounded-lg border border-border bg-white object-contain p-1")} />
+      <img src={job.company_logo} alt="" onError={() => setBroken(true)} className={cn(box, "shrink-0 rounded-md border border-border-soft bg-paper object-contain p-1")} />
     );
   }
   return (

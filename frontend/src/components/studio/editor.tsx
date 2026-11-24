@@ -247,7 +247,7 @@ export function Editor(p: EditorProps) {
       {!cur ? (
         !p.aiSteps && !p.improved && <EmptyState title={t("studio.empty")} text={t("studio2.editor.empty.d")} />
       ) : (
-        <section aria-labelledby="editor-h" className="overflow-hidden rounded-xl border border-border bg-surface">
+        <section aria-labelledby="editor-h" className="overflow-hidden rounded-lg border border-border-soft bg-surface">
           <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border px-4 py-2.5">
             <h2 id="editor-h" className="sr-only">
               {t("studio2.editor")}
@@ -311,7 +311,7 @@ export function Editor(p: EditorProps) {
           <h2 id="drafts-h" className="mb-2 text-sm font-semibold text-fg">
             {t("studio.drafts")} <span className="num font-normal text-fg-3">· {p.posts.length}</span>
           </h2>
-          <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
+          <ul className="divide-y divide-border rounded-lg border border-border-soft bg-surface">
             {p.posts.map((x) => {
               const r = asReport(x.claim_check);
               const flagged = blockingCount(r);

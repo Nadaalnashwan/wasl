@@ -14,7 +14,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border",
+        "rounded-lg border border-border-soft",
         tone === "surface" && "bg-surface",
         tone === "muted" && "bg-surface-2",
         tone === "brand" && "border-primary/20 bg-primary-soft",
@@ -108,7 +108,7 @@ export function MetricRow({ children, className }: { children: React.ReactNode; 
   return (
     <div
       className={cn(
-        "grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4 [&>*]:bg-surface [&>*]:p-4",
+        "grid grid-cols-2 border-y border-border sm:grid-cols-4 [&>*]:py-4 [&>*]:pe-4 [&>*:not(:first-child)]:sm:border-s [&>*:not(:first-child)]:sm:ps-5 [&>*]:border-border-soft",
         className,
       )}
     >
@@ -131,10 +131,10 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <header className={cn("mb-8 flex flex-wrap items-end gap-x-6 gap-y-4 border-b border-border pb-6", className)}>
+    <header className={cn("mb-10 flex flex-wrap items-end gap-x-6 gap-y-4", className)}>
       <div className="min-w-0 flex-1">
         {eyebrow && <div className="eyebrow mb-2">{eyebrow}</div>}
-        <h1 className="text-title font-semibold text-fg">{title}</h1>
+        <h1 className="text-title font-semibold tracking-tight text-fg">{title}</h1>
         {sub && <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-fg-2">{sub}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -181,11 +181,11 @@ export function Section({
 
 /** Divided list container (rows separated by hairlines). */
 export function List({ className, ...props }: React.HTMLAttributes<HTMLUListElement>) {
-  return <ul className={cn("divide-y divide-border rounded-xl border border-border bg-surface", className)} {...props} />;
+  return <ul className={cn("divide-y divide-border-soft border-y border-border", className)} {...props} />;
 }
 
 export function ListItem({ className, ...props }: React.LiHTMLAttributes<HTMLLIElement>) {
-  return <li className={cn("px-4 py-3.5", className)} {...props} />;
+  return <li className={cn("py-3.5", className)} {...props} />;
 }
 
 /** Key/value pairs (metadata). */

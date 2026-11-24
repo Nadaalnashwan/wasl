@@ -38,7 +38,7 @@ export function InfoTip({ def, text }: { def?: DefKey; text?: string }) {
 export function Definitions({ keys, className }: { keys: DefKey[]; className?: string }) {
   const { t } = useI18n();
   return (
-    <details className={cn("group rounded-xl border border-border bg-surface", className)}>
+    <details className={cn("group rounded-lg border border-border-soft bg-surface", className)}>
       <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-fg-2 hover:text-fg [&::-webkit-details-marker]:hidden">
         <span className="inline-flex items-center gap-2">
           <HelpCircle className="size-4 text-fg-3" aria-hidden /> {t("admin2.definitions")}
@@ -142,7 +142,7 @@ export function KpiStrip({ children, cols = 4, className }: { children: React.Re
 
 export function TableWrap({ children, className, label }: { children: React.ReactNode; className?: string; label?: string }) {
   return (
-    <div className={cn("overflow-x-auto rounded-xl border border-border bg-surface", className)} role="region" aria-label={label} tabIndex={label ? 0 : undefined}>
+    <div className={cn("overflow-x-auto rounded-lg border border-border-soft bg-surface", className)} role="region" aria-label={label} tabIndex={label ? 0 : undefined}>
       <table className="w-full border-collapse text-sm">{children}</table>
     </div>
   );

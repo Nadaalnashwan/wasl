@@ -31,10 +31,10 @@ export function DialogContent({
 }) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fade-in fixed inset-0 z-50 bg-[#0f172a]/40 backdrop-blur-[1px]" />
+      <DialogPrimitive.Overlay className="fade-in fixed inset-0 z-50 bg-scrim" />
       <DialogPrimitive.Content
         className={cn(
-          "fade-in fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[min(94vw,520px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-border bg-surface shadow-lg",
+          "fade-in fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[min(94vw,520px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-border-soft bg-surface-elevated shadow-lg",
           wide && "w-[min(96vw,1080px)]",
           className,
         )}
@@ -127,10 +127,10 @@ export function DrawerContent({
 }) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fade-in fixed inset-0 z-50 bg-[#0f172a]/40" />
+      <DialogPrimitive.Overlay className="fade-in fixed inset-0 z-50 bg-scrim" />
       <DialogPrimitive.Content
         className={cn(
-          "fixed inset-y-0 end-0 z-50 flex w-[min(100vw,560px)] flex-col border-s border-border bg-surface shadow-lg",
+          "fixed inset-y-0 end-0 z-50 flex w-[min(100vw,560px)] flex-col border-s border-border-soft bg-surface-elevated shadow-lg",
           className,
         )}
       >
@@ -182,7 +182,7 @@ export function Switch({ className, ...props }: React.ComponentProps<typeof Swit
       )}
       {...props}
     >
-      <SwitchPrimitive.Thumb className="block size-4 rounded-full bg-white shadow-sm transition-transform ltr:translate-x-0.5 rtl:-translate-x-0.5 ltr:data-[state=checked]:translate-x-[18px] rtl:data-[state=checked]:-translate-x-[18px]" />
+      <SwitchPrimitive.Thumb className="block size-4 rounded-full bg-surface-elevated shadow-sm transition-transform ltr:translate-x-0.5 rtl:-translate-x-0.5 ltr:data-[state=checked]:translate-x-[18px] rtl:data-[state=checked]:-translate-x-[18px]" />
     </SwitchPrimitive.Root>
   );
 }

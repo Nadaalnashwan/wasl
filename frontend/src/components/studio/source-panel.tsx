@@ -61,7 +61,7 @@ function AchievementPicker({
   if (loading && !data) return <SkeletonRows rows={3} />;
   if (!data?.length) {
     return (
-      <div className="rounded-lg border border-dashed border-border-strong px-3 py-5 text-center text-sm">
+      <div className="border-s-2 border-border py-1 ps-4 text-sm">
         <p className="font-medium text-fg">{t("studio2.src.empty")}</p>
         <p className="mt-1 text-xs text-fg-3">{t("studio2.src.empty.d")}</p>
         <Link href="/achievements" className="mt-2 inline-block text-xs font-medium text-primary-text hover:underline">

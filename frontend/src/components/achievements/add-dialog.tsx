@@ -53,7 +53,7 @@ function CandidateResults({ result, onReset, onDecided }: { result: DiscoveryRes
       </div>
       <InjectionNotice flags={result.injection_flags} />
       {result.candidates.length === 0 ? (
-        <p className="flex items-start gap-2 rounded-lg border border-dashed border-border-strong p-4 text-sm text-fg-2">
+        <p className="flex items-start gap-2 border-s-2 border-border py-1 ps-4 text-sm text-fg-2">
           <FileQuestion className="mt-0.5 size-4 shrink-0 text-fg-3" aria-hidden />
           {result.no_achievement_reason || t("achievements2.candidates.none")}
         </p>
@@ -416,7 +416,7 @@ function GithubScan({ onDone }: { onDone: () => void }) {
       </div>
 
       {list.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border-strong p-4 text-sm text-fg-2">{t("achievements2.gh.empty")}</p>
+        <p className="border-s-2 border-border py-1 ps-4 text-sm text-fg-2">{t("achievements2.gh.empty")}</p>
       ) : (
         <ul className="max-h-[46vh] divide-y divide-border overflow-y-auto rounded-xl border border-border" aria-label={t("achievements2.gh.repos")}>
           {list.map((r) => {

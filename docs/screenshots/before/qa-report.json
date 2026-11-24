@@ -1,0 +1,1969 @@
+{
+  "summary": {
+    "at": "2026-11-24T16:47:20.230Z",
+    "checks": 48,
+    "overflow_failures": [],
+    "pure_white_pages": [
+      "/ 390 light en: 16 (div.doc-surface, span.inline-flex, span.num)",
+      "/login 390 light en: 2 (input.w-full, input.w-full)",
+      "/register 390 light en: 3 (input.w-full, input.w-full, input.w-full)",
+      "/dashboard 390 light en: 3 (ul.divide-y, div.rounded-xl, a.inline-flex)",
+      "/achievements 390 light en: 4 (input.w-full, select.w-full, select.w-full)",
+      "/cv 390 light en: 8 (div.divide-y, input.w-full, input.w-full)",
+      "/studio 390 light en: 6 (button.rounded-md, select.w-full, select.w-full)",
+      "/tailor 390 light en: 8 (li.bg-surface, li.bg-surface, li.bg-surface)",
+      "/gap 390 light en: 1 (textarea.w-full)",
+      "/settings 390 light en: 20 (input.w-full, input.w-full, div.divide-y)",
+      "/admin/monitoring 390 light en: 16 (button.inline-flex, button.rounded-md, select.rounded-lg)",
+      "/ 390 light ar: 16 (div.doc-surface, span.inline-flex, span.num)",
+      "/login 390 light ar: 2 (input.w-full, input.w-full)",
+      "/register 390 light ar: 3 (input.w-full, input.w-full, input.w-full)",
+      "/dashboard 390 light ar: 3 (ul.divide-y, div.rounded-xl, a.inline-flex)",
+      "/achievements 390 light ar: 4 (input.w-full, select.w-full, select.w-full)",
+      "/cv 390 light ar: 8 (div.divide-y, input.w-full, input.w-full)",
+      "/studio 390 light ar: 6 (button.rounded-md, select.w-full, select.w-full)",
+      "/tailor 390 light ar: 8 (li.bg-surface, li.bg-surface, li.bg-surface)",
+      "/gap 390 light ar: 1 (textarea.w-full)",
+      "/settings 390 light ar: 20 (input.w-full, input.w-full, div.divide-y)",
+      "/admin/monitoring 390 light ar: 16 (button.inline-flex, button.rounded-md, select.rounded-lg)",
+      "/settings 390 dark en: 2 (span.block, span.block)",
+      "/settings 390 dark ar: 2 (span.block, span.block)"
+    ],
+    "axe_by_rule": [
+      [
+        "color-contrast [serious]",
+        19
+      ],
+      [
+        "definition-list [serious]",
+        8
+      ],
+      [
+        "dlitem [serious]",
+        8
+      ]
+    ],
+    "console_error_pages": [],
+    "redirected": [],
+    "admin_isolation_for_normal_user": {
+      "gate_status": 403,
+      "final_url": "/admin-gate?next=%2Fadmin%2Fmonitoring",
+      "admin_api_status": 403,
+      "legacy_api_status": 403,
+      "anonymous_api_status": 401
+    }
+  },
+  "results": [
+    {
+      "route": "/",
+      "kind": "public",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "en",
+      "finalUrl": "/",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "div",
+          "cls": "doc-surface overflow-hidden rounded-xl",
+          "w": 358,
+          "h": 1308
+        },
+        {
+          "tag": "span",
+          "cls": "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-",
+          "w": 44,
+          "h": 28
+        },
+        {
+          "tag": "span",
+          "cls": "num grid size-8 place-items-center rounded-full border border-border-strong bg-s",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "span",
+          "cls": "num grid size-8 place-items-center rounded-full border border-border-strong bg-s",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "span",
+          "cls": "num grid size-8 place-items-center rounded-full border border-border-strong bg-s",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "span",
+          "cls": "num grid size-8 place-items-center rounded-full border border-border-strong bg-s",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "section",
+          "cls": "scroll-mt-20 border-y border-border bg-surface py-20 md:py-28",
+          "w": 390,
+          "h": 1258
+        },
+        {
+          "tag": "div",
+          "cls": "mt-12 grid overflow-hidden rounded-xl border border-border bg-surface lg:grid-co",
+          "w": 358,
+          "h": 453
+        },
+        {
+          "tag": "span",
+          "cls": "inline-flex items-center gap-1 rounded-md font-medium whitespace-nowrap [&_svg]:",
+          "w": 105,
+          "h": 28
+        },
+        {
+          "tag": "span",
+          "cls": "inline-flex items-center gap-1 rounded-md font-medium whitespace-nowrap [&_svg]:",
+          "w": 80,
+          "h": 28
+        }
+      ],
+      "whiteCount": 16,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 12,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            ".mb-5",
+            ".mt-6.text-fg-3"
+          ]
+        },
+        {
+          "id": "definition-list",
+          "impact": "serious",
+          "nodes": 1,
+          "help": "<dl> elements must only directly contain properly-ordered <dt> and <dd> groups, <script>, <template> or <div> elements",
+          "sample": [
+            "dl"
+          ]
+        },
+        {
+          "id": "dlitem",
+          "impact": "serious",
+          "nodes": 8,
+          "help": "<dt> and <dd> elements must be contained by a <dl>",
+          "sample": [
+            ".px-5.py-4.gap-3:nth-child(1) > .min-w-0 > dt",
+            ".px-5.py-4.gap-3:nth-child(1) > .min-w-0 > dd"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/landing--390-light-en.png"
+    },
+    {
+      "route": "/login",
+      "kind": "public",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "en",
+      "finalUrl": "/login",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 40
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 40
+        }
+      ],
+      "whiteCount": 2,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/login--390-light-en.png"
+    },
+    {
+      "route": "/register",
+      "kind": "public",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "en",
+      "finalUrl": "/register",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 40
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 40
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 40
+        }
+      ],
+      "whiteCount": 3,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 2,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            "#name-hint",
+            "#password-hint"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/register--390-light-en.png"
+    },
+    {
+      "route": "/dashboard",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "en",
+      "finalUrl": "/dashboard",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "ul",
+          "cls": "divide-y divide-border overflow-hidden rounded-xl border border-border bg-surfac",
+          "w": 358,
+          "h": 157
+        },
+        {
+          "tag": "div",
+          "cls": "rounded-xl border border-border bg-surface p-5 flex flex-col gap-4",
+          "w": 358,
+          "h": 299
+        },
+        {
+          "tag": "a",
+          "cls": "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-",
+          "w": 143,
+          "h": 32
+        }
+      ],
+      "whiteCount": 3,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 5,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            "section[aria-labelledby=\"_r_3_\"] > .mb-3.items-end.gap-4 > .flex-1.min-w-0 > .mt-0\\.5",
+            ".mt-0\\.5 > .num"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/dashboard--390-light-en.png"
+    },
+    {
+      "route": "/achievements",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "en",
+      "finalUrl": "/achievements",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 36
+        },
+        {
+          "tag": "select",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 192,
+          "h": 36
+        },
+        {
+          "tag": "select",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 192,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "cls": "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-",
+          "w": 167,
+          "h": 32
+        }
+      ],
+      "whiteCount": 4,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 6,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            ".items-start.gap-2\\.5.flex:nth-child(1) > .min-w-0 > dd",
+            ".items-start.gap-2\\.5.flex:nth-child(2) > .min-w-0 > dd"
+          ]
+        },
+        {
+          "id": "definition-list",
+          "impact": "serious",
+          "nodes": 1,
+          "help": "<dl> elements must only directly contain properly-ordered <dt> and <dd> groups, <script>, <template> or <div> elements",
+          "sample": [
+            "dl"
+          ]
+        },
+        {
+          "id": "dlitem",
+          "impact": "serious",
+          "nodes": 6,
+          "help": "<dt> and <dd> elements must be contained by a <dl>",
+          "sample": [
+            ".items-start.gap-2\\.5.flex:nth-child(1) > .min-w-0 > dt",
+            ".items-start.gap-2\\.5.flex:nth-child(1) > .min-w-0 > dd"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/achievements--390-light-en.png"
+    },
+    {
+      "route": "/cv",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "en",
+      "finalUrl": "/cv",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "div",
+          "cls": "divide-y divide-border rounded-xl border border-border bg-surface",
+          "w": 358,
+          "h": 1122
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 324,
+          "h": 36
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 324,
+          "h": 36
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 324,
+          "h": 36
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 324,
+          "h": 36
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 324,
+          "h": 36
+        },
+        {
+          "tag": "div",
+          "cls": "flex min-h-9 flex-wrap items-center gap-1.5 rounded-lg border border-border bg-s",
+          "w": 324,
+          "h": 38
+        },
+        {
+          "tag": "textarea",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 324,
+          "h": 112
+        }
+      ],
+      "whiteCount": 8,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 4,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            ".mt-0\\.5.truncate.text-xs",
+            "#cv-tab-preview"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/cv--390-light-en.png"
+    },
+    {
+      "route": "/studio",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "en",
+      "finalUrl": "/studio",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "button",
+          "cls": "rounded-md font-medium transition-colors px-2.5 py-1 text-xs bg-surface text-fg ",
+          "w": 117,
+          "h": 24
+        },
+        {
+          "tag": "select",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 173,
+          "h": 36
+        },
+        {
+          "tag": "select",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 173,
+          "h": 36
+        },
+        {
+          "tag": "textarea",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 64
+        },
+        {
+          "tag": "select",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 314,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "cls": "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-",
+          "w": 36,
+          "h": 36
+        }
+      ],
+      "whiteCount": 6,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 6,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            ".py-1.text-xs[role=\"radio\"]:nth-child(2)",
+            ".py-1.text-xs[role=\"radio\"]:nth-child(3)"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/studio--390-light-en.png"
+    },
+    {
+      "route": "/jobs",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "en",
+      "finalUrl": "/jobs",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 2,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            "#radix-_r_3_-trigger-saved",
+            ".max-w-md"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/jobs--390-light-en.png"
+    },
+    {
+      "route": "/tailor",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "en",
+      "finalUrl": "/tailor",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "li",
+          "cls": "bg-surface",
+          "w": 178,
+          "h": 40
+        },
+        {
+          "tag": "li",
+          "cls": "bg-surface",
+          "w": 178,
+          "h": 40
+        },
+        {
+          "tag": "li",
+          "cls": "bg-surface",
+          "w": 178,
+          "h": 40
+        },
+        {
+          "tag": "li",
+          "cls": "bg-surface",
+          "w": 178,
+          "h": 40
+        },
+        {
+          "tag": "li",
+          "cls": "bg-surface",
+          "w": 178,
+          "h": 40
+        },
+        {
+          "tag": "li",
+          "cls": "bg-surface",
+          "w": 178,
+          "h": 40
+        },
+        {
+          "tag": "select",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 36
+        },
+        {
+          "tag": "textarea",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 224
+        }
+      ],
+      "whiteCount": 8,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 6,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            ".max-w-2xl.mt-0\\.5",
+            "label:nth-child(1) > .text-xs"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/tailor--390-light-en.png"
+    },
+    {
+      "route": "/gap",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "en",
+      "finalUrl": "/gap",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "textarea",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 224
+        }
+      ],
+      "whiteCount": 1,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 4,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            ".num",
+            ".flex-wrap.gap-3.items-center > span"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/gap--390-light-en.png"
+    },
+    {
+      "route": "/settings",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "en",
+      "finalUrl": "/settings",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 36
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 36
+        },
+        {
+          "tag": "div",
+          "cls": "divide-y divide-border rounded-xl border border-border bg-surface max-w-xl",
+          "w": 358,
+          "h": 201
+        },
+        {
+          "tag": "button",
+          "cls": "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-",
+          "w": 105,
+          "h": 32
+        },
+        {
+          "tag": "div",
+          "cls": "divide-y divide-border rounded-xl border border-border bg-surface max-w-xl",
+          "w": 358,
+          "h": 245
+        },
+        {
+          "tag": "button",
+          "cls": "rounded-md font-medium transition-colors px-3 py-1.5 text-sm bg-surface text-fg ",
+          "w": 73,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "cls": "rounded-md font-medium transition-colors px-3 py-1.5 text-sm bg-surface text-fg ",
+          "w": 57,
+          "h": 32
+        },
+        {
+          "tag": "div",
+          "cls": "divide-y divide-border rounded-xl border border-border bg-surface",
+          "w": 358,
+          "h": 355
+        },
+        {
+          "tag": "div",
+          "cls": "divide-y divide-border rounded-xl border border-border bg-surface",
+          "w": 358,
+          "h": 294
+        },
+        {
+          "tag": "div",
+          "cls": "divide-y divide-border rounded-xl border border-border bg-surface",
+          "w": 358,
+          "h": 239
+        }
+      ],
+      "whiteCount": 20,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 16,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            "a[href$=\"#account\"]",
+            "a[href$=\"#appearance\"]"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/settings--390-light-en.png"
+    },
+    {
+      "route": "/admin/monitoring",
+      "kind": "admin",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "en",
+      "finalUrl": "/admin/monitoring",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "button",
+          "cls": "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-",
+          "w": 102,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "cls": "rounded-md font-medium transition-colors px-2.5 py-1 text-xs bg-surface text-fg ",
+          "w": 57,
+          "h": 24
+        },
+        {
+          "tag": "select",
+          "cls": "rounded-lg border border-border bg-surface text-fg shadow-sm transition-colors p",
+          "w": 109,
+          "h": 32
+        },
+        {
+          "tag": "select",
+          "cls": "rounded-lg border border-border bg-surface text-fg shadow-sm transition-colors p",
+          "w": 97,
+          "h": 32
+        },
+        {
+          "tag": "select",
+          "cls": "rounded-lg border border-border bg-surface text-fg shadow-sm transition-colors p",
+          "w": 174,
+          "h": 32
+        },
+        {
+          "tag": "ul",
+          "cls": "flex flex-wrap gap-x-6 gap-y-2 rounded-xl border border-border bg-surface px-4 p",
+          "w": 358,
+          "h": 118
+        },
+        {
+          "tag": "div",
+          "cls": "min-w-0",
+          "w": 356,
+          "h": 102
+        },
+        {
+          "tag": "div",
+          "cls": "min-w-0",
+          "w": 356,
+          "h": 102
+        },
+        {
+          "tag": "div",
+          "cls": "min-w-0",
+          "w": 356,
+          "h": 102
+        },
+        {
+          "tag": "div",
+          "cls": "min-w-0",
+          "w": 356,
+          "h": 102
+        }
+      ],
+      "whiteCount": 16,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 9,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            ".text-xs[aria-live=\"polite\"]",
+            ".py-1.px-2\\.5[role=\"radio\"]:nth-child(1)"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/admin-monitoring--390-light-en.png"
+    },
+    {
+      "route": "/",
+      "kind": "public",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "ar",
+      "finalUrl": "/",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "div",
+          "cls": "doc-surface overflow-hidden rounded-xl",
+          "w": 358,
+          "h": 1173
+        },
+        {
+          "tag": "span",
+          "cls": "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-",
+          "w": 50,
+          "h": 28
+        },
+        {
+          "tag": "span",
+          "cls": "num grid size-8 place-items-center rounded-full border border-border-strong bg-s",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "span",
+          "cls": "num grid size-8 place-items-center rounded-full border border-border-strong bg-s",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "span",
+          "cls": "num grid size-8 place-items-center rounded-full border border-border-strong bg-s",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "span",
+          "cls": "num grid size-8 place-items-center rounded-full border border-border-strong bg-s",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "section",
+          "cls": "scroll-mt-20 border-y border-border bg-surface py-20 md:py-28",
+          "w": 390,
+          "h": 1120
+        },
+        {
+          "tag": "div",
+          "cls": "mt-12 grid overflow-hidden rounded-xl border border-border bg-surface lg:grid-co",
+          "w": 358,
+          "h": 404
+        },
+        {
+          "tag": "span",
+          "cls": "inline-flex items-center gap-1 rounded-md font-medium whitespace-nowrap [&_svg]:",
+          "w": 64,
+          "h": 28
+        },
+        {
+          "tag": "span",
+          "cls": "inline-flex items-center gap-1 rounded-md font-medium whitespace-nowrap [&_svg]:",
+          "w": 55,
+          "h": 28
+        }
+      ],
+      "whiteCount": 16,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 2,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            ".relative.grid-cols-\\[2rem_minmax\\(0\\,1fr\\)\\].gap-x-5:nth-child(1) > .pt-1 > .mt-3.text-fg-3.font-medium",
+            "#features > .mx-auto.w-full.max-w-6xl > .max-w-xl > .mb-3.eyebrow"
+          ]
+        },
+        {
+          "id": "definition-list",
+          "impact": "serious",
+          "nodes": 1,
+          "help": "<dl> elements must only directly contain properly-ordered <dt> and <dd> groups, <script>, <template> or <div> elements",
+          "sample": [
+            "dl"
+          ]
+        },
+        {
+          "id": "dlitem",
+          "impact": "serious",
+          "nodes": 8,
+          "help": "<dt> and <dd> elements must be contained by a <dl>",
+          "sample": [
+            ".px-5.py-4.gap-3:nth-child(1) > .min-w-0 > dt",
+            ".px-5.py-4.gap-3:nth-child(1) > .min-w-0 > dd"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/landing--390-light-ar.png"
+    },
+    {
+      "route": "/login",
+      "kind": "public",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "ar",
+      "finalUrl": "/login",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 40
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 40
+        }
+      ],
+      "whiteCount": 2,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/login--390-light-ar.png"
+    },
+    {
+      "route": "/register",
+      "kind": "public",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "ar",
+      "finalUrl": "/register",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 40
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 40
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 40
+        }
+      ],
+      "whiteCount": 3,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 1,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            "#password-hint"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/register--390-light-ar.png"
+    },
+    {
+      "route": "/dashboard",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "ar",
+      "finalUrl": "/dashboard",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "ul",
+          "cls": "divide-y divide-border overflow-hidden rounded-xl border border-border bg-surfac",
+          "w": 358,
+          "h": 117
+        },
+        {
+          "tag": "div",
+          "cls": "rounded-xl border border-border bg-surface p-5 flex flex-col gap-4",
+          "w": 358,
+          "h": 299
+        },
+        {
+          "tag": "a",
+          "cls": "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-",
+          "w": 180,
+          "h": 32
+        }
+      ],
+      "whiteCount": 3,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 1,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            ".mt-0\\.5 > .num"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/dashboard--390-light-ar.png"
+    },
+    {
+      "route": "/achievements",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "ar",
+      "finalUrl": "/achievements",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 36
+        },
+        {
+          "tag": "select",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 192,
+          "h": 36
+        },
+        {
+          "tag": "select",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 192,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "cls": "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-",
+          "w": 110,
+          "h": 32
+        }
+      ],
+      "whiteCount": 4,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "definition-list",
+          "impact": "serious",
+          "nodes": 1,
+          "help": "<dl> elements must only directly contain properly-ordered <dt> and <dd> groups, <script>, <template> or <div> elements",
+          "sample": [
+            "dl"
+          ]
+        },
+        {
+          "id": "dlitem",
+          "impact": "serious",
+          "nodes": 6,
+          "help": "<dt> and <dd> elements must be contained by a <dl>",
+          "sample": [
+            ".items-start.gap-2\\.5.flex:nth-child(1) > .min-w-0 > dt",
+            ".items-start.gap-2\\.5.flex:nth-child(1) > .min-w-0 > dd"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/achievements--390-light-ar.png"
+    },
+    {
+      "route": "/cv",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "ar",
+      "finalUrl": "/cv",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "div",
+          "cls": "divide-y divide-border rounded-xl border border-border bg-surface",
+          "w": 358,
+          "h": 1106
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 324,
+          "h": 36
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 324,
+          "h": 36
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 324,
+          "h": 36
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 324,
+          "h": 36
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 324,
+          "h": 36
+        },
+        {
+          "tag": "div",
+          "cls": "flex min-h-9 flex-wrap items-center gap-1.5 rounded-lg border border-border bg-s",
+          "w": 324,
+          "h": 38
+        },
+        {
+          "tag": "textarea",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 324,
+          "h": 112
+        }
+      ],
+      "whiteCount": 8,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/cv--390-light-ar.png"
+    },
+    {
+      "route": "/studio",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "ar",
+      "finalUrl": "/studio",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "button",
+          "cls": "rounded-md font-medium transition-colors px-2.5 py-1 text-xs bg-surface text-fg ",
+          "w": 117,
+          "h": 24
+        },
+        {
+          "tag": "select",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 173,
+          "h": 36
+        },
+        {
+          "tag": "select",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 173,
+          "h": 36
+        },
+        {
+          "tag": "textarea",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 64
+        },
+        {
+          "tag": "select",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 314,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "cls": "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-",
+          "w": 36,
+          "h": 36
+        }
+      ],
+      "whiteCount": 6,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 2,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            ".py-1.text-xs[role=\"radio\"]:nth-child(2)",
+            ".max-w-md"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/studio--390-light-ar.png"
+    },
+    {
+      "route": "/jobs",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "ar",
+      "finalUrl": "/jobs",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/jobs--390-light-ar.png"
+    },
+    {
+      "route": "/tailor",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "ar",
+      "finalUrl": "/tailor",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "li",
+          "cls": "bg-surface",
+          "w": 178,
+          "h": 40
+        },
+        {
+          "tag": "li",
+          "cls": "bg-surface",
+          "w": 178,
+          "h": 40
+        },
+        {
+          "tag": "li",
+          "cls": "bg-surface",
+          "w": 178,
+          "h": 40
+        },
+        {
+          "tag": "li",
+          "cls": "bg-surface",
+          "w": 178,
+          "h": 40
+        },
+        {
+          "tag": "li",
+          "cls": "bg-surface",
+          "w": 178,
+          "h": 40
+        },
+        {
+          "tag": "li",
+          "cls": "bg-surface",
+          "w": 178,
+          "h": 40
+        },
+        {
+          "tag": "select",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 36
+        },
+        {
+          "tag": "textarea",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 224
+        }
+      ],
+      "whiteCount": 8,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 3,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            ".max-w-2xl.mt-0\\.5",
+            ".text-xs > .num"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/tailor--390-light-ar.png"
+    },
+    {
+      "route": "/gap",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "ar",
+      "finalUrl": "/gap",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "textarea",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 224
+        }
+      ],
+      "whiteCount": 1,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 1,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            ".num"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/gap--390-light-ar.png"
+    },
+    {
+      "route": "/settings",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "ar",
+      "finalUrl": "/settings",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 36
+        },
+        {
+          "tag": "input",
+          "cls": "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm tran",
+          "w": 358,
+          "h": 36
+        },
+        {
+          "tag": "div",
+          "cls": "divide-y divide-border rounded-xl border border-border bg-surface max-w-xl",
+          "w": 358,
+          "h": 201
+        },
+        {
+          "tag": "button",
+          "cls": "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-",
+          "w": 129,
+          "h": 32
+        },
+        {
+          "tag": "div",
+          "cls": "divide-y divide-border rounded-xl border border-border bg-surface max-w-xl",
+          "w": 358,
+          "h": 225
+        },
+        {
+          "tag": "button",
+          "cls": "rounded-md font-medium transition-colors px-3 py-1.5 text-sm bg-surface text-fg ",
+          "w": 58,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "cls": "rounded-md font-medium transition-colors px-3 py-1.5 text-sm bg-surface text-fg ",
+          "w": 47,
+          "h": 32
+        },
+        {
+          "tag": "div",
+          "cls": "divide-y divide-border rounded-xl border border-border bg-surface",
+          "w": 358,
+          "h": 335
+        },
+        {
+          "tag": "div",
+          "cls": "divide-y divide-border rounded-xl border border-border bg-surface",
+          "w": 358,
+          "h": 274
+        },
+        {
+          "tag": "div",
+          "cls": "divide-y divide-border rounded-xl border border-border bg-surface",
+          "w": 358,
+          "h": 199
+        }
+      ],
+      "whiteCount": 20,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 2,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            "div[aria-label=\"لغة الواجهة\"] > .py-1\\.5[role=\"radio\"][type=\"button\"]:nth-child(1)",
+            "div[aria-label=\"السمة\"] > .py-1\\.5[role=\"radio\"][type=\"button\"]:nth-child(2)"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/settings--390-light-ar.png"
+    },
+    {
+      "route": "/admin/monitoring",
+      "kind": "admin",
+      "viewport": 390,
+      "theme": "light",
+      "locale": "ar",
+      "finalUrl": "/admin/monitoring",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "button",
+          "cls": "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-",
+          "w": 88,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "cls": "rounded-md font-medium transition-colors px-2.5 py-1 text-xs bg-surface text-fg ",
+          "w": 46,
+          "h": 24
+        },
+        {
+          "tag": "select",
+          "cls": "rounded-lg border border-border bg-surface text-fg shadow-sm transition-colors p",
+          "w": 92,
+          "h": 32
+        },
+        {
+          "tag": "select",
+          "cls": "rounded-lg border border-border bg-surface text-fg shadow-sm transition-colors p",
+          "w": 86,
+          "h": 32
+        },
+        {
+          "tag": "select",
+          "cls": "rounded-lg border border-border bg-surface text-fg shadow-sm transition-colors p",
+          "w": 171,
+          "h": 32
+        },
+        {
+          "tag": "ul",
+          "cls": "flex flex-wrap gap-x-6 gap-y-2 rounded-xl border border-border bg-surface px-4 p",
+          "w": 358,
+          "h": 118
+        },
+        {
+          "tag": "div",
+          "cls": "min-w-0",
+          "w": 356,
+          "h": 102
+        },
+        {
+          "tag": "div",
+          "cls": "min-w-0",
+          "w": 356,
+          "h": 102
+        },
+        {
+          "tag": "div",
+          "cls": "min-w-0",
+          "w": 356,
+          "h": 102
+        },
+        {
+          "tag": "div",
+          "cls": "min-w-0",
+          "w": 356,
+          "h": 102
+        }
+      ],
+      "whiteCount": 16,
+      "bodyBg": "rgb(246, 248, 251)",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 9,
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "sample": [
+            ".text-xs[aria-live=\"polite\"]",
+            ".py-1.px-2\\.5[role=\"radio\"]:nth-child(1)"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/admin-monitoring--390-light-ar.png"
+    },
+    {
+      "route": "/",
+      "kind": "public",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "en",
+      "finalUrl": "/",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [
+        {
+          "id": "definition-list",
+          "impact": "serious",
+          "nodes": 1,
+          "help": "<dl> elements must only directly contain properly-ordered <dt> and <dd> groups, <script>, <template> or <div> elements",
+          "sample": [
+            "dl"
+          ]
+        },
+        {
+          "id": "dlitem",
+          "impact": "serious",
+          "nodes": 8,
+          "help": "<dt> and <dd> elements must be contained by a <dl>",
+          "sample": [
+            ".px-5.py-4.gap-3:nth-child(1) > .min-w-0 > dt",
+            ".px-5.py-4.gap-3:nth-child(1) > .min-w-0 > dd"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": null
+    },
+    {
+      "route": "/login",
+      "kind": "public",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "en",
+      "finalUrl": "/login",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": null
+    },
+    {
+      "route": "/register",
+      "kind": "public",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "en",
+      "finalUrl": "/register",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": null
+    },
+    {
+      "route": "/dashboard",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "en",
+      "finalUrl": "/dashboard",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": null
+    },
+    {
+      "route": "/achievements",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "en",
+      "finalUrl": "/achievements",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [
+        {
+          "id": "definition-list",
+          "impact": "serious",
+          "nodes": 1,
+          "help": "<dl> elements must only directly contain properly-ordered <dt> and <dd> groups, <script>, <template> or <div> elements",
+          "sample": [
+            "dl"
+          ]
+        },
+        {
+          "id": "dlitem",
+          "impact": "serious",
+          "nodes": 6,
+          "help": "<dt> and <dd> elements must be contained by a <dl>",
+          "sample": [
+            ".items-start.gap-2\\.5.flex:nth-child(1) > .min-w-0 > dt",
+            ".items-start.gap-2\\.5.flex:nth-child(1) > .min-w-0 > dd"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": null
+    },
+    {
+      "route": "/cv",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "en",
+      "finalUrl": "/cv",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": null
+    },
+    {
+      "route": "/studio",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "en",
+      "finalUrl": "/studio",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": null
+    },
+    {
+      "route": "/jobs",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "en",
+      "finalUrl": "/jobs",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": null
+    },
+    {
+      "route": "/tailor",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "en",
+      "finalUrl": "/tailor",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": null
+    },
+    {
+      "route": "/gap",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "en",
+      "finalUrl": "/gap",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": null
+    },
+    {
+      "route": "/settings",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "en",
+      "finalUrl": "/settings",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "span",
+          "cls": "block size-4 rounded-full bg-white shadow-sm transition-transform ltr:translate-",
+          "w": 16,
+          "h": 16
+        },
+        {
+          "tag": "span",
+          "cls": "block size-4 rounded-full bg-white shadow-sm transition-transform ltr:translate-",
+          "w": 16,
+          "h": 16
+        }
+      ],
+      "whiteCount": 2,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": null
+    },
+    {
+      "route": "/admin/monitoring",
+      "kind": "admin",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "en",
+      "finalUrl": "/admin/monitoring",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": null
+    },
+    {
+      "route": "/",
+      "kind": "public",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "ar",
+      "finalUrl": "/",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [
+        {
+          "id": "definition-list",
+          "impact": "serious",
+          "nodes": 1,
+          "help": "<dl> elements must only directly contain properly-ordered <dt> and <dd> groups, <script>, <template> or <div> elements",
+          "sample": [
+            "dl"
+          ]
+        },
+        {
+          "id": "dlitem",
+          "impact": "serious",
+          "nodes": 8,
+          "help": "<dt> and <dd> elements must be contained by a <dl>",
+          "sample": [
+            ".px-5.py-4.gap-3:nth-child(1) > .min-w-0 > dt",
+            ".px-5.py-4.gap-3:nth-child(1) > .min-w-0 > dd"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/landing--390-dark-ar.png"
+    },
+    {
+      "route": "/login",
+      "kind": "public",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "ar",
+      "finalUrl": "/login",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/login--390-dark-ar.png"
+    },
+    {
+      "route": "/register",
+      "kind": "public",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "ar",
+      "finalUrl": "/register",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/register--390-dark-ar.png"
+    },
+    {
+      "route": "/dashboard",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "ar",
+      "finalUrl": "/dashboard",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/dashboard--390-dark-ar.png"
+    },
+    {
+      "route": "/achievements",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "ar",
+      "finalUrl": "/achievements",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [
+        {
+          "id": "definition-list",
+          "impact": "serious",
+          "nodes": 1,
+          "help": "<dl> elements must only directly contain properly-ordered <dt> and <dd> groups, <script>, <template> or <div> elements",
+          "sample": [
+            "dl"
+          ]
+        },
+        {
+          "id": "dlitem",
+          "impact": "serious",
+          "nodes": 6,
+          "help": "<dt> and <dd> elements must be contained by a <dl>",
+          "sample": [
+            ".items-start.gap-2\\.5.flex:nth-child(1) > .min-w-0 > dt",
+            ".items-start.gap-2\\.5.flex:nth-child(1) > .min-w-0 > dd"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/achievements--390-dark-ar.png"
+    },
+    {
+      "route": "/cv",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "ar",
+      "finalUrl": "/cv",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/cv--390-dark-ar.png"
+    },
+    {
+      "route": "/studio",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "ar",
+      "finalUrl": "/studio",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/studio--390-dark-ar.png"
+    },
+    {
+      "route": "/jobs",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "ar",
+      "finalUrl": "/jobs",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/jobs--390-dark-ar.png"
+    },
+    {
+      "route": "/tailor",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "ar",
+      "finalUrl": "/tailor",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/tailor--390-dark-ar.png"
+    },
+    {
+      "route": "/gap",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "ar",
+      "finalUrl": "/gap",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/gap--390-dark-ar.png"
+    },
+    {
+      "route": "/settings",
+      "kind": "user",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "ar",
+      "finalUrl": "/settings",
+      "overflow": 0,
+      "white": [
+        {
+          "tag": "span",
+          "cls": "block size-4 rounded-full bg-white shadow-sm transition-transform ltr:translate-",
+          "w": 16,
+          "h": 16
+        },
+        {
+          "tag": "span",
+          "cls": "block size-4 rounded-full bg-white shadow-sm transition-transform ltr:translate-",
+          "w": 16,
+          "h": 16
+        }
+      ],
+      "whiteCount": 2,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/settings--390-dark-ar.png"
+    },
+    {
+      "route": "/admin/monitoring",
+      "kind": "admin",
+      "viewport": 390,
+      "theme": "dark",
+      "locale": "ar",
+      "finalUrl": "/admin/monitoring",
+      "overflow": 0,
+      "white": [],
+      "whiteCount": 0,
+      "bodyBg": "rgb(11, 17, 32)",
+      "violations": [],
+      "consoleErrors": [],
+      "shot": "../docs/screenshots/before/admin-monitoring--390-dark-ar.png"
+    }
+  ]
+}

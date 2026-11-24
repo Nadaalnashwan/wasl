@@ -3,79 +3,95 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* =====================================================================
-   Wasl design system v2 — see docs/DESIGN_SYSTEM.md
-   Neutral slate surfaces, one brand blue, hairline borders, no decoration.
+   Wasl design system v2.1 "Ivory" — see docs/DESIGN_SYSTEM.md
+   Warm cream / ivory surfaces (never pure white), ink text, one brand blue used
+   sparingly, hairline separators instead of boxes, no decoration.
+   Every text token passes WCAG AA (>= 4.5:1) on every surface token;
+   --border-strong (form controls) passes 3:1 against the surfaces it sits on.
    ===================================================================== */
 
 :root {
-  /* surfaces */
-  --bg: #f6f8fb;
-  --surface: #ffffff;
-  --surface-2: #f1f4f9;
-  --surface-3: #e8edf5;
+  /* surfaces — warm, neutral, layered by tone rather than by shadow */
+  --bg: #f5f1e8; /* page */
+  --bg-sidebar: #efeadf; /* navigation rail */
+  --surface: #faf7f0; /* primary surface: panels, rows, editors */
+  --surface-elevated: #fcfaf5; /* dialogs, drawers, menus, popovers */
+  --surface-2: #ede6d8; /* secondary: hover, table heads, segmented tracks */
+  --surface-3: #e8e0d2; /* subtle accent */
+  --field: #fcfaf4; /* text inputs */
+  --paper: #fdfbf6; /* in-app document preview (exports stay plain white) */
   /* lines */
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
+  --border: #d8cfc0;
+  --border-soft: #e4dccd;
+  --border-strong: #8f846f;
   /* text */
-  --text: #0f172a;
-  --text-2: #475569;
-  --text-3: #64748b;
+  --text: #202b3c;
+  --text-2: #4d5360;
+  --text-3: #646052;
   /* brand */
   --primary: #0b57c9;
-  --primary-hover: #0947a6;
-  --primary-soft: #eaf1fc;
-  --primary-text: #0b4fb5;
-  --on-primary: #ffffff;
-  /* status (text colours pass 4.5:1 on --surface and on their soft fill) */
-  --ok: #047857;
-  --ok-soft: #e7f6ef;
-  --warn: #a15c07;
-  --warn-soft: #fdf3e1;
-  --bad: #b42318;
-  --bad-soft: #fdecea;
+  --primary-hover: #0848a8;
+  --primary-soft: #e5ebf4;
+  --primary-text: #0a4fb8;
+  --on-primary: #fbf9f4;
+  /* status — reserved for verification, warnings, errors and operations */
+  --ok: #0f6b4c;
+  --ok-soft: #e2ecdf;
+  --warn: #8a4b08;
+  --warn-soft: #f4e6cc;
+  --bad: #a61b12;
+  --bad-soft: #f5e0d8;
   --focus: #0b57c9;
-  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06);
-  --shadow-md: 0 4px 16px -4px rgb(15 23 42 / 0.12), 0 1px 3px rgb(15 23 42 / 0.06);
-  --shadow-lg: 0 24px 48px -12px rgb(15 23 42 / 0.22);
-  /* categorical chart series */
+  --scrim: rgb(32 43 60 / 0.38);
+  --shadow-sm: 0 1px 2px rgb(74 58 30 / 0.06);
+  --shadow-md: 0 6px 18px -8px rgb(74 58 30 / 0.18), 0 1px 3px rgb(74 58 30 / 0.06);
+  --shadow-lg: 0 28px 56px -18px rgb(46 38 24 / 0.32);
+  /* charts */
   --chart-1: #0b57c9;
-  --chart-2: #c2620a;
-  --chart-3: #0f8a5f;
-  --chart-4: #7c3aed;
-  --chart-grid: #e2e8f0;
+  --chart-2: #b4590c;
+  --chart-3: #2f7a55;
+  --chart-4: #6b4fa0;
+  --chart-grid: #e2d9ca;
   color-scheme: light;
 }
 
+/* Dark: warm charcoal with a hint of navy — designed, not inverted. */
 :root[data-theme="dark"] {
-  --bg: #0b1120;
-  --surface: #111827;
-  --surface-2: #162033;
-  --surface-3: #1e2a40;
-  --border: #243047;
-  --border-strong: #33425f;
-  --text: #e8edf5;
-  --text-2: #a9b4c6;
-  --text-3: #8592a8;
-  --primary: #5b9dff;
-  --primary-hover: #7db1ff;
-  --primary-soft: #14284a;
-  --primary-text: #8dbbff;
-  --on-primary: #06122a;
-  --ok: #4fd1a0;
-  --ok-soft: #0f2e25;
-  --warn: #f0b45a;
-  --warn-soft: #33260f;
-  --bad: #ff8a80;
-  --bad-soft: #3a1717;
-  --focus: #7db1ff;
+  --bg: #14161b;
+  --bg-sidebar: #111317;
+  --surface: #1b1e24;
+  --surface-elevated: #22262d;
+  --surface-2: #23272f;
+  --surface-3: #2b3039;
+  --field: #181b20;
+  --paper: #1e2127;
+  --border: #30353f;
+  --border-soft: #272b33;
+  --border-strong: #6e7482;
+  --text: #ece7dd;
+  --text-2: #bfb8aa;
+  --text-3: #9c9587;
+  --primary: #7aa9f7;
+  --primary-hover: #9bbef9;
+  --primary-soft: #1c2a42;
+  --primary-text: #9bbef9;
+  --on-primary: #0e1626;
+  --ok: #5cc99a;
+  --ok-soft: #16291f;
+  --warn: #e8b363;
+  --warn-soft: #2e2414;
+  --bad: #f08c80;
+  --bad-soft: #33191a;
+  --focus: #9bbef9;
+  --scrim: rgb(4 6 10 / 0.6);
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-md: 0 6px 20px -6px rgb(0 0 0 / 0.55);
-  --shadow-lg: 0 24px 56px -12px rgb(0 0 0 / 0.65);
-  --chart-1: #5b9dff;
-  --chart-2: #e8954a;
-  --chart-3: #3fbf8a;
-  --chart-4: #a78bfa;
-  --chart-grid: #243047;
+  --shadow-md: 0 8px 22px -8px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 28px 60px -16px rgb(0 0 0 / 0.7);
+  --chart-1: #7aa9f7;
+  --chart-2: #e39a55;
+  --chart-3: #5cc99a;
+  --chart-4: #b49bef;
+  --chart-grid: #2a2f38;
   color-scheme: dark;
 }
 
@@ -84,6 +100,12 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-surface-3: var(--surface-3);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-sidebar: var(--bg-sidebar);
+  --color-field: var(--field);
+  --color-paper: var(--paper);
+  --color-border-soft: var(--border-soft);
+  --color-scrim: var(--scrim);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-fg: var(--text);
@@ -102,6 +124,7 @@
   --color-bad-soft: var(--bad-soft);
 
   --font-sans: var(--font-inter), var(--font-plex-ar), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-newsreader), var(--font-plex-ar), Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
 
   --shadow-sm: var(--shadow-sm);
@@ -109,10 +132,10 @@
   --shadow-lg: var(--shadow-lg);
 
   /* type scale (see DESIGN_SYSTEM.md) */
-  --text-display: 3.5rem;
-  --text-display--line-height: 1.05;
-  --text-display--letter-spacing: -0.035em;
-  --text-title: 1.625rem;
+  --text-display: 3.75rem;
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.02em;
+  --text-title: 1.75rem;
   --text-title--line-height: 1.2;
   --text-title--letter-spacing: -0.02em;
   --text-heading: 1.0625rem;
@@ -160,16 +183,23 @@ body {
 }
 
 @layer components {
-  /* An eyebrow label used above section titles. */
+  /* A quiet label above titles — sentence case, not shouty uppercase. */
   .eyebrow {
-    font-size: 0.75rem;
-    line-height: 1rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    font-weight: 500;
     color: var(--text-3);
   }
-  [dir="rtl"] .eyebrow {
+  /* Editorial serif — marketing headlines and the workspace greeting only. */
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 450;
+    font-optical-sizing: auto;
+    letter-spacing: -0.015em;
+  }
+  [dir="rtl"] .font-display {
+    font-family: var(--font-plex-ar), var(--font-newsreader), serif;
+    font-weight: 600;
     letter-spacing: 0;
   }
   /* Tabular numbers for metrics and tables. */
@@ -178,8 +208,8 @@ body {
   }
   /* Document surface used for CV previews. */
   .doc-surface {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--paper);
+    border: 1px solid var(--border-soft);
     box-shadow: var(--shadow-md);
   }
 }
@@ -239,7 +269,7 @@ body {
   stroke: var(--chart-grid);
 }
 .recharts-tooltip-wrapper .recharts-default-tooltip {
-  background: var(--surface) !important;
+  background: var(--surface-elevated) !important;
   border: 1px solid var(--border) !important;
   border-radius: 8px;
   box-shadow: var(--shadow-md);

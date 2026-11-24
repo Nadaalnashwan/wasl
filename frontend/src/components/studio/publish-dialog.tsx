@@ -5,17 +5,27 @@ import { useState } from "react";
 import { type ClaimReport, ClaimReportPanel } from "@/components/claims";
 import { Notice } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/form";
+import { Checkbox, Field, Textarea } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/overlay";
 import { useI18n } from "@/lib/i18n";
 import { isArabic } from "@/lib/utils";
 import { blockingCount, fill, finalText, type StudioPost } from "./model";
 import { PrivatePostImage } from "./post-image";
 
+export type ClaimAssertion = { claim: string; statement: string };
+
+// mirrors the server rule (app/routers/posts.py evaluate_assertions): specific, not a generic "it's true"
+const GENERIC = /^\s*(i\s+)?(confirm|agree|accept|approve|acknowledge)\b|\b(this|it|that)\s+is\s+(true|accurate|correct)\b|^\s*(true|yes|ok|okay|correct|accurate|verified|confirmed|نعم|صحيح|أؤكد|موافق)[\s.!]*$/i;
+export function isSpecificStatement(claim: string, s: string): boolean {
+  const v = s.trim();
+  return v.length >= 20 && v.split(/\s+/).length >= 4 && !GENERIC.test(v) && v.toLowerCase() !== claim.trim().toLowerCase();
+}
+
 /**
  * Explicit confirmation before anything is sent to LinkedIn. Shows the exact final text.
- * Unresolved claims require an extra acknowledgement; an "uncertain" previous attempt requires
- * the user to confirm it was not published before a retry is allowed.
+ * Each unsupported / unconfirmed claim needs a specific, user-written statement of where the fact comes from
+ * (stored as the user's own assertion, never as verified evidence). Contradicted claims can only be edited.
+ * An "uncertain" previous attempt requires the user to confirm it was not published before a retry.
  */
 export function PublishDialog({
   open,
@@ -36,20 +46,26 @@ export function PublishDialog({
   report: ClaimReport | null;
   serverMessage: string | null;
   busy: boolean;
-  onConfirm: (opts: { acknowledgeClaims: boolean; confirmNotPublished: boolean }) => void;
+  onConfirm: (opts: { claimAssertions: ClaimAssertion[]; confirmNotPublished: boolean }) => void;
 }) {
   const { t } = useI18n();
-  const [ackClaims, setAckClaims] = useState(false);
+  const [statements, setStatements] = useState<Record<string, string>>({});
   const [notPublished, setNotPublished] = useState(false);
   const blocking = blockingCount(report);
   const uncertain = post.status === "uncertain";
   const text = finalText(content, tags);
-  const ready = (!blocking || ackClaims) && (!uncertain || notPublished);
+  const flagged = (report?.unsupported ?? []).filter((c) => c.status !== "ambiguous");
+  const contradicted = flagged.filter((c) => c.status === "contradicted");
+  const unavailable = flagged.some((c) => c.status === "unavailable") || (report?.summary?.unavailable ?? 0) > 0;
+  const assertable = flagged.filter((c) => c.status !== "contradicted" && c.status !== "unavailable");
+  const missing = assertable.filter((c) => !isSpecificStatement(c.value, statements[c.value] ?? "")).length;
+  const claimsOk = !blocking || (contradicted.length === 0 && !unavailable && missing === 0);
+  const ready = claimsOk && (!uncertain || notPublished);
 
   function change(o: boolean) {
     if (busy) return;
     if (!o) {
-      setAckClaims(false);
+      setStatements({});
       setNotPublished(false);
     }
     onOpenChange(o);
@@ -68,7 +84,12 @@ export function PublishDialog({
               {t("common.cancel")}
             </Button>
             <Button
-              onClick={() => onConfirm({ acknowledgeClaims: blocking > 0 && ackClaims, confirmNotPublished: uncertain && notPublished })}
+              onClick={() =>
+                onConfirm({
+                  claimAssertions: blocking > 0 ? assertable.map((c) => ({ claim: c.value, statement: (statements[c.value] ?? "").trim() })) : [],
+                  confirmNotPublished: uncertain && notPublished,
+                })
+              }
               loading={busy}
               disabled={!ready}
             >
@@ -118,13 +139,35 @@ export function PublishDialog({
                 {serverMessage || t("studio2.dialog.claims.d")}
               </Notice>
               {report && <ClaimReportPanel report={report} />}
-              <Checkbox
-                checked={ackClaims}
-                onChange={(e) => setAckClaims(e.target.checked)}
-                label={t("studio2.dialog.claims.ack")}
-                description={t("studio2.dialog.claims.ack.d")}
-                className="rounded-lg border border-border px-3 py-2.5"
-              />
+              {contradicted.length > 0 && (
+                <Notice tone="bad" title={contradicted.map((c) => `“${c.value}”`).join(", ")}>
+                  {t("studio2.assert.contradicted")}
+                </Notice>
+              )}
+              {unavailable && <Notice tone="warn">{t("studio2.assert.unavailable")}</Notice>}
+              {contradicted.length === 0 && !unavailable && (
+                <ol className="flex flex-col gap-4 border-t border-border-soft pt-4">
+                  {assertable.map((c) => (
+                    <li key={`${c.type}:${c.value}`}>
+                      <Field label={fill(t("studio2.assert.label"), { claim: c.value })} hint={t("studio2.assert.hint")}>
+                        <Textarea
+                          rows={2}
+                          className="min-h-16"
+                          value={statements[c.value] ?? ""}
+                          maxLength={600}
+                          placeholder={t("studio2.assert.placeholder")}
+                          onChange={(e) => setStatements((s) => ({ ...s, [c.value]: e.target.value }))}
+                        />
+                      </Field>
+                    </li>
+                  ))}
+                </ol>
+              )}
+              {missing > 0 && contradicted.length === 0 && !unavailable && (
+                <p className="text-xs text-fg-3" aria-live="polite">
+                  {fill(t("studio2.assert.missing"), { n: missing })}
+                </p>
+              )}
             </div>
           )}
         </div>

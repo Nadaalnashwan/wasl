@@ -117,7 +117,7 @@ export function AlertsView() {
                 )}
               </Block>
               <Block title="Scheduler">
-                <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 rounded-xl border border-border bg-surface p-4 text-sm">
+                <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 rounded-lg border border-border-soft bg-surface p-4 text-sm">
                   <dt className="text-fg-3">State</dt>
                   <dd>
                     <Status tone={d.scheduler.running ? "ok" : "warn"}>{d.scheduler.running ? "running in-process" : "not running in-process"}</Status>
@@ -131,7 +131,7 @@ export function AlertsView() {
                 </dl>
               </Block>
               <Block title="Thresholds" description="A rule fires only once the minimum sample is reached (escaped claims fire at 1).">
-                <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1.5 rounded-xl border border-border bg-surface p-4 text-sm">
+                <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1.5 rounded-lg border border-border-soft bg-surface p-4 text-sm">
                   {Object.entries(d.thresholds).map(([k, v]) => (
                     <div key={k} className="contents">
                       <dt className="text-fg-3">{humanize(k)}</dt>

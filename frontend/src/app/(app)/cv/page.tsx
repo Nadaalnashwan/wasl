@@ -281,7 +281,7 @@ export default function CVPage() {
       {!master.loading && !master.error && !hasWorkspace && (
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <Section title={t("cv2.start.title")} description={t("cv2.start.text")}>
-            <ol className="mt-4 flex flex-col divide-y divide-border rounded-xl border border-border bg-surface">
+            <ol className="mt-4 flex flex-col divide-y divide-border rounded-lg border border-border-soft bg-surface">
               <li className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-semibold text-fg">{t("cv2.start.upload")}</div>
@@ -556,7 +556,12 @@ export default function CVPage() {
                   </div>
                 )}
               </div>
-              <div className="lg:max-h-[calc(100vh-11rem)] lg:overflow-y-auto lg:rounded-md lg:pb-1">
+              <div
+                className="lg:max-h-[calc(100vh-11rem)] lg:overflow-y-auto lg:rounded-md lg:pb-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                role="region"
+                aria-label={t("cv2.preview.title")}
+                tabIndex={0}
+              >
                 {previewData && <CVDocument data={previewData} marks={previewMarks} label={t("cv2.preview.title")} />}
               </div>
             </aside>

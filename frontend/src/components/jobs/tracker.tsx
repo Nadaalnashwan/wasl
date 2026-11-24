@@ -186,11 +186,11 @@ export function Tracker({
       </div>
 
       {shown.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border-strong px-4 py-8 text-center text-sm text-fg-3">{t("jobs2.track.nofilter")}</p>
+        <p className="border-s-2 border-border py-1 ps-4 text-sm text-fg-3">{t("jobs2.track.nofilter")}</p>
       ) : (
         <>
           {/* Desktop: table */}
-          <div className="hidden overflow-hidden rounded-xl border border-border bg-surface lg:block">
+          <div className="hidden overflow-hidden rounded-lg border border-border-soft bg-surface lg:block">
             <table className="w-full table-fixed text-start text-sm">
               <thead className="border-b border-border bg-surface-2 text-xs text-fg-3">
                 <tr>
@@ -240,7 +240,7 @@ export function Tracker({
           </div>
 
           {/* Mobile: stacked list */}
-          <ul className="divide-y divide-border rounded-xl border border-border bg-surface lg:hidden">
+          <ul className="divide-y divide-border rounded-lg border border-border-soft bg-surface lg:hidden">
             {shown.map((row) => (
               <li key={row.id} className="flex flex-col gap-3 px-4 py-4">
                 <div className="flex items-start gap-3">

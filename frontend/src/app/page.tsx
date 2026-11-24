@@ -45,10 +45,10 @@ export default function Landing() {
             </p>
             <h1
               id="hero-title"
-              className="text-[2.5rem] leading-[1.08] font-semibold tracking-tight text-fg sm:text-5xl lg:text-display rtl:leading-[1.3]"
+              className="font-display text-[2.75rem] leading-[1.04] text-fg sm:text-6xl lg:text-display rtl:leading-[1.3]"
             >
               <span className="block">{t("landing2.hero.t1")}</span>
-              <span className="block text-fg-3">{t("landing2.hero.t2")}</span>
+              <span className="block text-fg-3 italic rtl:not-italic">{t("landing2.hero.t2")}</span>
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-fg-2 sm:text-lg">{t("landing2.hero.sub")}</p>
             <div className="mt-9 flex flex-wrap items-center gap-3">

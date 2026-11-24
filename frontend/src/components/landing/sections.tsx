@@ -51,7 +51,7 @@ function SectionIntro({
   return (
     <div className={cn("max-w-xl", className)}>
       <p className="eyebrow mb-3">{eyebrow}</p>
-      <h2 id={id} className="text-2xl font-semibold tracking-tight text-fg sm:text-3xl rtl:leading-snug">
+      <h2 id={id} className="font-display text-3xl text-fg sm:text-[2.5rem] sm:leading-[1.1] rtl:leading-snug">
         {title}
       </h2>
       {sub && <p className="mt-4 text-[15px] leading-relaxed text-fg-2">{sub}</p>}
@@ -165,14 +165,14 @@ export function EvidenceSection() {
 
         <div className="lg:pt-10">
           <h3 className="text-sm font-semibold text-fg">{t("landing2.ev.statuses")}</h3>
-          <dl className="mt-4 divide-y divide-border rounded-xl border border-border bg-bg">
+          <dl className="mt-4 divide-y divide-border rounded-lg border border-border-soft bg-bg">
             {STATUS_ROWS.map(({ status, icon: Icon, tone, key }) => (
-              <div key={status} className="flex gap-3 px-5 py-4">
-                <Icon className={cn("mt-0.5 size-4 shrink-0", tone)} aria-hidden />
-                <div className="min-w-0">
-                  <dt className={cn("text-sm font-semibold", tone)}>{claimStatusLabel(status, locale)}</dt>
-                  <dd className="mt-1 text-sm leading-relaxed text-fg-2">{t(key)}</dd>
-                </div>
+              <div key={status} className="px-5 py-4">
+                <dt className={cn("flex items-center gap-3 text-sm font-semibold", tone)}>
+                  <Icon className="size-4 shrink-0" aria-hidden />
+                  {claimStatusLabel(status, locale)}
+                </dt>
+                <dd className="mt-1 ps-7 text-sm leading-relaxed text-fg-2">{t(key)}</dd>
               </div>
             ))}
           </dl>
@@ -200,7 +200,7 @@ export function FeaturesSection() {
         <SectionIntro id="features-title" eyebrow={t("landing2.f.eyebrow")} title={t("landing2.f.title")} />
 
         {/* featured: LinkedIn studio, split */}
-        <div className="mt-12 grid overflow-hidden rounded-xl border border-border bg-surface lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+        <div className="mt-12 grid overflow-hidden rounded-lg border border-border-soft bg-surface lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
           <div className="p-6 sm:p-8">
             <PenLine className="size-5 text-primary" aria-hidden />
             <h3 className="mt-4 text-xl font-semibold tracking-tight text-fg">{t("landing2.f.studio.t")}</h3>
@@ -280,7 +280,7 @@ export function ClosingCta() {
       <div className={wrap}>
         <div className="flex flex-col gap-8 rounded-2xl border border-border bg-surface px-6 py-10 sm:px-10 md:flex-row md:items-center md:justify-between md:py-12">
           <div className="max-w-xl">
-            <h2 id="end-title" className="text-2xl font-semibold tracking-tight text-fg sm:text-3xl">
+            <h2 id="end-title" className="font-display text-3xl text-fg sm:text-[2.5rem]">
               {t("landing2.end.title")}
             </h2>
             <p className="mt-3 text-[15px] leading-relaxed text-fg-2">{t("landing2.end.sub")}</p>

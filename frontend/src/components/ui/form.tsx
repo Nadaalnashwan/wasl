@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const control =
-  "w-full rounded-lg border border-border bg-surface text-sm text-fg shadow-sm transition-colors placeholder:text-fg-3 hover:border-border-strong focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-bad/20";
+  "w-full rounded-md border border-border-strong/70 bg-field text-sm text-fg transition-colors placeholder:text-fg-3 hover:border-border-strong focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-bad/20";
 
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ className, ...props }, ref) => (
   <input ref={ref} className={cn(control, "h-9 px-3", className)} {...props} />
@@ -111,7 +111,7 @@ export function Segmented<T extends string>({
           className={cn(
             "rounded-md font-medium transition-colors",
             size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm",
-            value === o.value ? "bg-surface text-fg shadow-sm" : "text-fg-3 hover:text-fg",
+            value === o.value ? "bg-surface-elevated text-fg shadow-sm" : "text-fg-2 hover:text-fg",
           )}
         >
           {o.label}
@@ -130,7 +130,7 @@ export function Checkbox({
 }: Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> & { label: React.ReactNode; description?: React.ReactNode }) {
   return (
     <label className={cn("flex cursor-pointer items-start gap-2.5 text-sm", className)}>
-      <input type="checkbox" className="mt-0.5 size-4 shrink-0 cursor-pointer rounded border-border accent-[var(--primary)]" {...props} />
+      <input type="checkbox" className="mt-0.5 size-4 shrink-0 cursor-pointer rounded border-border-strong accent-[var(--primary)]" {...props} />
       <span>
         <span className="font-medium text-fg">{label}</span>
         {description && <span className="mt-0.5 block text-xs text-fg-3">{description}</span>}

@@ -256,7 +256,7 @@ export default function StudioPage() {
     setConfirmOpen(true);
   }
 
-  async function publish(opts: { acknowledgeClaims: boolean; confirmNotPublished: boolean }) {
+  async function publish(opts: { claimAssertions: { claim: string; statement: string }[]; confirmNotPublished: boolean }) {
     if (!current || busy !== null) return;
     setBusy("publish");
     let keepOpen = false;
@@ -267,15 +267,15 @@ export default function StudioPage() {
       }
       const p = await api<StudioPost>(`/api/posts/${current.id}/publish`, {
         method: "POST",
-        json: { confirm: true, confirm_not_published: opts.confirmNotPublished, acknowledge_unverified_claims: opts.acknowledgeClaims },
+        json: { confirm: true, confirm_not_published: opts.confirmNotPublished, claim_assertions: opts.claimAssertions },
       });
       replaceCurrent(p);
       toast("ok", t("studio2.published"));
     } catch (e) {
       const err = e as ApiError;
       const detail = err.detail as { code?: string; claim_check?: ClaimReport; post?: StudioPost; message?: string } | undefined;
-      if (err.status === 409 && detail?.code === "unverified_claims") {
-        // The server re-verified the final text: show its report and require the acknowledgement.
+      if (detail && err.status === 409 && ["unverified_claims", "contradicted_claims", "verification_unavailable"].includes(detail.code ?? "")) {
+        // The server re-verified the final text: show its report and ask for a statement per flagged claim.
         keepOpen = true;
         setDialogReport(asReport(detail.claim_check) ?? dialogReport);
         setServerClaimMsg(detail.message ?? err.message);

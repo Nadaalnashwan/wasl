@@ -30,8 +30,10 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "axe-core": "4.11.0",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
+    "playwright-core": "1.56.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -63,7 +63,7 @@ function StatementPanel() {
       <div />
       <div className="max-w-md">
         <p className="eyebrow mb-4">{t("auth2.side.eyebrow")}</p>
-        <p className="text-3xl leading-tight font-semibold tracking-tight text-fg rtl:leading-snug">{t("auth2.side.title")}</p>
+        <p className="font-display text-[2.5rem] leading-[1.08] text-fg rtl:leading-snug">{t("auth2.side.title")}</p>
         <ul className="mt-10 flex flex-col gap-6">
           {points.map((p) => (
             <li key={p.t} className="flex gap-3">
@@ -171,7 +171,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
                 <span className="grid size-10 place-items-center rounded-lg bg-primary-soft text-primary-text">
                   <MailCheck className="size-5" aria-hidden />
                 </span>
-                <h1 id="confirm-title" className="mt-6 text-title font-semibold text-fg">
+                <h1 id="confirm-title" className="font-display mt-6 text-[2rem] leading-tight text-fg">
                   {t("auth2.confirm.title")}
                 </h1>
                 <p className="mt-3 text-[15px] leading-relaxed text-fg-2">{t("auth2.confirm.text")}</p>
@@ -194,7 +194,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
                 aria-describedby="auth-sub"
                 aria-busy={busy || undefined}
               >
-                <h1 id="auth-title" className="text-title font-semibold text-fg">
+                <h1 id="auth-title" className="font-display text-[2.25rem] leading-tight text-fg">
                   {mode === "login" ? t("auth.login.title") : t("auth.register.title")}
                 </h1>
                 <p id="auth-sub" className="mt-2 text-[15px] leading-relaxed text-fg-2">

@@ -8,7 +8,7 @@ import { fmt } from "@/components/achievements/shared";
 import { ClaimSummary } from "@/components/claims";
 import { EmptyState, ErrorNote, SkeletonRows } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
-import { Card, DescriptionList, Section, Status, type BadgeTone } from "@/components/ui/card";
+import { DescriptionList, Section, Status, type BadgeTone } from "@/components/ui/card";
 import { useApi } from "@/lib/hooks";
 import { useI18n, type TKey } from "@/lib/i18n";
 import { useAuth } from "@/lib/providers";
@@ -101,18 +101,18 @@ function AttentionList({ items }: { items: AttentionItem[] }) {
   const { t } = useI18n();
   if (items.length === 0) {
     return (
-      <p className="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3.5 text-sm text-fg-2">
+      <p className="flex items-center gap-2 border-y border-border-soft py-3.5 text-sm text-fg-2">
         <CheckCircle2 className="size-4 shrink-0 text-ok" aria-hidden /> {t("dashboard2.attention.none")}
       </p>
     );
   }
   return (
-    <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+    <ul className="divide-y divide-border-soft border-y border-border">
       {items.map((it) => (
         <li key={it.id}>
           <Link
             href={it.href}
-            className="group flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-surface-2 focus-visible:bg-surface-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+            className="group -mx-3 flex items-start gap-3 rounded-md px-3 py-3.5 transition-colors hover:bg-surface/70 focus-visible:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
           >
             <Status tone={PRIO_TONE[it.priority]} className="mt-1 shrink-0">
               <span className="sr-only">{t(`dashboard2.prio.${it.priority}`)}</span>
@@ -189,10 +189,17 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-10">
-      <header className="flex flex-wrap items-end gap-x-6 gap-y-4 border-b border-border pb-6">
+      <header className="flex flex-wrap items-end gap-x-6 gap-y-5 border-b border-border pb-8">
         <div className="min-w-0 flex-1">
-          <h1 className="text-title font-semibold text-fg">{name ? fmt(t("dashboard2.greeting"), { name }) : t("dashboard2.greeting.anon")}</h1>
-          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-fg-2" dir="auto">
+          <p className="eyebrow mb-3">
+            <time dateTime={new Date().toISOString().slice(0, 10)}>
+              {new Date().toLocaleDateString(locale === "ar" ? "ar-SA-u-ca-gregory" : "en-GB", { weekday: "long", day: "numeric", month: "long" })}
+            </time>
+          </p>
+          <h1 className="font-display text-[2.25rem] leading-[1.1] text-fg sm:text-[2.75rem]">
+            {name ? fmt(t("dashboard2.greeting"), { name }) : t("dashboard2.greeting.anon")}
+          </h1>
+          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-fg-2" dir="auto">
             {data?.user.headline || t("dashboard2.sub")}
           </p>
         </div>
@@ -296,7 +303,7 @@ export default function DashboardPage() {
             {/* ---------------------------------------------------------------- side column */}
             <aside className="flex min-w-0 flex-col gap-10">
               <Section title={t("dashboard2.cv.title")} action={data.cv.exists ? <SectionLink href="/cv">{t("dashboard2.cv.open")}</SectionLink> : undefined}>
-                <Card className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 border-t border-border pt-4">
                   {data.cv.exists ? (
                     <>
                       <div>
@@ -358,7 +365,7 @@ export default function DashboardPage() {
                       )}
                     </Link>
                   )}
-                </Card>
+                </div>
               </Section>
 
               <Section title={t("dashboard2.content.title")} action={<SectionLink href="/studio">{t("dashboard2.content.open")}</SectionLink>}>

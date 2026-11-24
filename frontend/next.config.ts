@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  devIndicators: false, // keeps the dev overlay out of QA screenshots
   // Wasl pages are client components backed by the FastAPI API and auth-gated in the browser,
   // so Cache Components / Partial Prefetching (server-rendered App Shells) are intentionally off.
   turbopack: {

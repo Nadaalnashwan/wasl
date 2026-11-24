@@ -147,7 +147,7 @@ export function QualityView() {
                   const c = q.cv_decisions;
                   const n = c.accepted + c.edited + c.rejected;
                   return (
-                    <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4">
+                    <div className="flex flex-col gap-4 rounded-lg border border-border-soft bg-surface p-4">
                       <Kpi label="Acceptance rate" def="cv_acceptance" value={fmtPct(q.cv_acceptance_rate)} sample={<Sample n={n} unit="decisions" />} />
                       {n > 0 ? (
                         <SegmentBar
@@ -170,7 +170,7 @@ export function QualityView() {
                   const f = q.achievement_feedback;
                   const n = f.confirmed + f.rejected;
                   return (
-                    <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4">
+                    <div className="flex flex-col gap-4 rounded-lg border border-border-soft bg-surface p-4">
                       <Kpi label="Extraction precision (proxy)" def="extraction_precision" value={fmtPct(q.extraction_precision)} sample={<Sample n={n} unit="reviewed" />} />
                       {n > 0 ? (
                         <SegmentBar
@@ -188,7 +188,7 @@ export function QualityView() {
                 })()}
               </Block>
               <Block title="Safety & publishing">
-                <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 rounded-xl border border-border bg-surface p-4 text-sm">
+                <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 rounded-lg border border-border-soft bg-surface p-4 text-sm">
                   <dt className="flex items-center gap-1 text-fg-3">
                     Prompt-injection flags <InfoTip def="injection_flags" />
                   </dt>

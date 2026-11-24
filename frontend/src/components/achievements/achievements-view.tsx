@@ -27,12 +27,12 @@ function Legend() {
   return (
     <dl className="mb-8 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-3">
       {items.map((it) => (
-        <div key={it.label} className="flex items-start gap-2.5">
-          <it.icon className={`mt-0.5 size-4 shrink-0 ${it.tone}`} aria-hidden />
-          <div className="min-w-0">
-            <dt className="font-medium text-fg">{it.label}</dt>
-            <dd className="text-xs leading-relaxed text-fg-3">{it.d}</dd>
-          </div>
+        <div key={it.label} className="min-w-0">
+          <dt className="flex items-center gap-2.5 font-medium text-fg">
+            <it.icon className={`size-4 shrink-0 ${it.tone}`} aria-hidden />
+            {it.label}
+          </dt>
+          <dd className="ps-[26px] text-xs leading-relaxed text-fg-3">{it.d}</dd>
         </div>
       ))}
     </dl>
@@ -180,7 +180,7 @@ export function AchievementsView({ initialStatus, initialOpen }: { initialStatus
                 <p className="mb-2 text-xs text-fg-3" aria-live="polite">
                   {fmt(t("achievements2.filter.showing"), { n: visible.length, t: inTab })}
                 </p>
-                <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface" aria-label={t("achievements2.list.label")}>
+                <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border-soft bg-surface" aria-label={t("achievements2.list.label")}>
                   {visible.map((a) => (
                     <AchievementRow key={a.id} a={a} active={a.id === openId} onOpen={(x) => {
                         setTab(active);
