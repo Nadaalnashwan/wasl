@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.ai.workflows.career import run_career
 from app.deps import achievement_dict, get_current_user, get_db, master_cv, owned, track_task
 from app.models import CV, Achievement, JobAnalysis, User
-from app.monitoring.recorder import record_quality
+from app.monitoring.recorder import record_claim_check
 
 router = APIRouter(prefix="/api/career", tags=["career"])
 
@@ -41,8 +41,9 @@ async def tailor(body: JobIn, user: User = Depends(get_current_user), db: Sessio
         st = await run_career(user, "tailor", body.job_text, cv.data, _confirmed(db, user))
     req = st["requirements"]
     enf = st["enforcement"]
-    record_quality("claim_check", user_id=user.id, task="cv_tailor",
-                   details={"claims_checked": enf["claims_checked"], "unsupported_count": enf["unsupported_found"]})
+    record_claim_check("cv_tailor", enf["claim_report"], stage="raw", user_id=user.id)
+    record_claim_check("cv_tailor", enf["final_claim_report"], stage="final", user_id=user.id,
+                       rejected_bullets=enf["rejected_bullets"])
     j = JobAnalysis(user_id=user.id, kind="tailor", job_title=req.job_title[:300], company=req.company[:300],
                     requirements=req.model_dump(), match_score=st["score"]["score"],
                     result={"must": st["must"], "nice": st["nice"], "score": st["score"], "enforcement": enf,
@@ -89,6 +90,8 @@ def analysis(analysis_id: str, user: User = Depends(get_current_user), db: Sessi
         t = db.scalar(select(CV).where(CV.job_analysis_id == j.id, CV.user_id == user.id))
         if t:
             parent = db.get(CV, t.parent_cv_id) if t.parent_cv_id else None
+            if parent is not None and parent.user_id != user.id:  # defence in depth: never mix users' CVs
+                parent = None
             out["tailored"] = {"id": t.id, "title": t.title, "data": t.data}
             out["original"] = parent.data if parent else None
     return out

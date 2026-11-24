@@ -30,14 +30,10 @@ def platform_key(provider: str) -> str:
 
 
 def model_for(provider: str, tier: str) -> str:
-    """tier: 'fast' (cheap classification/extraction) or 'quality' (writing, reasoning)."""
-    if provider == "groq":
-        return settings.groq_model_quality if tier == "quality" else settings.groq_model_fast
-    if provider == "gemini":
-        return settings.gemini_model_quality if tier == "quality" else settings.gemini_model_fast
-    if provider == "openrouter":
-        return settings.openrouter_model
-    return f"{provider}-{tier}"
+    """Kept for backwards compatibility; the source of truth is app/ai/model_registry.py."""
+    from app.ai.model_registry import model_for as _model_for
+
+    return _model_for(provider, tier)
 
 
 def platform_providers() -> list[str]:

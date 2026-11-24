@@ -48,6 +48,7 @@ class ContentState(TypedDict, total=False):
     evidence: str
     post: GeneratedPost
     claims: dict
+    raw_claims: dict
     revisions: int
     provider: str
     model: str
@@ -76,12 +77,23 @@ async def _generate(state: ContentState) -> ContentState:
             "fallback_used": res.fallback_used}
 
 
+def _contribution_confirmed(a: dict) -> bool | None:
+    """False when the achievement still needs the user to confirm their personal contribution."""
+    if a.get("needs_contribution_confirmation") and not (a.get("contribution_note") or "").strip():
+        return False
+    return None
+
+
 def _check(state: ContentState) -> ContentState:
-    return {"claims": check_claims(state["post"].content, state["evidence"])}
+    rep = check_claims(state["post"].content, state["evidence"], contribution_confirmed=_contribution_confirmed(state["achievement"]))
+    out: ContentState = {"claims": rep}
+    if not state.get("revisions"):
+        out["raw_claims"] = rep  # the model's first draft, before the revise step (raw, pre-enforcement)
+    return out
 
 
 async def _revise(state: ContentState) -> ContentState:
-    bad = ", ".join(f"{u['type']} '{u['value']}'" for u in state["claims"]["unsupported"])
+    bad = ", ".join(f"{u['type']} '{u['value']}' ({u.get('reason') or u.get('status', '')})" for u in state["claims"]["unsupported"])
     prompt = (
         f"This LinkedIn post contains claims not supported by the achievement data: {bad}.\n"
         "Rewrite the post removing or softening ONLY those claims, keep language, tone and length.\n\n"

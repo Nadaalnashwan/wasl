@@ -50,7 +50,7 @@ class GeminiProvider(Provider):
         return LLMResult(
             text=text,
             provider=self.name,
-            model=model,
+            model=data.get("modelVersion") or model,
             prompt_tokens=int(usage.get("promptTokenCount") or 0),
             completion_tokens=int(usage.get("candidatesTokenCount") or 0),
         )

@@ -42,7 +42,7 @@ def test_claim_checker_flags_invented_numbers_skills_and_credentials():
     assert ok["passed"]
     bad = check_claims("Award-winning parser in Python and Kubernetes, improved accuracy by 40%.", evidence)
     values = {u["value"] for u in bad["unsupported"]}
-    assert {"40", "Kubernetes", "award"} <= values
+    assert {"40%", "Kubernetes", "award"} <= values  # v2 labels numbers with their unit
     assert not bad["passed"]
 
 

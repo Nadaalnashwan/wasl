@@ -135,6 +135,8 @@ def _pending(db: Session, suggestion_id: str, user: User) -> tuple[CVSuggestion,
     if s.status != "pending":
         raise HTTPException(409, f"Suggestion is already {s.status}.")
     cv = db.get(CV, s.cv_id)
+    if cv is not None and cv.user_id != user.id:  # defence in depth
+        raise HTTPException(404, "Not found")
     if cv is None or cv.version != s.base_version:
         s.status = "stale"
         db.commit()

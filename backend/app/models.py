@@ -40,6 +40,9 @@ class User(Base, TimestampMixin):
     ai_mode: Mapped[str] = mapped_column(String(20), default="platform")
     allow_platform_fallback: Mapped[bool] = mapped_column(Boolean, default=True)
     allow_cross_provider: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Authorization role: "user" | "admin". Never settable through the API — only via scripts/admin.py
+    # (trusted server-side CLI). Read from the DB on every request, so revocation is immediate.
+    role: Mapped[str] = mapped_column(String(16), default="user", server_default="user", index=True)
 
 
 class Achievement(Base, TimestampMixin):
@@ -329,6 +332,13 @@ class AIEvent(Base, TimestampMixin):
     prompt_tokens: Mapped[int] = mapped_column(Integer, default=0)
     completion_tokens: Mapped[int] = mapped_column(Integer, default=0)
     input_chars: Mapped[int] = mapped_column(Integer, default=0)
+    # v2 traceability (see docs/AI_MODEL_REGISTRY.md). returned_model = identifier reported by the provider.
+    returned_model: Mapped[str] = mapped_column(String(120), default="", server_default="")
+    registry_version: Mapped[str] = mapped_column(String(40), default="", server_default="")
+    est_cost_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
+    pricing_version: Mapped[str] = mapped_column(String(40), default="", server_default="")
+    privacy_level: Mapped[str] = mapped_column(String(20), default="", server_default="")
+    redactions: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
 
 class HTTPEvent(Base, TimestampMixin):
@@ -369,5 +379,45 @@ class EvalRun(Base, TimestampMixin):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     dataset_version: Mapped[str] = mapped_column(String(40))
     provider: Mapped[str] = mapped_column(String(40), default="")
+    model: Mapped[str] = mapped_column(String(200), default="", server_default="")
+    # deterministic = offline regression suite (no LLM); live = real provider run; benchmark = provider comparison
+    kind: Mapped[str] = mapped_column(String(20), default="live", server_default="live")
+    verifier_version: Mapped[str] = mapped_column(String(40), default="", server_default="")
+    git_sha: Mapped[str] = mapped_column(String(40), default="", server_default="")
     summary: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     cases: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+
+
+class AdminAuditLog(Base, TimestampMixin):
+    """Security audit trail: role changes and administrative access. Metadata only."""
+
+    __tablename__ = "admin_audit_log"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    actor_user_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    actor_label: Mapped[str] = mapped_column(String(100), default="")  # e.g. "cli" for scripts/admin.py
+    action: Mapped[str] = mapped_column(String(40), index=True)  # role_grant | role_revoke | admin_access | alert_test ...
+    target_user_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    details: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+
+
+class AlertIncident(Base, TimestampMixin):
+    """An alert rule that fired. One open incident per rule key; deduplicated while open, resolved on recovery."""
+
+    __tablename__ = "alert_incidents"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    key: Mapped[str] = mapped_column(String(60), index=True)
+    severity: Mapped[str] = mapped_column(String(20))  # info | warning | critical
+    title: Mapped[str] = mapped_column(String(300))
+    status: Mapped[str] = mapped_column(String(20), default="open", index=True)  # open | resolved
+    value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    threshold: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sample_size: Mapped[int] = mapped_column(Integer, default=0)
+    investigate: Mapped[str] = mapped_column(Text, default="")
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # external delivery (Slack webhook / generic webhook)
+    notify_status: Mapped[str] = mapped_column(String(20), default="pending")  # pending | sent | failed | disabled
+    notify_attempts: Mapped[int] = mapped_column(Integer, default=0)
+    notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    recovery_notified: Mapped[bool] = mapped_column(Boolean, default=False)
+    last_error: Mapped[str] = mapped_column(String(300), default="")

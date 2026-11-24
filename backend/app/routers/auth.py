@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -25,6 +25,9 @@ class LoginIn(BaseModel):
 
 
 class ProfileIn(BaseModel):
+    # extra="forbid": unknown fields (e.g. a forged "role") are rejected with 422, never applied
+    model_config = ConfigDict(extra="forbid")
+
     full_name: str | None = Field(default=None, max_length=200)
     headline: str | None = Field(default=None, max_length=300)
     locale: str | None = Field(default=None, pattern="^(en|ar)$")
@@ -32,7 +35,7 @@ class ProfileIn(BaseModel):
 
 def user_out(u: User) -> dict:
     return {"id": u.id, "email": u.email, "full_name": u.full_name, "headline": u.headline, "locale": u.locale,
-            "created_at": u.created_at.isoformat()}
+            "role": u.role or "user", "created_at": u.created_at.isoformat()}
 
 
 @router.get("/config")
@@ -51,7 +54,7 @@ def register(body: RegisterIn, db: Session = Depends(get_db)):
     email = body.email.lower()
     if db.scalar(select(User).where(User.email == email)):
         raise HTTPException(409, "An account with this email already exists.")
-    u = User(email=email, password_hash=hash_password(body.password), full_name=body.full_name.strip())
+    u = User(email=email, password_hash=hash_password(body.password), full_name=body.full_name.strip(), role="user")
     db.add(u)
     db.commit()
     return {"access_token": create_local_token(u.id), "token_type": "bearer", "user": user_out(u)}

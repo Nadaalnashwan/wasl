@@ -12,6 +12,7 @@ from typing import Any
 
 from app.db import SessionLocal
 from app.models import AIEvent, ErrorLog, HTTPEvent, QualityEvent
+from app.security.pii import redact_for_logs
 
 log = logging.getLogger("wasl.monitoring")
 
@@ -23,9 +24,10 @@ _SECRET_PATTERNS = [
 
 
 def scrub(text: str, limit: int = 300) -> str:
+    """Remove secrets AND personal data (emails, phones, IDs…) before anything reaches logs."""
     for pat in _SECRET_PATTERNS:
         text = pat.sub("[redacted]", text)
-    return text[:limit]
+    return redact_for_logs(text, limit)
 
 
 def _write(obj: Any) -> None:
@@ -51,6 +53,24 @@ def record_http_event(**kwargs: Any) -> None:
 def record_quality(kind: str, *, user_id: str | None = None, task: str = "", outcome: str = "",
                    value: float | None = None, details: dict[str, Any] | None = None) -> None:
     _write(QualityEvent(kind=kind, user_id=user_id, task=task, outcome=outcome, value=value, details=details or {}))
+
+
+def record_claim_check(task: str, report: dict, *, stage: str, user_id: str | None = None, **extra: Any) -> None:
+    """stage: raw (model output before any enforcement) | final (what the user receives / what is saved) |
+    approved (content the user accepted, exported or published)."""
+    summary = report.get("summary") or {}
+    record_quality("claim_check", user_id=user_id, task=task, outcome=stage, details={
+        "stage": stage,
+        "claims_checked": int(report.get("claims_checked", 0)),
+        "unsupported_count": int(report.get("unsupported_count", 0)),
+        "blocking_count": int(report.get("blocking_count", report.get("unsupported_count", 0))),
+        "contradicted": int(summary.get("contradicted", 0)),
+        "ambiguous": int(summary.get("ambiguous", 0)),
+        "needs_confirmation": int(summary.get("needs_confirmation", 0)),
+        "unavailable": int(summary.get("unavailable", 0)),
+        "verifier_version": report.get("verifier_version", "claims-v1"),
+        **extra,
+    })
 
 
 def record_error(route: str, exc: BaseException, user_id: str | None = None) -> str:

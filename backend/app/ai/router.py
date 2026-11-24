@@ -25,6 +25,8 @@ from typing import TypeVar
 from pydantic import BaseModel, ValidationError
 from sqlalchemy import select
 
+from app.ai import model_registry
+from app.ai.pricing import PRICING_VERSION, estimate_cost
 from app.ai.providers import registry
 from app.ai.providers.base import ChatMessage, ProviderError
 from app.config import settings
@@ -32,30 +34,13 @@ from app.db import SessionLocal
 from app.models import User, UserApiKey
 from app.monitoring.recorder import record_ai_event
 from app.security.crypto import decrypt
+from app.security.pii import Redactor
 
 T = TypeVar("T", bound=BaseModel)
 
 
-@dataclass(frozen=True)
-class TaskProfile:
-    tier: str  # fast | quality
-    max_tokens: int
-    temperature: float
-
-
-TASKS: dict[str, TaskProfile] = {
-    "post_generation": TaskProfile("quality", 1200, 0.7),
-    "post_improve": TaskProfile("quality", 1000, 0.4),
-    "achievement_extraction": TaskProfile("quality", 1500, 0.1),
-    "repo_analysis": TaskProfile("quality", 1500, 0.1),
-    "cv_parse": TaskProfile("quality", 3500, 0.0),
-    "cv_update": TaskProfile("quality", 1500, 0.2),
-    "job_requirements": TaskProfile("fast", 1200, 0.0),
-    "cv_tailor": TaskProfile("quality", 3000, 0.2),
-    "gap_roadmap": TaskProfile("quality", 2000, 0.3),
-    "job_profile": TaskProfile("fast", 800, 0.0),
-    "job_requirements_batch": TaskProfile("fast", 2500, 0.0),
-}
+# Task configuration now lives in the model registry (app/ai/model_registry.py); re-exported for callers.
+TASKS = model_registry.TASKS
 
 
 class AIUnavailableError(Exception):
@@ -78,10 +63,14 @@ class Candidate:
 class RouterResult:
     data: BaseModel
     provider: str
-    model: str
+    model: str  # identifier the provider reported (falls back to the requested model)
     request_id: str
     fallback_used: bool
     attempts: list[dict] = field(default_factory=list)
+    requested_model: str = ""
+    registry_version: str = model_registry.REGISTRY_VERSION
+    est_cost_usd: float | None = None
+    redactions: int = 0
 
 
 def _user_keys(user_id: str) -> dict[str, str]:
@@ -140,63 +129,111 @@ async def run_structured(
     *,
     user: User | None = None,
     candidates: list[Candidate] | None = None,
+    pii_names: list[str] | None = None,
+    document: bool = False,
 ) -> RouterResult:
-    profile = TASKS[task]
+    """Run one logical AI request.
+
+    Privacy enforcement happens HERE (not in each workflow): personal-data tasks only go to providers whose
+    verified privacy level meets AI_PERSONAL_MIN_PRIVACY — the same rule applies to fallbacks and BYOK keys —
+    and every outbound message is PII-redacted, with placeholders restored locally in the answer.
+    `pii_names` adds names to redact; `document=True` also treats the first line as the holder's name (CVs).
+    """
+    cfg = model_registry.TASKS[task]
     cands = candidates if candidates is not None else build_candidates(user)
-    if not cands:
-        # still visible on the dashboard: users experienced a failed AI call
-        record_ai_event(request_id=str(uuid.uuid4()), user_id=user.id if user else None, task=task, provider="none", model="-",
-                        key_source="platform", status="error", error_type="no_provider", latency_ms=0,
-                        input_chars=len(system) + len(user_prompt))
-        if user is not None and user.ai_mode == "personal" and not user.allow_platform_fallback:
-            raise AIUnavailableError("You chose to use only your own API keys, but no valid personal key is saved. Add one in Settings.")
-        raise AIUnavailableError("No AI provider is configured. Add GROQ_API_KEY or GEMINI_API_KEY to backend/.env, or add your own key in Settings.")
-
-    sys_msg = (
-        f"{system}\n\nRespond with a single JSON object only, matching this JSON Schema:\n{_schema_hint(schema)}"
-    )
     request_id = str(uuid.uuid4())
-    attempts_log: list[dict] = []
     input_chars = len(system) + len(user_prompt)
+    uid = user.id if user else None
 
-    for idx, cand in enumerate(cands):
+    def _no_provider(error_type: str, reason: str) -> AIUnavailableError:
+        record_ai_event(request_id=request_id, user_id=uid, task=task, provider="none", model="-", key_source="platform",
+                        status="error", error_type=error_type, latency_ms=0, input_chars=input_chars,
+                        registry_version=model_registry.REGISTRY_VERSION)
+        return AIUnavailableError(reason)
+
+    if not cands:
+        if user is not None and user.ai_mode == "personal" and not user.allow_platform_fallback:
+            raise _no_provider("no_provider", "You chose to use only your own API keys, but no valid personal key is saved. Add one in Settings.")
+        raise _no_provider("no_provider", "No AI provider is configured. Add GROQ_API_KEY or GEMINI_API_KEY to backend/.env, or add your own key in Settings.")
+
+    # ---- provider privacy policy (applies equally to primary, fallback and BYOK candidates)
+    eligible: list[tuple[Candidate, str]] = []
+    for c in cands:
+        level, _basis = model_registry.provider_privacy(c.provider, c.key_source)
+        if model_registry.privacy_ok(level, cfg.sensitivity):
+            eligible.append((c, level))
+    if not eligible:
+        raise _no_provider(
+            "privacy_policy",
+            "No configured AI provider meets Wasl's privacy requirements for personal career data, so nothing was sent. "
+            "An administrator must enable a provider with limited retention (see docs/PRIVACY.md), or add a Groq or "
+            "OpenRouter key in Settings.",
+        )
+
+    # ---- PII redaction at the provider boundary
+    names = [n for n in [*(pii_names or []), (user.full_name if user else "")] if n]
+    redactor = Redactor(known_names=names, cv_header=document)
+    if settings.ai_redact_pii:
+        safe_system, safe_prompt = redactor.redact(system), redactor.redact(user_prompt)
+    else:  # pragma: no cover - only for local debugging
+        safe_system, safe_prompt = system, user_prompt
+
+    sys_msg = f"{safe_system}\n\nRespond with a single JSON object only, matching this JSON Schema:\n{_schema_hint(schema)}"
+    if redactor.count:
+        sys_msg += ("\nSome personal details were replaced with placeholders like [EMAIL_1] or [NAME_1]. "
+                    "Copy placeholders exactly where those values belong; never invent replacements.")
+    attempts_log: list[dict] = []
+    deadline = time.monotonic() + settings.ai_total_deadline_seconds
+
+    for idx, (cand, level) in enumerate(eligible):
         provider = registry.build(cand.provider, cand.api_key)
-        model = registry.model_for(cand.provider, profile.tier)
-        messages = [ChatMessage("system", sys_msg), ChatMessage("user", user_prompt)]
+        provider.zdr_required = cfg.sensitivity == "personal"  # adapters that support request-level ZDR use it
+        model = model_registry.model_for(cand.provider, cfg.tier)
+        messages = [ChatMessage("system", sys_msg), ChatMessage("user", safe_prompt)]
         repaired = False
         attempt = 0
-        while attempt <= settings.ai_max_retries:
+        while attempt <= cfg.max_retries:
+            remaining = deadline - time.monotonic()
+            if remaining <= 1:
+                attempts_log.append({"provider": cand.provider, "attempt": attempt + 1, "error": "deadline"})
+                break
             attempt += 1
             t0 = time.perf_counter()
             event = dict(
-                request_id=request_id, user_id=user.id if user else None, task=task, provider=cand.provider,
-                model=model, key_source=cand.key_source, attempt=attempt, is_fallback=idx > 0, input_chars=input_chars,
+                request_id=request_id, user_id=uid, task=task, provider=cand.provider, model=model, key_source=cand.key_source,
+                attempt=attempt, is_fallback=idx > 0, input_chars=input_chars, registry_version=model_registry.REGISTRY_VERSION,
+                pricing_version=PRICING_VERSION, privacy_level=level, redactions=redactor.count,
             )
             try:
                 res = await provider.complete(
-                    messages, model, json_mode=True, temperature=profile.temperature,
-                    max_tokens=profile.max_tokens, timeout=settings.ai_timeout_seconds,
+                    messages, model, json_mode=True, temperature=cfg.temperature,
+                    max_tokens=cfg.max_tokens, timeout=min(cfg.timeout_s, remaining),
                 )
             except ProviderError as err:
                 latency = int((time.perf_counter() - t0) * 1000)
                 record_ai_event(**event, status="error", error_type=err.error_type, http_status=err.http_status, latency_ms=latency)
                 attempts_log.append({"provider": cand.provider, "attempt": attempt, "error": err.error_type})
-                if err.retryable and attempt <= settings.ai_max_retries:
+                if err.retryable and attempt <= cfg.max_retries:
                     delay = err.retry_after if err.retry_after is not None else min(8.0, 0.75 * 2 ** (attempt - 1))
+                    if delay >= deadline - time.monotonic():
+                        break  # Retry-After longer than our budget -> try the next provider instead of waiting
                     await asyncio.sleep(min(delay, 8.0))
                     continue
                 break  # non-retryable (auth/bad_request) or retries exhausted -> next provider
 
             latency = int((time.perf_counter() - t0) * 1000)
-            tokens = dict(prompt_tokens=res.prompt_tokens, completion_tokens=res.completion_tokens)
+            returned = res.model or model
+            cost = estimate_cost(cand.provider, model, res.prompt_tokens, res.completion_tokens)
+            tokens = dict(prompt_tokens=res.prompt_tokens, completion_tokens=res.completion_tokens, returned_model=returned[:120],
+                          est_cost_usd=cost)
             try:
-                parsed = schema.model_validate(extract_json(res.text))
+                parsed = schema.model_validate(extract_json(redactor.restore(res.text)))
             except (json.JSONDecodeError, ValidationError) as verr:
                 record_ai_event(**event, status="invalid_output", error_type="validation", latency_ms=latency, **tokens)
                 attempts_log.append({"provider": cand.provider, "attempt": attempt, "error": "validation"})
                 if not repaired:
                     repaired = True
-                    detail = str(verr)[:800]
+                    detail = redactor.redact(str(verr)[:800])
                     messages = messages + [
                         ChatMessage("assistant", res.text[:4000]),
                         ChatMessage("user", f"That output failed validation: {detail}\nReturn ONLY corrected JSON for the schema."),
@@ -205,11 +242,12 @@ async def run_structured(
                 break
             record_ai_event(**event, status="success", latency_ms=latency, **tokens)
             attempts_log.append({"provider": cand.provider, "attempt": attempt, "ok": True})
-            return RouterResult(parsed, cand.provider, res.model, request_id, idx > 0, attempts_log)
+            return RouterResult(parsed, cand.provider, returned, request_id, idx > 0, attempts_log, requested_model=model,
+                                est_cost_usd=cost, redactions=redactor.count)
 
     summary = ", ".join(f"{a['provider']}:{a.get('error', 'ok')}" for a in attempts_log[-6:])
     errors = {a.get("error") for a in attempts_log}
-    if errors & {"rate_limit", "timeout", "server", "network", "empty"}:
+    if errors & {"rate_limit", "timeout", "server", "network", "empty", "deadline"}:
         hint = "This is usually temporary — please retry in a minute."
     elif errors & {"auth", "model_not_found", "bad_request"}:
         hint = "The AI provider configuration needs attention (key or model name)."

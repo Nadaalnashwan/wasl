@@ -39,5 +39,7 @@ def get_db() -> Iterator[Session]:
 
 def init_db() -> None:
     from app import models  # noqa: F401  (register tables)
+    from app.migrate import upgrade
 
+    upgrade(engine)  # additive ALTERs for databases created by v1 (create_all never adds columns)
     Base.metadata.create_all(engine)

@@ -96,7 +96,8 @@ def get_current_user(
         if existing:
             raise _unauthorized("Account conflict")
         meta = claims.get("user_metadata") or {}
-        user = User(id=user_id, email=email, full_name=meta.get("full_name", ""))
+        # role is NEVER taken from token claims/metadata (user-editable in Supabase); new users are "user"
+        user = User(id=user_id, email=email, full_name=meta.get("full_name", ""), role="user")
         db.add(user)
         db.commit()
     if user is None:

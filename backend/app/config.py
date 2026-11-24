@@ -48,11 +48,24 @@ class Settings(BaseSettings):
     ai_provider_priority: str = "groq,gemini,openrouter"
     groq_model_fast: str = "openai/gpt-oss-20b"
     groq_model_quality: str = "openai/gpt-oss-120b"
-    gemini_model_fast: str = "gemini-3.5-flash"
-    gemini_model_quality: str = "gemini-3.5-flash"
+    # Verified against ai.google.dev model list on 2026-11-24: "gemini-3.5-flash" is NOT a listed ID.
+    gemini_model_fast: str = "gemini-3.5-flash-lite"
+    gemini_model_quality: str = "gemini-3.8-flash"
     openrouter_model: str = "meta-llama/llama-3.3-70b-instruct:free"
     ai_timeout_seconds: float = 45.0
     ai_max_retries: int = 2
+    # hard cap on one logical AI request across all retries + fallbacks (prevents retry storms)
+    ai_total_deadline_seconds: float = 120.0
+
+    # --- AI privacy policy (see docs/PRIVACY.md) ---
+    # Minimum provider privacy level for tasks that carry personal career data:
+    #   none | limited_retention | zdr
+    ai_personal_min_privacy: str = "limited_retention"
+    # Operator attestations about the PLATFORM accounts (cannot be detected via API):
+    groq_zdr_enabled: bool = False  # Zero Data Retention switched on in Groq console Data Controls
+    gemini_paid_tier: bool = False  # Gemini API project has billing enabled (free-tier data may be used to improve products)
+    # Redact contact details / identifiers before any provider call (never disable in production)
+    ai_redact_pii: bool = True
     # Test-only deterministic provider. Never enabled unless explicitly set.
     ai_enable_fake_provider: bool = False
 
@@ -89,10 +102,20 @@ class Settings(BaseSettings):
     upload_dir: str = str(BACKEND_DIR / "uploads")
 
     # --- monitoring alert thresholds ---
-    alert_failure_rate: float = 0.2
-    alert_p95_latency_ms: int = 15000
-    alert_unsupported_claim_rate: float = 0.1
-    alert_fallback_rate: float = 0.3
+    # thresholds are justified in docs/MONITORING.md (baseline + product risk)
+    alert_failure_rate: float = 0.1
+    alert_p95_latency_ms: int = 20000
+    # raw (pre-enforcement) unsupported-claim rate of generated text; escapes after enforcement alert at >0
+    alert_unsupported_claim_rate: float = 0.08
+    alert_fallback_rate: float = 0.25
+    alert_rate_limit_count: int = 10
+    alert_daily_cost_usd: float = 5.0
+    alert_min_sample: int = 20
+    alert_cooldown_minutes: int = 60
+    alert_eval_interval_minutes: int = 5  # in-process scheduler; 0 disables it (use the CLI/cron instead)
+    # external delivery: Slack incoming webhook (preferred) or any JSON webhook. Empty = persisted only.
+    alert_slack_webhook_url: str = ""
+    alert_webhook_url: str = ""
 
     @model_validator(mode="after")
     def _defaults_for_blank(self) -> Settings:

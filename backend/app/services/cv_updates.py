@@ -8,11 +8,10 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.ai.claims import check_claims
-from app.ai.workflows.career import achievement_text, propose_cv_update
+from app.ai.workflows.career import propose_cv_update
 from app.deps import achievement_dict, master_cv
 from app.models import Achievement, CVSuggestion, User
-from app.monitoring.recorder import record_quality
+from app.monitoring.recorder import record_claim_check
 
 
 def suggestion_out(s: CVSuggestion) -> dict:
@@ -225,26 +224,11 @@ async def suggest_for_achievement(
                 "achievement_id": ach.id,
             })
 
-    added = " ".join(
-        change.get("bullet", "") or change.get("summary", "")
-        for change in new_changes
-    )
-
-    if added:
-        check = check_claims(
-            added,
-            achievement_text(achievement),
-        )
-
-        record_quality(
-            "claim_check",
-            user_id=user.id,
-            task="cv_update",
-            details={
-                "claims_checked": check["claims_checked"],
-                "unsupported_count": check["unsupported_count"],
-            },
-        )
+    if result.get("raw_claims"):
+        record_claim_check("cv_update", result["raw_claims"], stage="raw", user_id=user.id)
+    if result.get("final_claims"):
+        record_claim_check("cv_update", result["final_claims"], stage="final", user_id=user.id,
+                           rejected_changes=len(result["rejected"]))
 
     all_changes.extend(new_changes)
 

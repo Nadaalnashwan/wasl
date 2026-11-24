@@ -19,6 +19,9 @@ class OpenAICompatProvider(Provider):
         }
         if json_mode and self.supports_json_mode:
             body["response_format"] = {"type": "json_object"}
+        if self.name == "openrouter" and self.zdr_required:
+            # route only to Zero-Data-Retention endpoints that do not collect data; fail instead of falling back
+            body["provider"] = {"zdr": True, "data_collection": "deny"}
         if "gpt-oss" in model:
             body["reasoning_effort"] = "low"  # reasoning tokens count against max_tokens; keep them small
         headers = {"Authorization": f"Bearer {self.api_key}", **self.extra_headers}

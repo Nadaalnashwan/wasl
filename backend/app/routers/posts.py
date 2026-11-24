@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.ai.claims import check_claims
 from app.ai.workflows.content import (
+    _contribution_confirmed,  # noqa: E402
     evidence_text,
     generate_post,
     improve_post,
@@ -27,10 +28,9 @@ from app.deps import (
     track_task,
 )
 from app.models import Achievement, Integration, Post, User
-from app.monitoring.recorder import record_quality
+from app.monitoring.recorder import record_claim_check, record_quality
 from app.security.crypto import decrypt
 from app.services import linkedin
-
 
 router = APIRouter(prefix="/api/posts", tags=["posts"])
 
@@ -91,6 +91,8 @@ class PostPatch(BaseModel):
 class PublishIn(BaseModel):
     confirm: bool = False
     confirm_not_published: bool = False
+    # required when the final text still has unsupported / contradicted / unconfirmed claims
+    acknowledge_unverified_claims: bool = False
 
 
 def post_out(p: Post) -> dict:
@@ -141,7 +143,7 @@ def image_path(post_id: str, image_id: str) -> Path:
         post_uuid = str(uuid.UUID(post_id))
         image_uuid = str(uuid.UUID(image_id))
     except ValueError:
-        raise HTTPException(404, "Image not found.")
+        raise HTTPException(404, "Image not found.") from None
 
     return IMAGE_DIR / post_uuid / image_uuid
 
@@ -232,16 +234,8 @@ async def generate(
 
     claims = state["claims"]
 
-    record_quality(
-        "claim_check",
-        user_id=user.id,
-        task="post_generation",
-        details={
-            "claims_checked": claims["claims_checked"],
-            "unsupported_count": claims["unsupported_count"],
-            "revisions": state.get("revisions", 0),
-        },
-    )
+    record_claim_check("post_generation", state.get("raw_claims") or claims, stage="raw", user_id=user.id)
+    record_claim_check("post_generation", claims, stage="final", user_id=user.id, revisions=state.get("revisions", 0))
 
     gp = state["post"]
 
@@ -286,15 +280,7 @@ async def improve(
             body.language,
         )
 
-    record_quality(
-        "claim_check",
-        user_id=user.id,
-        task="post_improve",
-        details={
-            "claims_checked": claims["claims_checked"],
-            "unsupported_count": claims["unsupported_count"],
-        },
-    )
+    record_claim_check("post_improve", claims, stage="final", user_id=user.id)
 
     return {
         "content": gp.content,
@@ -322,7 +308,7 @@ def edit(
     if "content" in data and p.achievement_id:
         a = db.get(Achievement, p.achievement_id)
 
-        if a:
+        if a and a.user_id == user.id:
             p.claim_check = {
                 **check_claims(
                     p.content,
@@ -476,7 +462,7 @@ def get_post_image(
     )
 
     if image is None:
-        raise HTTPException(404, "Image not found.")
+        raise HTTPException(404, "Image not found.") from None
 
     path = image_path(p.id, image_id)
 
@@ -519,7 +505,7 @@ def delete_post_image(
         img.get("id") == image_id
         for img in images
     ):
-        raise HTTPException(404, "Image not found.")
+        raise HTTPException(404, "Image not found.") from None
 
     p.images = [
         img
@@ -597,6 +583,22 @@ async def publish(
             409,
             "The last attempt may have succeeded. "
             "Check LinkedIn before retrying.",
+        )
+
+    # ---- claim enforcement: re-verify the exact text about to be published
+    report = p.claim_check or {}
+    if p.achievement_id:
+        a = db.get(Achievement, p.achievement_id)
+        if a is not None and a.user_id == user.id:
+            ad = achievement_dict(a)
+            report = check_claims(p.content, evidence_text(ad), contribution_confirmed=_contribution_confirmed(ad))
+    blocking = int(report.get("blocking_count", report.get("unsupported_count", 0)) or 0)
+    if blocking and not body.acknowledge_unverified_claims:
+        raise HTTPException(
+            409,
+            {"message": "This post still contains claims that are not supported by your evidence. Edit them, or "
+                        "confirm that every statement is accurate before publishing.",
+             "code": "unverified_claims", "claim_check": report},
         )
 
     integ = db.scalar(
@@ -744,6 +746,9 @@ async def publish(
         raise
 
     p.status = "published"
+    # approved stage: fabrication-type claims here are user-acknowledged, never silent (blocked above otherwise)
+    record_claim_check("post_generation", report, stage="approved", user_id=user.id,
+                       acknowledged=bool(blocking and body.acknowledge_unverified_claims))
     p.linkedin_post_urn = urn
     p.publish_error = None
     p.published_at = datetime.now(UTC)

@@ -48,6 +48,8 @@ def classify_status(status: int) -> str:
 class Provider(ABC):
     name: str
     supports_json_mode: bool = True
+    # set by the router for personal-data tasks; adapters with request-level ZDR controls must honour it
+    zdr_required: bool = False
 
     def __init__(self, api_key: str):
         self.api_key = api_key

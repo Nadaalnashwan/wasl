@@ -20,7 +20,7 @@ from typing import Any, TypedDict
 
 from langgraph.graph import END, StateGraph
 
-from app.ai.claims import check_claims
+from app.ai.claims import check_claims, merge_reports
 from app.ai.router import run_structured
 from app.ai.schemas import (
     AwardItem,
@@ -47,7 +47,9 @@ PARSE_SYSTEM = (
 
 async def parse_cv(user, text: str) -> tuple[CVData, list[str]]:
     safe, flags = sanitize_untrusted(text, 20000)
-    res = await run_structured("cv_parse", PARSE_SYSTEM, f"CV text:\n{wrap('cv_upload', safe)}", CVData, user=user)
+    # document=True: the CV header line (usually the holder's name) is redacted too; contact fields come back as
+    # placeholders and are restored locally by the router before validation.
+    res = await run_structured("cv_parse", PARSE_SYSTEM, f"CV text:\n{wrap('cv_upload', safe)}", CVData, user=user, document=True)
     return res.data, flags
 
 
@@ -113,8 +115,14 @@ def apply_changes(cv_dict: dict, proposal: CVUpdateProposal, achievement: dict) 
     allowed_skills = {canonical(s).lower() for s in [*achievement.get("skills", []), *achievement.get("technologies", [])]}
     applied, rejected = [], []
 
+    full_evidence = evidence + "\n" + cv_text(cv_dict)
+    contribution = False if achievement.get("needs_contribution_confirmation") and not achievement.get("contribution_note") else None
+
+    def report(texts: list[str]) -> dict:
+        return merge_reports([check_claims(t, full_evidence, contribution_confirmed=contribution) for t in texts if t])
+
     def ok(text: str) -> bool:
-        return check_claims(text, evidence + "\n" + cv_text(cv_dict))["passed"] if text else True
+        return report([text])["passed"] if text else True
 
     for ch in proposal.changes:
         if ch.action == "add_item" and ch.section in _ITEM_MODELS:
@@ -135,14 +143,17 @@ def apply_changes(cv_dict: dict, proposal: CVUpdateProposal, achievement: dict) 
                 rejected.append({"section": ch.section, "reason": f"duplicate of existing '{name}'"})
                 continue
             texts = [name, getattr(item, "description", ""), *getattr(item, "bullets", [])]
-            if not all(ok(t) for t in texts):
-                rejected.append({"section": ch.section, "reason": "contains claims not in the achievement", "name": name})
+            rep = report(texts)
+            if not rep["passed"]:
+                rejected.append({"section": ch.section, "reason": "contains claims not in the achievement", "name": name,
+                                 "claim_check": rep})
                 continue
             if isinstance(item, ProjectItem):
                 item.technologies = [t for t in item.technologies if canonical(t).lower() in allowed_skills or t.lower() in evidence.lower()]
             getattr(cv, ch.section).append(item)
             applied.append({"section": ch.section, "action": "add_item", "summary": f"Add {ch.section[:-1]} '{name}'",
-                            "item_id": item.id, "reason": ch.reason})
+                            "item_id": item.id, "reason": ch.reason, "claim_check": rep,
+                            "evidence": [e for e in achievement.get("evidence", []) if isinstance(e, dict) and e.get("quote")][:3]})
         elif ch.action == "add_bullet" and ch.section in ("experience", "projects") and ch.bullet:
             target = next((x for x in getattr(cv, ch.section) if x.id == ch.target_id), None)
             if not target:
@@ -151,13 +162,15 @@ def apply_changes(cv_dict: dict, proposal: CVUpdateProposal, achievement: dict) 
             if any(similarity(b, ch.bullet) >= 0.7 for b in target.bullets):
                 rejected.append({"section": ch.section, "reason": "duplicate bullet"})
                 continue
-            if not ok(ch.bullet):
-                rejected.append({"section": ch.section, "reason": "bullet contains unsupported claims"})
+            rep = report([ch.bullet])
+            if not rep["passed"]:
+                rejected.append({"section": ch.section, "reason": "bullet contains unsupported claims", "claim_check": rep})
                 continue
             target.bullets.append(ch.bullet.strip())
             label = getattr(target, "title", None) or getattr(target, "name", "")
             applied.append({"section": ch.section, "action": "add_bullet", "summary": f"Add bullet to '{label}'",
-                            "item_id": target.id, "bullet": ch.bullet.strip(), "reason": ch.reason})
+                            "item_id": target.id, "bullet": ch.bullet.strip(), "reason": ch.reason, "claim_check": rep,
+                            "evidence": [e for e in achievement.get("evidence", []) if isinstance(e, dict) and e.get("quote")][:3]})
         elif ch.action == "add_skills":
             existing = {s.lower() for s in cv.skills}
             new = []
@@ -188,8 +201,11 @@ async def propose_cv_update(user, cv_dict: dict, achievement: dict) -> dict:
     prompt = f"Current CV outline: {compact}\n\nConfirmed achievement (category={achievement.get('category')}):\n{wrap('achievement', safe_a)}"
     res = await run_structured("cv_update", UPDATE_SYSTEM, prompt, CVUpdateProposal, user=user)
     draft, applied, rejected = apply_changes(cv_dict, res.data, achievement)
+    # raw = everything the model proposed (applied + rejected), before deterministic enforcement
+    raw = merge_reports([c["claim_check"] for c in [*applied, *rejected] if c.get("claim_check")])
+    final = merge_reports([c["claim_check"] for c in applied if c.get("claim_check")])
     return {"duplicate": None, "draft": draft if applied else None, "applied": applied, "rejected": rejected,
-            "rationale": res.data.rationale, "provider": res.provider}
+            "rationale": res.data.rationale, "provider": res.provider, "model": res.model, "raw_claims": raw, "final_claims": final}
 
 
 # ----------------------------------------------------------------------------- tailoring + gap graph
@@ -273,7 +289,7 @@ def _enforce(state: CareerState) -> CareerState:
     t = state["tailored_raw"]
     evidence = cv_text(state["cv"]) + "\n" + "\n".join(achievement_text(a) for a in state.get("achievements") or [])
     out = copy.deepcopy(master)
-    report = {"kept_original": [], "rejected_bullets": 0, "accepted_bullets": 0, "unknown_ids": [], "claims": []}
+    report = {"kept_original": [], "rejected_bullets": 0, "accepted_bullets": 0, "unknown_ids": [], "claims": [], "rejected": []}
 
     if t.summary:
         chk = check_claims(t.summary, evidence)
@@ -282,6 +298,7 @@ def _enforce(state: CareerState) -> CareerState:
             out.summary = t.summary
         else:
             report["kept_original"].append({"field": "summary", "unsupported": chk["unsupported"]})
+            report["rejected"].append({"field": "summary", "text": t.summary[:500], "unsupported": chk["unsupported"]})
 
     for sec_name in ("experience", "projects"):
         items = {i.id: i for i in getattr(out, sec_name)}
@@ -300,6 +317,7 @@ def _enforce(state: CareerState) -> CareerState:
                     report["accepted_bullets"] += 1
                 else:
                     report["rejected_bullets"] += 1
+                    report["rejected"].append({"field": f"{sec_name}:{sec.id}", "text": b[:500], "unsupported": chk["unsupported"]})
             if good:
                 items[sec.id].bullets = good
             else:
@@ -313,12 +331,17 @@ def _enforce(state: CareerState) -> CareerState:
     ordered = [s for s in dict.fromkeys(ordered) if s]
     out.skills = ordered + [s for s in master.skills if s not in ordered]
 
-    total_checked = sum(c["claims_checked"] for c in report["claims"])
-    total_bad = sum(c["unsupported_count"] for c in report["claims"])
-    report["claims_checked"] = total_checked
-    report["unsupported_found"] = total_bad
-    report["unsupported_rate_before_enforcement"] = round(total_bad / total_checked, 3) if total_checked else 0.0
-    report.pop("claims")
+    raw = merge_reports(report.pop("claims"))
+    report["claims_checked"] = raw["claims_checked"]
+    report["unsupported_found"] = raw["unsupported_count"]
+    report["blocking_found"] = raw["blocking_count"]
+    report["unsupported_rate_before_enforcement"] = raw["unsupported_rate"]
+    report["claim_report"] = raw  # every claim the model wrote, with statuses (raw, pre-enforcement)
+    # invariant check: re-verify the FINAL tailored document. Anything still flagged here escaped enforcement.
+    final_text = "\n".join([out.summary, *(b for e in out.experience for b in e.bullets), *(b for p in out.projects for b in p.bullets)])
+    final = check_claims(final_text, evidence)
+    report["final_claim_report"] = final
+    report["unsupported_after_enforcement"] = final["unsupported_count"]
     return {"tailored_cv": out.model_dump(), "enforcement": report}
 
 

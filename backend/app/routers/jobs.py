@@ -28,6 +28,7 @@ from app.config import settings
 from app.deps import achievement_dict, get_current_user, get_db, master_cv, owned, track_task
 from app.models import CV, Achievement, JobListing, JobProfile, SavedJob, User, UserJobFeed
 from app.monitoring.recorder import record_quality
+from app.security.authz import require_admin
 from app.services import job_sources
 from app.services.job_sources import SearchQuery
 
@@ -318,7 +319,8 @@ def delete_saved(saved_id: str, user: User = Depends(get_current_user), db: Sess
 
 
 @router.get("/usage")
-def usage(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def usage(user: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Deployment-wide provider quota usage — operational data, administrators only."""
     return {"usage": job_sources.usage_summary(db), "providers_configured": settings.job_providers(),
             "cache_hours": settings.jobs_cache_hours, "cooldown_minutes": settings.jobs_refresh_cooldown_minutes,
             "refreshes_per_day": settings.jobs_refreshes_per_day}

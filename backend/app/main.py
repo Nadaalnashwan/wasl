@@ -15,7 +15,7 @@ from app.ai.router import AIUnavailableError
 from app.config import settings
 from app.db import init_db
 from app.monitoring.recorder import record_error, record_http_event
-from app.routers import achievements, auth, career, cv, dashboard, integrations, jobs, monitoring, posts, user_settings
+from app.routers import achievements, auth, career, cv, dashboard, discovery, integrations, jobs, monitoring, posts, user_settings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("wasl")
@@ -110,6 +110,7 @@ for r in (
     auth,
     dashboard,
     achievements,
+    discovery,
     posts,
     cv,
     career,
@@ -123,11 +124,5 @@ for r in (
 
 @app.get("/api/health")
 def health():
-    from app.ai.providers.registry import platform_providers
-
-    return {
-        "status": "ok",
-        "auth_mode": settings.auth_mode,
-        "database": "sqlite" if settings.is_sqlite else "postgres",
-        "ai_providers_configured": platform_providers(),
-    }
+    """Public liveness probe. Deliberately minimal: configuration details are admin-only (/api/admin/health)."""
+    return {"status": "ok"}
