@@ -93,6 +93,11 @@ async def _extract(state: DiscoveryState) -> DiscoveryState:
     return {"extraction": res.data, "provider": res.provider}
 
 
+_CONCRETE_ACTION = re.compile(r"\b(built|created|developed|designed|implemented|launched|shipped|deployed|automated|trained|"
+                              r"wrote|published|won|reduced|increased|migrated|analy[sz]ed|organi[sz]ed|taught|mentored)\b|"
+                              r"بنيت|طورت|صممت|أطلقت|نشرت|فزت|خفضت|زدت|درّبت|دربت", re.I)
+
+
 def _verify(state: DiscoveryState) -> DiscoveryState:
     src = state["safe_text"]
     meta = state.get("repo_meta") or {}
@@ -128,6 +133,13 @@ def _verify(state: DiscoveryState) -> DiscoveryState:
         skills = [canonical(s) for s in a.skills if supported(s)]
         dropped = [t for t in [*a.technologies, *a.skills] if not supported(t)]
         conf = round(a.confidence * (0.5 + 0.5 * ratio), 2)
+        # low-information sources ("helped with a project, it went fine") cannot carry high confidence: require at
+        # least one concrete cue (a number, a known skill or a concrete build/ship verb)
+        concrete = re.search(r"\d", src) or src_skills or _CONCRETE_ACTION.search(src)
+        if not concrete:
+            if quotes and not verified:
+                continue  # fabricated quotes about a source with no professional content: nothing to review
+            conf = min(conf, 0.5)
         # repositories and team documents never prove personal contribution
         team_doc = bool(re.search(r"\b(we|our team|the team|our group|together)\b|فريقنا|قمنا", src, re.I))
         needs_conf = a.needs_contribution_confirmation or state["source_type"] == "github" or team_doc

@@ -23,29 +23,59 @@ LEXICON: dict[str, list[str]] = {
     "Redis": ["redis"], "Supabase": ["supabase"], "Firebase": ["firebase"], "SQLite": ["sqlite"],
     "Docker": ["docker", "dockerfile", "containers"], "Kubernetes": ["kubernetes", "k8s"],
     "AWS": ["aws", "amazon web services", "ec2", "s3", "lambda"], "Azure": ["azure"], "GCP": ["gcp", "google cloud"],
-    "CI/CD": ["ci/cd", "github actions", "gitlab ci", "jenkins", "continuous integration"], "Git": ["git", "github", "gitlab"],
+    "CI/CD": ["ci/cd", "continuous integration", "continuous delivery"], "Jenkins": ["jenkins"],
+    "GitHub Actions": ["github actions"], "GitLab CI": ["gitlab ci", "gitlab-ci"], "Git": ["git", "github", "gitlab"],
     "Linux": ["linux", "ubuntu"], "Terraform": ["terraform"],
     "Machine Learning": ["machine learning", "ml", "تعلم الآلة"], "Deep Learning": ["deep learning", "neural network", "neural networks", "التعلم العميق"],
     "NLP": ["nlp", "natural language processing", "معالجة اللغة"], "Computer Vision": ["computer vision", "image classification", "object detection", "yolo", "الرؤية الحاسوبية"],
     "LLMs": ["llm", "llms", "large language model", "large language models", "gpt", "generative ai", "genai"],
     "RAG": ["rag", "retrieval augmented generation", "retrieval-augmented generation"],
     "LangChain": ["langchain"], "LangGraph": ["langgraph"], "Prompt Engineering": ["prompt engineering"],
-    "PyTorch": ["pytorch", "torch"], "TensorFlow": ["tensorflow", "keras"], "scikit-learn": ["scikit-learn", "sklearn"],
+    "PyTorch": ["pytorch", "torch"], "TensorFlow": ["tensorflow"], "Keras": ["keras"], "scikit-learn": ["scikit-learn", "sklearn"],
     "Pandas": ["pandas"], "NumPy": ["numpy"], "Data Analysis": ["data analysis", "data analytics", "تحليل البيانات"],
-    "Data Visualization": ["data visualization", "tableau", "power bi", "matplotlib", "dashboards"],
+    "Data Visualization": ["data visualization", "dashboards", "التصور البياني"], "Tableau": ["tableau"],
+    "Power BI": ["power bi", "powerbi"], "Matplotlib": ["matplotlib"], "Looker": ["looker", "looker studio"],
+    "Excel": ["excel", "microsoft excel", "ms excel"], "Airflow": ["airflow", "apache airflow"],
+    "Spark": ["spark", "apache spark", "pyspark"], "Kafka": ["kafka", "apache kafka"], "Snowflake": ["snowflake"],
+    "Jira": ["jira"],
     "Statistics": ["statistics", "statistical", "الإحصاء"], "MLOps": ["mlops", "model deployment", "mlflow"],
     "Hugging Face": ["hugging face", "huggingface", "transformers"], "OpenCV": ["opencv"],
     "REST APIs": ["rest", "rest api", "restful", "api development", "apis"], "GraphQL": ["graphql"],
     "Microservices": ["microservices", "microservice"], "System Design": ["system design", "distributed systems"],
-    "Testing": ["unit testing", "pytest", "jest", "testing", "test automation"], "Agile": ["agile", "scrum", "kanban"],
+    "Testing": ["unit testing", "unit tests", "testing", "test automation"], "Pytest": ["pytest"], "Jest": ["jest"], "Agile": ["agile", "scrum", "kanban"],
     "Cybersecurity": ["cybersecurity", "security", "penetration testing", "الأمن السيبراني"],
-    "UI/UX Design": ["ui/ux", "ux", "ui design", "figma", "user experience"],
+    "UI/UX Design": ["ui/ux", "ux", "ui design", "user experience"], "Figma": ["figma"],
     "Project Management": ["project management", "pmp", "إدارة المشاريع"],
     "Leadership": ["leadership", "led a team", "team lead", "القيادة"], "Communication": ["communication", "presentation skills", "التواصل"],
     "Teamwork": ["teamwork", "collaboration", "cross-functional", "العمل الجماعي"],
     "Problem Solving": ["problem solving", "problem-solving"], "Mentoring": ["mentoring", "mentored", "coaching"],
-    "AI Ethics": ["ai ethics", "responsible ai", "أخلاقيات الذكاء الاصطناعي"], "Monitoring": ["monitoring", "observability", "prometheus", "grafana"],
+    "AI Ethics": ["ai ethics", "responsible ai", "أخلاقيات الذكاء الاصطناعي"], "Monitoring": ["monitoring", "observability"],
+    "Prometheus": ["prometheus"], "Grafana": ["grafana"],
 }
+
+# One-way implications: evidence of a specific tool also demonstrates its family ("Tableau" -> "Data
+# Visualization"), but a family or a sibling tool never demonstrates a specific tool ("Power BI" does not
+# support a "Tableau" claim). Keeping tools separate is what lets the claim verifier catch tool swaps.
+FAMILIES: dict[str, set[str]] = {
+    "Data Visualization": {"Tableau", "Power BI", "Matplotlib", "Looker"},
+    "CI/CD": {"Jenkins", "GitHub Actions", "GitLab CI"},
+    "Testing": {"Pytest", "Jest"},
+    "Monitoring": {"Prometheus", "Grafana"},
+    "UI/UX Design": {"Figma"},
+    "Deep Learning": {"PyTorch", "TensorFlow", "Keras"},
+}
+_IMPLIES: dict[str, set[str]] = {}
+for _fam, _members in FAMILIES.items():
+    for _m in _members:
+        _IMPLIES.setdefault(_m, set()).add(_fam)
+
+
+def with_families(skills: set[str]) -> set[str]:
+    out = set(skills)
+    for sk in skills:
+        out |= _IMPLIES.get(sk, set())
+    return out
+
 
 _ALIAS_TO_CANON: dict[str, str] = {}
 for canon, aliases in LEXICON.items():
@@ -69,13 +99,28 @@ def _pattern(alias: str) -> re.Pattern[str]:
 _PATTERNS = [(a, c, _pattern(a)) for a, c in _ALIAS_TO_CANON.items() if a not in _AMBIGUOUS]
 
 
-def find_skills(text: str) -> set[str]:
-    """Canonical skills mentioned in free text (conservative)."""
+# Ambiguous short aliases are accepted only in an unambiguous context (case-sensitive): "ML model", "Node backend",
+# "in Go". "go live", "node of a graph" or "ml of water" never match.
+_CONTEXT_ALIASES: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"\bML\b(?=[\s-]+(?:model|models|pipeline|pipelines|engineer|engineering|system|systems|project|algorithm|ops))"), "Machine Learning"),
+    (re.compile(r"\bNode\b(?=\s+(?:backend|server|servers|api|apis|service|services|app|application|microservice|runtime))"), "Node.js"),
+    (re.compile(r"\b(?:in|with|using|written in)\s+Go\b(?!\s+(?:live|ahead|through|back|over))|\bGo\b(?=\s+(?:backend|service|services|"
+                r"microservice|microservices|api|apis|server|binary|module|modules|code))"), "Go"),
+    (re.compile(r"\bREST\b(?=\s+(?:api|apis|endpoint|endpoints|service|services))", re.I), "REST APIs"),
+]
+
+
+def find_skills(text: str, *, implied: bool = False) -> set[str]:
+    """Canonical skills mentioned in free text (conservative). implied=True adds the families the specific tools
+    demonstrate (use it for EVIDENCE, never for the claims being checked)."""
     found = set()
     for _alias, canon, pat in _PATTERNS:
         if pat.search(text):
             found.add(canon)
-    return found
+    for pat, canon in _CONTEXT_ALIASES:
+        if pat.search(text):
+            found.add(canon)
+    return with_families(found) if implied else found
 
 
 @dataclass
@@ -86,25 +131,36 @@ class SkillEvidence:
     explanation: str
 
 
+_EXPOSURE_ONLY = re.compile(r"\b(attended|attending|studied|studying|learning|took (?:a|an) (?:course|class|workshop)|enrolled in|"
+                            r"introductory|intro to|workshop|webinar|bootcamp session|plan(?:ning)? to|want to learn)\b|"
+                            r"حضرت|ورشة|دورة تعريفية|أتعلم|درست", re.I)
+_USE = re.compile(r"\b(built|build|created|developed|designed|implemented|deployed|used|using|wrote|automated|trained|analy[sz]ed|"
+                  r"migrated|maintained|shipped|delivered|ran|configured)\b|بنيت|طورت|استخدمت|صممت", re.I)
+
+
 def cv_evidence_index(cv: dict, confirmed_achievements: list[dict] | None = None) -> tuple[dict[str, list[str]], set[str]]:
     """Return (skill -> evidence sources from experience/projects/certs/education/achievements, skills listed only)."""
     index: dict[str, list[str]] = {}
 
     def add(text: str, label: str) -> None:
-        for s in find_skills(text):
-            index.setdefault(s, [])
-            if label not in index[s]:
-                index[s].append(label)
+        # each bullet/sentence on its own: "Attended an introductory Tableau workshop" is exposure, not use
+        for part in re.split(r"(?<=[.!?؟])\s+|\n", text):
+            if _EXPOSURE_ONLY.search(part) and not _USE.search(part):
+                continue
+            for s in find_skills(part, implied=True):
+                index.setdefault(s, [])
+                if label not in index[s]:
+                    index[s].append(label)
 
     for e in cv.get("experience", []):
-        add(" ".join([e.get("title", ""), *e.get("bullets", [])]), f"experience: {e.get('title', '')} @ {e.get('organization', '')}".strip())
+        add("\n".join([e.get("title", ""), *e.get("bullets", [])]), f"experience: {e.get('title', '')} @ {e.get('organization', '')}".strip())
     for p in cv.get("projects", []):
-        add(" ".join([p.get("name", ""), p.get("description", ""), " ".join(p.get("technologies", [])), *p.get("bullets", [])]), f"project: {p.get('name', '')}")
+        add("\n".join([p.get("name", ""), p.get("description", ""), " ".join(p.get("technologies", [])), *p.get("bullets", [])]), f"project: {p.get('name', '')}")
         for t in p.get("technologies", []):
-            c = canonical(t)
-            index.setdefault(c, [])
-            if f"project: {p.get('name', '')}" not in index[c]:
-                index[c].append(f"project: {p.get('name', '')}")
+            for c in with_families({canonical(t)}):
+                index.setdefault(c, [])
+                if f"project: {p.get('name', '')}" not in index[c]:
+                    index[c].append(f"project: {p.get('name', '')}")
     for c in cv.get("certifications", []):
         add(c.get("name", ""), f"certification: {c.get('name', '')}")
     for ed in cv.get("education", []):
@@ -113,12 +169,12 @@ def cv_evidence_index(cv: dict, confirmed_achievements: list[dict] | None = None
         label = f"achievement: {a.get('title', '')}"
         add(" ".join([a.get("title", ""), a.get("description", "")]), label)
         for t in [*a.get("technologies", []), *a.get("skills", [])]:
-            c = canonical(t)
-            index.setdefault(c, [])
-            if label not in index[c]:
-                index[c].append(label)
-    listed = {canonical(s) for s in cv.get("skills", [])}
-    listed |= find_skills(cv.get("summary", ""))
+            for c in with_families({canonical(t)}):
+                index.setdefault(c, [])
+                if label not in index[c]:
+                    index[c].append(label)
+    listed = with_families({canonical(s) for s in cv.get("skills", [])})
+    listed |= find_skills(cv.get("summary", ""), implied=True)
     return index, listed
 
 

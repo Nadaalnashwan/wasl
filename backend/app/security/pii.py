@@ -56,10 +56,10 @@ _PHONE_LABELLED = re.compile(
 )
 _PHONE = re.compile(rf"(?<![\w{_AR_DIGITS}])(?:\(?\+|00|0|٠٠|٠)(?:[ ().-]?{D}){{8,14}}(?![\w{_AR_DIGITS}])")
 # unlabelled 10-digit IDs; not when it is a quantity ("1200000000 events", "SAR 1200000000")
-_NATIONAL_ID = re.compile(rf"(?<![\w{_AR_DIGITS}$])(?<!SAR )(?<!USD )[12١٢]{D}{{9}}(?![\w{_AR_DIGITS}])(?!\s*(?:[A-Za-z\u0600-\u06FF%]))")
+_NATIONAL_ID = re.compile(rf"(?<![\w{_AR_DIGITS}$])(?<!SAR )(?<!USD )[12١٢]{D}{{9}}(?![\w{_AR_DIGITS}])(?![ \t]*(?:[A-Za-z\u0600-\u06FF%]))")
 _ID_LABELLED = re.compile(
     r"(?i:\b(?:national id|national identity|iqama|id number|id no\.?|civil id|residence permit|ssn|social security)\b|"
-    r"رقم الهوية|الهوية الوطنية|رقم الإقامة|الإقامة|السجل المدني)\s*(?:number|no\.?|#|رقم)?\s*[:：#\-]?\s*([A-Za-z0-9٠-٩-]{5,20})"
+    r"رقم الهوية|الهوية الوطنية|رقم الإقامة|الإقامة|السجل المدني)\s*(?i:number|no\.?|#|رقم)?\s*[:：#\-]?\s*([A-Za-z0-9٠-٩-]{5,20})"
 )
 _PASSPORT = re.compile(r"(?i:\bpassport\b(?:\s*(?:no\.?|number|#))?|جواز السفر|رقم الجواز)\s*[:：#\-]?\s*([A-Za-z]{0,2}[0-9]{6,9})")
 _ADDRESS_LABELLED = re.compile(r"(?im)^\s*(?:(?:home |mailing |postal )?address|العنوان|عنوان السكن)\s*[:：]\s*(.+)$")
@@ -155,6 +155,16 @@ class Redactor:
                 cand = re.split(r"\s*[|,·•]\s*", line)[0].strip()
                 words = cand.split()
                 from app.ai.skills import find_skills  # local import keeps this module dependency-light
+
+                # two-column PDFs merge "Name Python SQL Tableau" into one line: keep the leading non-skill words
+                if find_skills(cand) and len(words) > 2:
+                    prefix: list[str] = []
+                    for w in words:
+                        if find_skills(w):
+                            break
+                        prefix.append(w)
+                    if 2 <= len(prefix) <= 4 and len(prefix) < len(words):
+                        cand, words = " ".join(prefix), prefix
 
                 if (
                     2 <= len(words) <= 4

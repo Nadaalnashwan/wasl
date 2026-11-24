@@ -35,10 +35,11 @@ from app.security.pii import Redactor
 EVAL_DIR = Path(__file__).resolve().parent.parent / "eval"
 DATA_DIR = EVAL_DIR / "v2"
 RESULTS = EVAL_DIR / "results"
-DATASET_VERSION = "wasl-eval-v2.0"
+DATASET_VERSION = "wasl-eval-v2.1"
 # dev = regression set used while building the safeguards; heldout = frozen set never used for tuning
-DATASETS = {"dev": (EVAL_DIR / "v2", "wasl-eval-v2.0", "deterministic-latest"),
-            "heldout": (EVAL_DIR / "heldout", "wasl-heldout-1.0", "deterministic-heldout-latest")}
+DATASETS = {"dev": (EVAL_DIR / "v2", "wasl-eval-v2.1", "deterministic-latest"),
+            "heldout": (EVAL_DIR / "heldout", "wasl-heldout-1.0", "deterministic-heldout-latest"),
+            "heldout2": (EVAL_DIR / "heldout2", "wasl-heldout-2.0", "deterministic-heldout2-latest")}
 CATEGORIES = ["cv_parsing", "achievement_extraction", "linkedin_content", "cv_tailoring", "hallucination",
               "prompt_injection", "arabic_mixed", "privacy"]
 
@@ -329,7 +330,7 @@ def main(argv: list[str] | None = None) -> int:
             db.close()
     print(json.dumps({k: summary[k] for k in ("cases", "errors", "case_pass_rate", "claim_detection_precision", "claim_detection_recall",
                                               "false_acceptance_rate", "false_rejection_rate", "pii_recall")}, indent=2))
-    if args.dataset == "heldout":
+    if args.dataset.startswith("heldout"):
         return 0  # the held-out set is reported, never used as a CI gate (gating would invite tuning to it)
     base_path = Path(args.baseline)
     if args.write_baseline:

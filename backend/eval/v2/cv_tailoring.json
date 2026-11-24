@@ -2436,9 +2436,20 @@
    },
    "expect": {
     "unverified": [
-     "Data Visualization"
+     "Tableau"
     ]
-   }
+   },
+   "expect_history": [
+    {
+     "dataset_version": "wasl-eval-v2.0",
+     "expect": {
+      "unverified": [
+       "Data Visualization"
+      ]
+     },
+     "note": "2026-11-24: label only. v2.0 named the skill by the old lexicon family 'Data Visualization'; v2.2 keeps tools separate (Tableau ≠ Power BI), so the same expectation is expressed with the tool's own name. The expected behaviour (stated in `purpose`) is unchanged."
+    }
+   ]
   },
   {
    "id": "tai-027",

@@ -30,7 +30,7 @@ from dataclasses import asdict, dataclass, field
 
 from app.ai.skills import find_skills
 
-VERIFIER_VERSION = "claims-v2.1"
+VERIFIER_VERSION = "claims-v2.2"
 
 
 def _aw(*words: str) -> str:
@@ -52,7 +52,12 @@ CREDENTIAL_TERMS = [
 ]
 # outcome / prestige words that must appear in the evidence when the text uses them
 _PRESTIGE = re.compile(r"\b(best|top|award-winning|first-ever|largest|highest|#1|number one|record-breaking|world-class|leading|"
-                       r"keynote|spoke at|speaker at|presented at|published in|featured in|doubled|tripled|halved|quadrupled)\b|"
+                       r"keynote|spoke at|speaker at|presented at|published in|featured in|doubled|tripled|halved|quadrupled|"
+                       # vague impact inflation: must be stated in the evidence, not added by the model
+                       r"the first(?!\s+(?:time|version|phase|step|stage|year|month|week|day|release|draft|iteration|half|quarter|"
+                       r"semester|term|round|sprint|prototype|milestone|module|part|of))|"
+                       r"significantly|dramatically|substantially|drastically|greatly|massively|hugely|vastly|"
+                       r"eliminat(?:ed|ing|es)|zero (?:downtime|bugs|defects|errors|incidents)|flawless(?:ly)?)\b|"
                        + _aw("أفضل", "الأفضل", "الأولى", "متحدث", "متحدثة", "ضاعفت"), re.I)
 _PLACE = re.compile(r"\b(first|1st|second|2nd|third|3rd)\s+place\b|المركز\s+(الأول|الثاني|الثالث)", re.I)
 _TITLE = re.compile(r"\b((?:[A-Z][A-Za-z+#.-]*\s){1,3}(?:Engineer|Architect|Manager|Scientist|Analyst|Developer|Consultant|Director|"
@@ -70,6 +75,7 @@ _STUDY = re.compile(r"\b(studied|study|studying|learn(?:ed|ing|t)?|course|class|
 _USAGE = re.compile(r"\b(experienced|experience (?:in|with)|expert|expertise|proficient|professional(?:ly)?|deployed|production|"
                     r"built|developed|implemented|engineered|architected|years of|hands-on|maintained|operated|ran)\b|" + _aw("خبرة", "محترف", "نشرت", "طورت", "بنيت"), re.I)
 _STRONG_ROLE = re.compile(r"\b(?:(?:led|lead|leads|leading)(?!\s+to\b)|headed|directed|spearheaded|supervised|oversaw|"
+                          r"owned|took ownership of|championed|"
                           r"in charge of|team lead|tech lead|"
                           r"(?:managed|manage|manages|managing)(?=(?:\s+\w+){0,3}?\s+(?:team|teams|people|engineers|developers|staff|"
                           r"project|projects|group|department|squad|interns|employees|members|\d+)\b))\b|"
@@ -106,7 +112,8 @@ _UNIT_CLASSES: list[tuple[str, re.Pattern[str]]] = [
     ("time:year", re.compile(r"^(years?|yrs?|سنة|سنوات|عام|أعوام|سنين)$", re.I)),
     ("people", re.compile(r"^(users?|customers?|clients?|students?|people|persons?|members?|employees?|engineers?|developers?|staff|"
                           r"participants?|attendees?|learners?|visitors?|subscribers?|followers?|registrations?|interns?|"
-                          r"مستخدم|مستخدمين|عميل|عملاء|طالب|طلاب|موظف|موظفين|شخص|أشخاص|عضو|أعضاء|مشارك|مشاركين)$", re.I)),
+                          r"مستخدم|مستخدمين|مستخدما|عميل|عملاء|طالب|طلاب|طالبة|طالبات|موظف|موظفين|موظفا|موظفًا|موظفة|موظفات|"
+                          r"مطور|مطورين|مطورا|مهندس|مهندسين|متدرب|متدربين|شخص|أشخاص|عضو|أعضاء|مشارك|مشاركين)$", re.I)),
     ("money", re.compile(r"^(usd|dollars?|sar|riyals?|ريال|دولار|\$)$", re.I)),
 ]
 _FILLER = re.compile(r"^(more|new|active|monthly|daily|weekly|total|over|of|than|unique|paying|registered|and|to|in|at|for|by|from|على|من|إلى|في)$", re.I)
@@ -246,7 +253,7 @@ class _Evidence:
         self.numbers = [n for s in self.sents for n in _numbers(s)]
         self.skill_sents: dict[str, list[str]] = {}
         for s in self.sents:
-            for sk in find_skills(s):
+            for sk in find_skills(s, implied=True):
                 self.skill_sents.setdefault(sk.lower(), []).append(s)
 
     def mentions(self, term: str) -> list[str]:
@@ -283,6 +290,93 @@ def _shares_context(claim_sentence: str, evidence_sentence: str) -> bool:
 
 def _q(s: str) -> dict:
     return {"source": "evidence", "quote": s[:220]}
+
+
+_TEAM_ACTOR = re.compile(r"\b(we|we've|we have|our team|my team|the team|our group|together)\b|" + _aw("نحن", "فريقنا", "الفريق"), re.I)
+_SELF_ACTOR = re.compile(r"\b(i|i've|i'd|i have|i had|me|myself)\b|" + _aw("أنا"), re.I)
+_NOT_A_NAME = {"I", "We", "Our", "My", "The", "This", "That", "Then", "Later", "Also", "Recently", "Previously", "In", "At",
+               "During", "After", "Before", "Together", "As", "When", "While", "For", "On", "With", "And", "Built", "Created",
+               "Designed", "Developed", "Led", "Managed", "Wrote", "Implemented", "Launched", "Received", "Won", "Its", "A", "An"}
+_PASSIVE_BY = re.compile(r"\b(?:led|headed|managed|directed|supervised|overseen|owned|run|built|created|designed|developed|written|"
+                         r"implemented|launched|made|won|received|awarded|given)\s+by\s+(?!me\b|myself\b|us\b|my team\b|our team\b)", re.I)
+_CREATE_VERB = re.compile(r"\b(built|created|developed|designed|wrote|implemented|launched|shipped|made|architected|coded|programmed)\b", re.I)
+_AWARD_VERB = re.compile(r"\b(won|received|earned|was awarded|were awarded|got|secured|was given|took home)\b|"
+                         + _aw("فاز", "فازت", "حصل", "حصلت", "نال", "نالت"), re.I)
+
+
+def _actor(sentence: str, start: int) -> str:
+    """Who performs the verb starting at `start`: 'self', 'team', 'other' or 'unknown' (CV voice, no subject)."""
+    clause = re.split(r"[;:.!?]|,(?!\d)|\band\b(?=\s+(?:i|we|my|our)\b)|\bwhile\b|\bbut\b", sentence[:start], flags=re.I)[-1]
+    tail = clause.split()[-4:]
+    tail_s = " ".join(tail)
+    if _TEAM_ACTOR.search(tail_s):
+        return "team"
+    if _SELF_ACTOR.search(tail_s):
+        return "self"
+    if _OTHER_PERSON.search(tail_s):
+        return "other"
+    if any(re.fullmatch(r"[A-Z][a-z]{1,20}", t.strip("'\"()")) and t.strip("'\"()") not in _NOT_A_NAME for t in tail):
+        return "other"
+    return "unknown"
+
+
+def _verb_actors(sentence: str, verb: re.Pattern) -> set[str]:
+    """Actors of every `verb` occurrence in the sentence; passives ('led by Fahad') count as 'other'."""
+    out = set()
+    for m in verb.finditer(sentence):
+        if re.match(r"\s+by\s+(?!me\b|myself\b|us\b|my team\b|our team\b)", sentence[m.end():], re.I):
+            out.add("other")
+        else:
+            who = _actor(sentence, m.start())
+            # Arabic is verb-subject order ("فاز زميلي"): look right after the verb when nothing precedes it
+            if who == "unknown" and re.search(rf"[{AR}]", m.group(0)):
+                after = " ".join(sentence[m.end():].split()[:2])
+                if _OTHER_PERSON.search(after):
+                    who = "other"
+                elif _TEAM_ACTOR.search(after):
+                    who = "team"
+            out.add(who)
+    return out
+
+
+def _object_words(text: str) -> set[str]:
+    return {w[:6] for w in re.findall(rf"[A-Za-z{AR}]{{3,}}", text.lower()) if w not in _STOP}
+
+
+def _authorship_conflicts(output: str, ev: _Evidence, contribution_confirmed: bool | None) -> list[tuple]:
+    """Creation claims ("I built the dashboard") whose object the evidence credits only to someone else
+    (contradicted) or only to a team (needs confirmation). Silent when the evidence never mentions the object."""
+    out = []
+    for s in sentences(output):
+        for m in _CREATE_VERB.finditer(s):
+            who_out = _actor(s, m.start())
+            if who_out in ("other", "team"):
+                continue
+            obj = _object_words(re.split(r"[,;.]|\band\b", s[m.end():])[0])
+            if not obj:
+                continue
+            credited: list[tuple[str, str]] = []
+            for es in ev.sents:
+                for em in _CREATE_VERB.finditer(es):
+                    by = re.match(r"\s+by\s+(\w+)", es[em.end():], re.I)
+                    if by:  # passive: "The dashboard was built by Sara" — the object precedes the verb
+                        eobj = _object_words(re.split(r"[,;.]", es[:em.start()])[-1])
+                        who = "self" if by.group(1).lower() in ("me", "myself") else ("team" if by.group(1).lower() == "us" else "other")
+                    else:
+                        eobj = _object_words(re.split(r"[,;.]|\band\b", es[em.end():])[0])
+                        who = _actor(es, em.start())
+                    if obj & eobj:
+                        credited.append((who, es))
+            actors = {w for w, _ in credited}
+            if not actors or actors & {"self", "unknown"}:
+                continue
+            if "team" in actors:
+                if who_out == "self" and not contribution_confirmed:
+                    out.append((s, m.group(0), "needs_confirmation", ["team_vs_individual"],
+                                _q(next(es for w, es in credited if w == "team"))))
+                continue
+            out.append((s, m.group(0), "contradicted", ["attributed_to_other"], _q(credited[0][1])))
+    return out
 
 
 def _judge(a: Atom, ev: _Evidence, contribution_confirmed: bool | None) -> tuple[str, list[str], list[dict]]:
@@ -341,7 +435,13 @@ def _judge(a: Atom, ev: _Evidence, contribution_confirmed: bool | None) -> tuple
             award_sents = hits or [s for s in ev.sents if any(_has_term(s, t) for t in _AWARD_TERMS)]
             if not award_sents:
                 return "unsupported", ["credential_not_in_evidence"], []
-            if all(_OTHER_PERSON.search(s) and not re.search(r"\b(i|we|our)\b|فزت|فزنا|فريقنا", s, re.I) for s in award_sents):
+            def _awarded_to_other(s: str) -> bool:
+                acts = _verb_actors(s, _AWARD_VERB)
+                if acts:
+                    return acts == {"other"}
+                return bool(_OTHER_PERSON.search(s)) and not re.search(r"\b(i|we|our)\b|فزت|فزنا|فريقنا", s, re.I)
+
+            if all(_awarded_to_other(s) for s in award_sents):
                 if _OTHER_PERSON.search(a.sentence) and not _I_WON.search(a.sentence):
                     return "supported", [], [_q(award_sents[0])]  # the text credits the colleague, too
                 return "contradicted", ["attributed_to_other"], [_q(award_sents[0])]
@@ -367,7 +467,11 @@ def _judge(a: Atom, ev: _Evidence, contribution_confirmed: bool | None) -> tuple
 
     if a.kind in ("prestige", "title", "entity"):
         term = a.value
-        hits = [s for s in ev.sents if re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", s, re.I)]
+        pat = r"(?<!\w)" + re.escape(term) + r"(?!\w)"
+        stem = re.match(r"^([a-z]{4,}?)(?:ed|ing|es|ly)$", term) if a.kind == "prestige" else None
+        if stem:  # "eliminated" in the evidence supports "eliminating"
+            pat = r"(?<!\w)" + re.escape(stem.group(1)) + r"\w*"
+        hits = [s for s in ev.sents if re.search(pat, s, re.I)]
         if hits:
             return "supported", [], [_q(hits[0])]
         reason = {"prestige": "prestige_not_in_evidence", "title": "title_not_in_evidence", "entity": "entity_not_in_evidence"}[a.kind]
@@ -381,10 +485,16 @@ def _judge(a: Atom, ev: _Evidence, contribution_confirmed: bool | None) -> tuple
             if n and not any(n in s for s in managed_ev):
                 team = [s for s in ev.sents if n in s and _TEAM_SIZE.search(s)]
                 if team:
-                    return "unsupported", ["team_size_as_reports"], [_q(team[0])]
+                    own_role = [s for s in ev.sents if _STRONG_ROLE.search(s) and _verb_actors(s, _STRONG_ROLE) & {"self", "team", "unknown"}]
+                    # "I led our 4-person team" from "I was a member of the 4-person team": both the number's meaning
+                    # and the role are wrong, so report both
+                    return "unsupported", ["team_size_as_reports", *([] if own_role else ["role_inflated"])], [_q(team[0])]
         strong = [s for s in ev.sents if _STRONG_ROLE.search(s)]
-        if strong:
-            return "supported", [], [_q(strong[0])]
+        own = [s for s in strong if _verb_actors(s, _STRONG_ROLE) & {"self", "team", "unknown"}]
+        if own:
+            return "supported", [], [_q(own[0])]
+        if strong:  # "the refactor led by Fahad": the role belongs to someone else
+            return "unsupported", ["role_inflated"], [_q(strong[0])]
         weak = [s for s in ev.sents if _WEAK_ROLE.search(s)]
         return "unsupported", ["role_inflated"], [_q(weak[0])] if weak else []
 
@@ -410,6 +520,8 @@ def check_claims(output: str, evidence: str, *, contribution_confirmed: bool | N
         for i, a in enumerate(extract_atoms(output), 1):
             status, reasons, spans = _judge(a, ev, contribution_confirmed)
             claims.append(Claim(f"c{i}", a.sentence[:240], a.kind, _label(a), status, reasons, spans))
+        for sent, verb, status, reasons, span in _authorship_conflicts(output, ev, contribution_confirmed):
+            claims.append(Claim(f"c{len(claims) + 1}", sent[:240], "attribution", verb, status, reasons, [span]))
         if contribution_confirmed is False:
             for s in sentences(output):
                 if _FIRST_PERSON_BUILD.search(s):
