@@ -328,7 +328,8 @@ Additional technical documentation is available in `docs/`:
 | `docs/SECURITY.md`     | Authorization, admin provisioning, ownership, secrets review |
 | `docs/PRIVACY.md`      | PII redaction and provider privacy policy       |
 | `docs/AI_MODEL_REGISTRY.md` | Per-task models, routing, pricing, traceability |
-| `docs/DESIGN_SYSTEM.md` | v2 design tokens, components and rules         |
+| `docs/DESIGN_SYSTEM.md` | "Ivory" design tokens (warm cream, no pure white), components and rules |
+| `docs/SUPABASE_MIGRATION.md` | Supabase v2 compatibility review, migration runbook, backup and rollback |
 | `docs/WASL_V2_IMPLEMENTATION.md` | v2 audit, changes and instructor-feedback traceability |
 | `docs/QA_REPORT.md`    | Test, build and browser QA evidence             |
 

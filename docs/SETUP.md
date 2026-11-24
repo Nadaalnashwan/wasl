@@ -47,7 +47,9 @@ Users can also add their own keys in **Settings → AI provider & your own keys*
 
 1. Create a project at https://supabase.com/dashboard.
 2. SQL editor → run `supabase/migrations/0001_init.sql`, `0002_jobs.sql`, then **`0003_v2_security.sql`** (admin role +
-   role-escalation triggers, audit log, alert incidents, traceability columns). All three are idempotent and additive.
+   role-escalation protection, audit log, alert incidents, scheduler lease, traceability columns) and
+   **`0004_v2_performance.sql`** (foreign-key indexes, `auth.uid()` init-plan policies). All are idempotent and
+   additive. For an **existing** project follow `docs/SUPABASE_MIGRATION.md` (pre-checks, backup, rollback).
    Local SQLite databases are upgraded automatically on startup (`app/migrate.py`).
 3. Backend `.env`:
    * `DATABASE_URL=postgresql+psycopg://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres` (Project → Connect → Session pooler)
@@ -79,14 +81,14 @@ If LinkedIn rejects the configured `LINKEDIN_API_VERSION`, the service falls bac
 
 ```bash
 cd backend
-python -m scripts.admin grant you@example.com --reason "owner"   # the account must already exist
+python -m scripts.admin grant you@example.com --user-id <uuid> --reason "owner"   # account must exist; --user-id required on Supabase
 python -m scripts.run_alerts                                     # one alert cycle (for cron)
 ```
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `ALERT_SLACK_WEBHOOK_URL` / `ALERT_WEBHOOK_URL` | empty | External alert delivery (empty = persisted only) |
-| `ALERT_EVAL_INTERVAL_MINUTES` | 5 | In-process alert scheduler; 0 = disabled (use cron) |
+| `ALERT_SLACK_WEBHOOK_URL` / `ALERT_WEBHOOK_URL` | empty | External alert delivery (empty = persisted only). Create a Slack *Incoming Webhook* for a private channel and store the URL **only** in the backend host's secret environment (e.g. Render/Fly/Railway env vars, or a GitHub Actions secret for the cron job) — never in the repository or the frontend. Then use **Admin → Alerts → Send test alert**. |
+| `ALERT_EVAL_INTERVAL_MINUTES` | 5 | In-process alert scheduler; safe with several workers (database lease: one evaluation per interval). 0 = disabled (use cron with `scripts.run_alerts`, which uses the same lease) |
 | `ALERT_MIN_SAMPLE`, `ALERT_COOLDOWN_MINUTES`, `ALERT_*` thresholds | see `config.py` | Rule tuning (`docs/MONITORING.md`) |
 | `AI_TOTAL_DEADLINE_SECONDS` | 120 | Cap on one logical AI request incl. retries/fallbacks |
 | `AI_PERSONAL_MIN_PRIVACY` | `limited_retention` | `none` / `limited_retention` / `zdr` |
@@ -100,6 +102,9 @@ python -m scripts.run_alerts                                     # one alert cyc
 cd backend  && pytest -q && ruff check app tests scripts
 cd backend  && python -m app.eval_v2                          # deterministic AI regression suite (no LLM)
 cd frontend && npm run lint && npm run build && npx tsc --noEmit
+cd frontend && QA_EMAIL=… QA_PASSWORD=… node scripts/qa-visual.mjs --shots qa-shots   # local stack only: axe + responsive + pure-white scan
+cd backend  && python -m app.eval_v2 --dataset heldout    # frozen held-out sets (report only)
+PGURL=postgresql://postgres@localhost:54329 supabase/tests/run_local.sh               # Supabase migrations on a throwaway local Postgres
 cd backend  && python -m app.evaluation --max-calls 60        # LIVE providers, needs keys, bounded
 cd backend  && python -m app.evaluation --benchmark --max-calls 90
 ```
@@ -107,6 +112,6 @@ cd backend  && python -m app.evaluation --benchmark --max-calls 90
 ## 8. Production checklist
 
 `APP_ENV=production` (startup refuses missing `JWT_SECRET` / `ENCRYPTION_KEY`) · HTTPS for both apps · `CORS_ORIGINS` = real frontend origin ·
-OAuth redirect URIs updated · Supabase migrations 0001–0003 applied · keep `AI_ENABLE_FAKE_PROVIDER=false` ·
+OAuth redirect URIs updated · Supabase migrations 0001–0004 applied (with the owner's approval, `docs/SUPABASE_MIGRATION.md`) · keep `AI_ENABLE_FAKE_PROVIDER=false` ·
 at least one privacy-eligible provider for personal tasks · an admin provisioned with `scripts.admin` ·
 an alert channel configured.

@@ -48,7 +48,11 @@ to every rate; definitions inline.
 ## Alerting (independent of the dashboard)
 
 `app/monitoring/alerts.py`. An in-process scheduler evaluates every rule every `ALERT_EVAL_INTERVAL_MINUTES`
-(default 5; set 0 and run `python -m scripts.run_alerts` from cron on multi-instance deployments). Admins can also
+(default 5), independently of anyone opening the console. With several workers or instances each one runs the
+loop, but a database lease (`scheduler_leases`, a single conditional `UPDATE`) lets exactly one evaluate per
+interval, and a unique partial index allows at most one **open** incident per rule key even if two cycles race.
+`python -m scripts.run_alerts` (cron) uses the same lease. The console shows the shared last run, leader and
+last error. Admins can also
 trigger "Evaluate now". Each rule opens **one** incident per key; while it keeps firing it is updated, not
 duplicated; reminders respect `ALERT_COOLDOWN_MINUTES`; when it clears the incident resolves and a recovery
 message is sent. Delivery: Slack incoming webhook (`ALERT_SLACK_WEBHOOK_URL`) or any JSON webhook
@@ -63,7 +67,7 @@ persisted and shown in the console with "external delivery disabled".
 | `fallback_rate` | ≥ 20 successes and fallback rate > 25 % | warning |
 | `rate_limits` | ≥ 10 rate-limit errors | warning |
 | `raw_unsupported_claims` | ≥ 20 claims checked and raw rate > 8 % | warning |
-| `claims_escaped` | **any** unacknowledged unsupported claim in approved output | critical |
+| `claims_escaped` | **any** unsupported claim in approved output without a user-written assertion | critical |
 | `verifier_failures` | ≥ 3 outputs where the claim verifier could not run | warning |
 | `http_5xx` | ≥ 20 requests and 5xx rate > 5 % | critical |
 | `cost_spike` | today's estimated cost > `ALERT_DAILY_COST_USD` ($5) | warning |
@@ -80,3 +84,20 @@ console's p95 after a week of real traffic.
 
 Alert payloads contain rule keys, numbers and sample sizes only — never user identifiers, emails, CV text,
 prompts or tokens.
+
+### Validation (2026-11-24)
+
+Run with real processes against a throwaway SQLite database seeded with 30 synthetic AI events (12 failing)
+and a **local mock webhook** (not Slack):
+
+| Step | Result |
+|---|---|
+| Cycle 1 | `ai_failure_rate` fired with value 0.4 (12/30), n = 30; incident opened; one webhook delivery |
+| Next interval, two `run_alerts` processes started together | exactly one evaluated (still firing, **no** second notification inside the cooldown); the other reported "another worker holds the alert lease" |
+| Failures cleared, next interval | incident resolved; recovery message delivered; `recovery_notified = true` |
+| Lease row | 3 runs, no error |
+
+Also covered by tests: dedupe/cooldown/recovery (`test_alert_cycle_opens_dedupes_and_resolves`), lease takeover
+after expiry, database rejection of a duplicate open incident, tiny-sample suppression. **Not verified:** delivery
+to a real Slack workspace (no webhook was provided) — configure `ALERT_SLACK_WEBHOOK_URL` and use "Send test
+alert".

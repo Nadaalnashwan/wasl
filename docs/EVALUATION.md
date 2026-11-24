@@ -30,9 +30,9 @@ Privacy/authorization **software** tests (401/403 matrix, IDOR, payload capture)
 
 ### How a claim is judged
 
-`app/ai/claims.py` (verifier `claims-v2.1`) splits generated text into sentences and extracts checkable atoms:
+`app/ai/claims.py` (verifier `claims-v2.2`) splits generated text into sentences and extracts checkable atoms:
 numbers with unit classes, skills, credentials and places, leadership verbs, attribution, job titles, named
-employers/organisations, and prestige words (best, top, keynote, doubled…). Each atom is compared with the
+employers/organisations, prestige and vague-impact words (best, top, keynote, doubled, "the first", significantly, eliminated…), and creation claims ("I built X"). v2.2 also determines **who** performed an action (self, team, a named other person, passive "led by X", Arabic verb-first order): a creation or role that the evidence credits to someone else is contradicted, team work claimed individually needs confirmation. Each atom is compared with the
 evidence sentences and gets a status with reason codes and the supporting evidence span:
 **supported**, **unsupported** (e.g. `number_unit_mismatch`, `skill_studied_only`, `credential_attended_only`,
 `credential_planned_only`, `role_inflated`, `team_size_as_reports`, `entity_not_in_evidence`,
@@ -53,33 +53,67 @@ the same model's self-reported confidence.
 * **PII recall** = removed ÷ PII strings that must be removed; **preservation** = kept ÷ task strings that must be kept.
 * **Case pass rate**: a case passes only if every one of its checks passes.
 
-### Results
+### Results — development set (`wasl-eval-v2.x`, 205 cases)
 
-The suite was written blind (expectations were never changed to match the system). The first run found 57 failing
-cases; those failures were then used to fix root causes in the code. Because the fixes were made **while looking at
-this same suite**, the "after" column is a development-set result and is optimistic for unseen data — a fresh
-held-out set is the next step (see limitations).
+The suite was written blind (expectations never changed to match the system). Its failures were then used to fix
+root causes, so **every "after" column on this set is a development-set result and optimistic for unseen data.**
 
-| Metric | Initial (blind) | After fixes (same suite) |
-|---|---:|---:|
-| Cases passing | 148 / 205 (72.2 %) | **193 / 205 (94.1 %)** |
-| Claim detection precision | 0.822 (tp 37, fp 8) | 1.000 (tp 42, fp 0) |
-| Claim detection recall | 0.860 (fn 6) | 0.977 (fn 1) |
-| False acceptance rate | 0.140 | 0.023 |
-| False rejection rate | 0.364 | 0.000 |
-| Tailored CVs failing final re-verification | 1 | **0** |
-| Injection detection accuracy | 0.68 | 1.00 |
-| PII recall / preservation | 0.841 / 0.963 | 0.984 / 1.000 |
-| Arabic cases passing | 11 / 18 | 18 / 18 |
+| Metric | Initial (blind, verifier v2.0) | After v2.1 fixes | After v2.2 fixes (2026-11-24) |
+|---|---:|---:|---:|
+| Cases passing | 148 / 205 (72.2 %) | 193 / 205 (94.1 %) | **205 / 205** |
+| Claim detection precision | 0.822 (tp 37, fp 8) | 1.000 | 1.000 (tp 43, fp 0) |
+| Claim detection recall | 0.860 (fn 6) | 0.977 (fn 1) | 1.000 (fn 0) |
+| False acceptance / false rejection | 0.140 / 0.364 | 0.023 / 0.000 | 0.000 / 0.000 |
+| Tailored CVs failing final re-verification | 1 | 0 | 0 (21 raw unsupported claims in 78 checked, all removed) |
+| Injection detection accuracy | 0.68 | 1.00 | 1.00 |
+| PII recall / preservation | 0.841 / 0.963 | 0.984 / 1.000 | 1.000 / 1.000 |
+| Arabic cases passing | 11 / 18 | 18 / 18 | 18 / 18 |
 
-Reports: `eval/results/deterministic-initial.md`, `eval/results/deterministic-latest.md`. CI fails if the case
-pass rate, claim precision/recall or PII recall drop below `eval/baseline_deterministic.json`.
+The 12 cases still failing after v2.1 and their root causes (all fixed by general changes, no case-specific
+rules): tool families merged in the skills lexicon (Tableau ≡ Power BI; 4 cases), ambiguous aliases never matched
+in context ("ML model", "Node backend"; 2), vague low-information text keeping high confidence (1), fabricated
+quotes about non-professional text still surfaced (ext-010; 1), a name merged with the skills column on a PDF's
+first line (1), one role-inflation case reporting only one of its two valid reasons (li-021; 1), an invented
+"the first …" superlative (1) and the Arabic verb-first attribution regression introduced and fixed in v2.2 (1).
 
-**Still failing (12):** no-number outcome inventions in tailoring ("reduced churn"), a tool swapped within the same
-family (Tableau ↔ Power BI) in tailoring, overly broad lexicon groups (Tableau → "Data Visualization", "ML"), a
-merged first line (`Name Python SQL Tableau`), one ordinal case, extraction confidence calibration on vague text,
-and two expectation choices the dataset author flagged as debatable (ext-010: zero candidates for no-achievement
-text; li-021: which reason code applies).
+Two expectations (ext-004, tai-026) named the skill by the old lexicon family label "Data Visualization". The
+label was changed to the tool's own name ("Power BI", "Tableau"); the expected behaviour stated in each case's
+`purpose` is unchanged and the original expectation is kept in the case's `expect_history` (dataset → v2.1).
+
+## 1b. Held-out sets (independent of tuning)
+
+Two further sets, each **frozen in its own commit before its first run** (`a170c42`, `aafe8d5`), with new
+synthetic people, employers and wording. Their expectations state what a correct safeguard *should* do,
+including cases the cue-based verifier was expected to miss. They are report-only (`python -m app.eval_v2
+--dataset heldout|heldout2`), never a CI gate.
+
+| Metric | Held-out 1 — first run (independent) | Held-out 1 — after fixes (**not** independent) | Held-out 2 — first run (independent, not tuned) |
+|---|---:|---:|---:|
+| Dataset / verifier | wasl-heldout-1.0 / claims-v2.1 | wasl-heldout-1.0 / claims-v2.2 | wasl-heldout-2.0 / claims-v2.2 |
+| Cases passing | 63 / 79 (79.7 %) | 79 / 79 | 21 / 28 (75.0 %) |
+| Claim precision (tp / tp+fp) | 0.962 (25 / 26) | 1.000 (30 / 30) | 1.000 (9 / 9) |
+| Claim recall (tp / tp+fn) | 0.833 (25 / 30) | 1.000 (30 / 30) | 0.750 (9 / 12) |
+| False acceptance (fn / positives) | 0.167 | 0.000 | 0.250 |
+| False rejection (fp / negatives) | 0.143 (1 / 7) | 0.000 | 0.000 (0 / 4) |
+| Injection detection accuracy | 0.583 (7 / 12) | 1.000 | 0.667 (4 / 6) |
+| PII recall / preservation | 0.957 / 1.000 | 1.000 / 1.000 | 0.667 / 1.000 |
+| Tailoring: final CVs still failing | 0 | 0 | — (no tailoring cases) |
+
+Held-out 1 misses (first run) drove v2.2: misattributed authorship ("Sara built the dashboard" → "I built…"),
+roles held by someone else ("led by Fahad"), a colleague's award, vague outcome inflation, a tool swap within a
+family, "owned" as role inflation, five injection forms (HTML comment addressed to the AI, JSON chat role,
+letter-spaced "I-g-n-o-r-e", tool-call exfiltration, mid-line "NEW INSTRUCTIONS:") and an Iqama number whose
+label suffix was matched case-sensitively.
+
+**Held-out 2 is the best available estimate of generalisation after the fixes** and its 7 misses are known,
+unfixed gaps: a shortlisting claimed as a win, a team's migration claimed in the first person singular without a
+creation verb, an Arabic verb-first attribution to a colleague with the verb repeated in the output, Greek
+look-alike letters in "Ιgnore", an Arabic instruction to give the highest score phrased with "أعطِ", a header
+name separated from the email by " - ", and a Slack webhook URL not recognised as a secret. Fixing them would make
+held-out 2 a development set too; the next step is a held-out 3 written by someone who has not read the code.
+
+These are **deterministic safeguard** measurements on fixed inputs and fixed "model outputs". They are not
+live model-generation accuracy (section 3).
 
 ## 2. Why offline 0 % and live 5.4 % unsupported claims disagreed (v1)
 
@@ -110,14 +144,17 @@ tokens, p50/p95 latency, estimated cost, privacy-blocked tasks, and the exact mo
 when `--max-calls` is reached. Without a real provider key it refuses to run instead of producing placeholder
 numbers.
 
-**Status:** not run for v2 — no provider API keys were available in the implementation environment. The last live
+**Status:** not run for v2 — no provider API keys were available in the implementation environment
+(re-checked 2026-11-24: only `.env.example` files exist locally; no `GROQ_API_KEY`, `GEMINI_API_KEY` or
+`OPENROUTER_API_KEY` in the environment). The last live
 run on record (v1, 2026-10-21, Groq `openai/gpt-oss-120b` / `20b`, 17 cases) remains in `eval/results/latest.md`; it
 predates verifier v2 and is not comparable with the numbers above. Run the `Live AI evaluation` workflow (repository
 secrets `GROQ_API_KEY`, `GEMINI_API_KEY`, `OPENROUTER_API_KEY`) to produce v2 live and benchmark results.
 
 ## 4. Limitations
 
-* After-fix numbers are on the development set; add a held-out set written by someone who has not seen the code.
+* Dev-set and held-out-1 "after" numbers are not independent. Held-out 2 is independent but small (28 cases) and
+  was written by the same author as the code; a held-out set from someone outside the project is still needed.
 * Cue-based verification misses fabrications with no number, skill, credential, role, attribution, title,
   organisation or prestige cue (e.g. "reduced churn").
 * Prompt-injection detection is pattern-based; it is a first layer, with delimiting, schema validation and claim
