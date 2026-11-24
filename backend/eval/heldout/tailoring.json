@@ -1,0 +1,1056 @@
+{
+ "category": "tailoring",
+ "frozen": "2026-11-24",
+ "cases": [
+  {
+   "id": "ho-t01",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Faithful rephrasing of all three bullets must be accepted in full.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Huda Al-Ghamdi",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst with 2 years of experience in SQL reporting and Power BI dashboards.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Rawabi Logistics",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards tracking delivery times for 14 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Assisted the operations manager with quarterly forecasting in Excel"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Elm",
+       "start": "2022",
+       "end": "2022",
+       "bullets": [
+        "Cleaned survey data in Python (pandas) for a research team",
+        "Prepared weekly KPI slides for the product team"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Ramadan sales analysis",
+       "description": "Personal analysis project",
+       "technologies": [
+        "Python",
+        "pandas"
+       ],
+       "bullets": [
+        "Analysed 50,000 orders to compare Ramadan and non-Ramadan sales"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Statistics",
+       "institution": "King Abdulaziz University",
+       "start": "2018",
+       "end": "2022"
+      }
+     ],
+     "skills": [
+      "SQL",
+      "Power BI",
+      "Excel",
+      "Python",
+      "pandas"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Built Power BI dashboards that track delivery times across 14 warehouses",
+        "Cut month-end reporting from 3 days to 1 day with SQL queries",
+        "Assisted the operations manager with quarterly Excel forecasting"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_max": 0,
+    "accepted_bullets_min": 3
+   },
+   "category": "tailoring"
+  },
+  {
+   "id": "ho-t02",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Warehouse count inflated; the true 14 must survive.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Huda Al-Ghamdi",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst with 2 years of experience in SQL reporting and Power BI dashboards.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Rawabi Logistics",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards tracking delivery times for 14 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Assisted the operations manager with quarterly forecasting in Excel"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Elm",
+       "start": "2022",
+       "end": "2022",
+       "bullets": [
+        "Cleaned survey data in Python (pandas) for a research team",
+        "Prepared weekly KPI slides for the product team"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Ramadan sales analysis",
+       "description": "Personal analysis project",
+       "technologies": [
+        "Python",
+        "pandas"
+       ],
+       "bullets": [
+        "Analysed 50,000 orders to compare Ramadan and non-Ramadan sales"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Statistics",
+       "institution": "King Abdulaziz University",
+       "start": "2018",
+       "end": "2022"
+      }
+     ],
+     "skills": [
+      "SQL",
+      "Power BI",
+      "Excel",
+      "Python",
+      "pandas"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Built Power BI dashboards tracking delivery times for 40 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Assisted the operations manager with quarterly forecasting in Excel"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "40 warehouses"
+    ],
+    "must_contain": [
+     "14 warehouses"
+    ]
+   },
+   "category": "tailoring"
+  },
+  {
+   "id": "ho-t03",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Assisting turned into leading.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Huda Al-Ghamdi",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst with 2 years of experience in SQL reporting and Power BI dashboards.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Rawabi Logistics",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards tracking delivery times for 14 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Assisted the operations manager with quarterly forecasting in Excel"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Elm",
+       "start": "2022",
+       "end": "2022",
+       "bullets": [
+        "Cleaned survey data in Python (pandas) for a research team",
+        "Prepared weekly KPI slides for the product team"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Ramadan sales analysis",
+       "description": "Personal analysis project",
+       "technologies": [
+        "Python",
+        "pandas"
+       ],
+       "bullets": [
+        "Analysed 50,000 orders to compare Ramadan and non-Ramadan sales"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Statistics",
+       "institution": "King Abdulaziz University",
+       "start": "2018",
+       "end": "2022"
+      }
+     ],
+     "skills": [
+      "SQL",
+      "Power BI",
+      "Excel",
+      "Python",
+      "pandas"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Built Power BI dashboards tracking delivery times for 14 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Led quarterly forecasting for the operations department in Excel"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "Led quarterly"
+    ]
+   },
+   "category": "tailoring"
+  },
+  {
+   "id": "ho-t04",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Tool swapped for one the CV never mentions (Power BI -> Tableau).",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Huda Al-Ghamdi",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst with 2 years of experience in SQL reporting and Power BI dashboards.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Rawabi Logistics",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards tracking delivery times for 14 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Assisted the operations manager with quarterly forecasting in Excel"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Elm",
+       "start": "2022",
+       "end": "2022",
+       "bullets": [
+        "Cleaned survey data in Python (pandas) for a research team",
+        "Prepared weekly KPI slides for the product team"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Ramadan sales analysis",
+       "description": "Personal analysis project",
+       "technologies": [
+        "Python",
+        "pandas"
+       ],
+       "bullets": [
+        "Analysed 50,000 orders to compare Ramadan and non-Ramadan sales"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Statistics",
+       "institution": "King Abdulaziz University",
+       "start": "2018",
+       "end": "2022"
+      }
+     ],
+     "skills": [
+      "SQL",
+      "Power BI",
+      "Excel",
+      "Python",
+      "pandas"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e1",
+       "bullets": [
+        "Built Tableau dashboards tracking delivery times for 14 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Assisted the operations manager with quarterly forecasting in Excel"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "Tableau"
+    ]
+   },
+   "category": "tailoring"
+  },
+  {
+   "id": "ho-t05",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Summary invents years of experience and a certificate: original summary kept.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Huda Al-Ghamdi",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst with 2 years of experience in SQL reporting and Power BI dashboards.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Rawabi Logistics",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards tracking delivery times for 14 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Assisted the operations manager with quarterly forecasting in Excel"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Elm",
+       "start": "2022",
+       "end": "2022",
+       "bullets": [
+        "Cleaned survey data in Python (pandas) for a research team",
+        "Prepared weekly KPI slides for the product team"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Ramadan sales analysis",
+       "description": "Personal analysis project",
+       "technologies": [
+        "Python",
+        "pandas"
+       ],
+       "bullets": [
+        "Analysed 50,000 orders to compare Ramadan and non-Ramadan sales"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Statistics",
+       "institution": "King Abdulaziz University",
+       "start": "2018",
+       "end": "2022"
+      }
+     ],
+     "skills": [
+      "SQL",
+      "Power BI",
+      "Excel",
+      "Python",
+      "pandas"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "Senior data analyst with 5 years of experience and a Google Data Analytics certificate.",
+     "skills_order": [],
+     "experience": [],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "summary_kept_original": true,
+    "must_not_contain": [
+     "5 years",
+     "certificate"
+    ]
+   },
+   "category": "tailoring"
+  },
+  {
+   "id": "ho-t06",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Skill order that adds a skill the CV lacks.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Huda Al-Ghamdi",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst with 2 years of experience in SQL reporting and Power BI dashboards.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Rawabi Logistics",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards tracking delivery times for 14 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Assisted the operations manager with quarterly forecasting in Excel"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Elm",
+       "start": "2022",
+       "end": "2022",
+       "bullets": [
+        "Cleaned survey data in Python (pandas) for a research team",
+        "Prepared weekly KPI slides for the product team"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Ramadan sales analysis",
+       "description": "Personal analysis project",
+       "technologies": [
+        "Python",
+        "pandas"
+       ],
+       "bullets": [
+        "Analysed 50,000 orders to compare Ramadan and non-Ramadan sales"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Statistics",
+       "institution": "King Abdulaziz University",
+       "start": "2018",
+       "end": "2022"
+      }
+     ],
+     "skills": [
+      "SQL",
+      "Power BI",
+      "Excel",
+      "Python",
+      "pandas"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [
+      "Machine Learning",
+      "SQL",
+      "Power BI",
+      "Python"
+     ],
+     "experience": [],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "must_not_contain": [
+     "Machine Learning"
+    ]
+   },
+   "category": "tailoring"
+  },
+  {
+   "id": "ho-t07",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Intern cleaning work inflated to ownership of a pipeline.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Huda Al-Ghamdi",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst with 2 years of experience in SQL reporting and Power BI dashboards.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Rawabi Logistics",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards tracking delivery times for 14 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Assisted the operations manager with quarterly forecasting in Excel"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Elm",
+       "start": "2022",
+       "end": "2022",
+       "bullets": [
+        "Cleaned survey data in Python (pandas) for a research team",
+        "Prepared weekly KPI slides for the product team"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Ramadan sales analysis",
+       "description": "Personal analysis project",
+       "technologies": [
+        "Python",
+        "pandas"
+       ],
+       "bullets": [
+        "Analysed 50,000 orders to compare Ramadan and non-Ramadan sales"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Statistics",
+       "institution": "King Abdulaziz University",
+       "start": "2018",
+       "end": "2022"
+      }
+     ],
+     "skills": [
+      "SQL",
+      "Power BI",
+      "Excel",
+      "Python",
+      "pandas"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e2",
+       "bullets": [
+        "Owned the survey analytics pipeline in Python for a research team",
+        "Prepared weekly KPI slides for the product team"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "Owned the survey"
+    ]
+   },
+   "category": "tailoring"
+  },
+  {
+   "id": "ho-t08",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Vague outcome inflation with no number or skill cue (known hard case).",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Huda Al-Ghamdi",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst with 2 years of experience in SQL reporting and Power BI dashboards.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Rawabi Logistics",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards tracking delivery times for 14 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Assisted the operations manager with quarterly forecasting in Excel"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Elm",
+       "start": "2022",
+       "end": "2022",
+       "bullets": [
+        "Cleaned survey data in Python (pandas) for a research team",
+        "Prepared weekly KPI slides for the product team"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Ramadan sales analysis",
+       "description": "Personal analysis project",
+       "technologies": [
+        "Python",
+        "pandas"
+       ],
+       "bullets": [
+        "Analysed 50,000 orders to compare Ramadan and non-Ramadan sales"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Statistics",
+       "institution": "King Abdulaziz University",
+       "start": "2018",
+       "end": "2022"
+      }
+     ],
+     "skills": [
+      "SQL",
+      "Power BI",
+      "Excel",
+      "Python",
+      "pandas"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [
+      {
+       "id": "e2",
+       "bullets": [
+        "Cleaned survey data in Python (pandas), significantly improving research accuracy",
+        "Prepared weekly KPI slides for the product team"
+       ]
+      }
+     ],
+     "projects": [],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "significantly improving"
+    ]
+   },
+   "category": "tailoring"
+  },
+  {
+   "id": "ho-t09",
+   "lang": "en",
+   "kind": "tailor_enforce",
+   "purpose": "Project row count changed (50,000 -> 500,000).",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Huda Al-Ghamdi",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst with 2 years of experience in SQL reporting and Power BI dashboards.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Rawabi Logistics",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards tracking delivery times for 14 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Assisted the operations manager with quarterly forecasting in Excel"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Elm",
+       "start": "2022",
+       "end": "2022",
+       "bullets": [
+        "Cleaned survey data in Python (pandas) for a research team",
+        "Prepared weekly KPI slides for the product team"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Ramadan sales analysis",
+       "description": "Personal analysis project",
+       "technologies": [
+        "Python",
+        "pandas"
+       ],
+       "bullets": [
+        "Analysed 50,000 orders to compare Ramadan and non-Ramadan sales"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Statistics",
+       "institution": "King Abdulaziz University",
+       "start": "2018",
+       "end": "2022"
+      }
+     ],
+     "skills": [
+      "SQL",
+      "Power BI",
+      "Excel",
+      "Python",
+      "pandas"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "model_output": {
+     "summary": "",
+     "skills_order": [],
+     "experience": [],
+     "projects": [
+      {
+       "id": "p1",
+       "bullets": [
+        "Analysed 500,000 orders to compare Ramadan and non-Ramadan sales"
+       ]
+      }
+     ],
+     "highlighted_item_ids": [],
+     "notes": []
+    }
+   },
+   "expect": {
+    "rejected_bullets_min": 1,
+    "must_not_contain": [
+     "500,000"
+    ],
+    "must_contain": [
+     "50,000"
+    ]
+   },
+   "category": "tailoring"
+  },
+  {
+   "id": "ho-s01",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "Used skills are verified; job-only skills are missing.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Huda Al-Ghamdi",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst with 2 years of experience in SQL reporting and Power BI dashboards.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Rawabi Logistics",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards tracking delivery times for 14 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Assisted the operations manager with quarterly forecasting in Excel"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Elm",
+       "start": "2022",
+       "end": "2022",
+       "bullets": [
+        "Cleaned survey data in Python (pandas) for a research team",
+        "Prepared weekly KPI slides for the product team"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Ramadan sales analysis",
+       "description": "Personal analysis project",
+       "technologies": [
+        "Python",
+        "pandas"
+       ],
+       "bullets": [
+        "Analysed 50,000 orders to compare Ramadan and non-Ramadan sales"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Statistics",
+       "institution": "King Abdulaziz University",
+       "start": "2018",
+       "end": "2022"
+      }
+     ],
+     "skills": [
+      "SQL",
+      "Power BI",
+      "Excel",
+      "Python",
+      "pandas"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "requirements": [
+     "SQL",
+     "Power BI",
+     "Excel",
+     "Tableau",
+     "Airflow"
+    ]
+   },
+   "expect": {
+    "verified": [
+     "SQL",
+     "Power BI",
+     "Excel"
+    ],
+    "missing": [
+     "Tableau",
+     "Airflow"
+    ]
+   },
+   "category": "tailoring"
+  },
+  {
+   "id": "ho-s02",
+   "lang": "en",
+   "kind": "skill_match",
+   "purpose": "A skill that appears only in the skills list stays unverified.",
+   "input": {
+    "cv": {
+     "contact": {
+      "full_name": "Huda Al-Ghamdi",
+      "headline": "Data Analyst"
+     },
+     "summary": "Data analyst with 2 years of experience in SQL reporting and Power BI dashboards.",
+     "experience": [
+      {
+       "id": "e1",
+       "title": "Data Analyst",
+       "organization": "Rawabi Logistics",
+       "start": "2023",
+       "end": "Present",
+       "bullets": [
+        "Built Power BI dashboards tracking delivery times for 14 warehouses",
+        "Wrote SQL queries that cut month-end reporting from 3 days to 1 day",
+        "Assisted the operations manager with quarterly forecasting in Excel"
+       ]
+      },
+      {
+       "id": "e2",
+       "title": "Data Intern",
+       "organization": "Elm",
+       "start": "2022",
+       "end": "2022",
+       "bullets": [
+        "Cleaned survey data in Python (pandas) for a research team",
+        "Prepared weekly KPI slides for the product team"
+       ]
+      }
+     ],
+     "projects": [
+      {
+       "id": "p1",
+       "name": "Ramadan sales analysis",
+       "description": "Personal analysis project",
+       "technologies": [
+        "Python",
+        "pandas"
+       ],
+       "bullets": [
+        "Analysed 50,000 orders to compare Ramadan and non-Ramadan sales"
+       ]
+      }
+     ],
+     "education": [
+      {
+       "id": "d1",
+       "degree": "BSc Statistics",
+       "institution": "King Abdulaziz University",
+       "start": "2018",
+       "end": "2022"
+      }
+     ],
+     "skills": [
+      "SQL",
+      "Power BI",
+      "Excel",
+      "Python",
+      "pandas",
+      "Docker"
+     ],
+     "languages": [
+      "Arabic",
+      "English"
+     ]
+    },
+    "requirements": [
+     "Docker",
+     "Python"
+    ]
+   },
+   "expect": {
+    "unverified": [
+     "Docker"
+    ],
+    "verified": [
+     "Python"
+    ]
+   },
+   "category": "tailoring"
+  }
+ ]
+}

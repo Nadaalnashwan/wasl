@@ -1,0 +1,51 @@
+{
+ "category": "privacy",
+ "frozen": "2026-11-24",
+ "cases": [
+  {
+   "id": "ho-v01",
+   "lang": "en",
+   "kind": "privacy_policy",
+   "purpose": "Gemini free tier may use inputs to improve products: never eligible for CV parsing.",
+   "input": {
+    "provider": "gemini",
+    "key_source": "platform",
+    "task": "cv_parse"
+   },
+   "expect": {
+    "eligible": false
+   },
+   "category": "privacy"
+  },
+  {
+   "id": "ho-v02",
+   "lang": "en",
+   "kind": "privacy_policy",
+   "purpose": "Public job requirements may use any configured provider.",
+   "input": {
+    "provider": "gemini",
+    "key_source": "platform",
+    "task": "job_requirements"
+   },
+   "expect": {
+    "eligible": true
+   },
+   "category": "privacy"
+  },
+  {
+   "id": "ho-v03",
+   "lang": "en",
+   "kind": "privacy_policy",
+   "purpose": "Groq (no retention by default, short abuse logging) meets the floor for CV tailoring.",
+   "input": {
+    "provider": "groq",
+    "key_source": "platform",
+    "task": "cv_tailor"
+   },
+   "expect": {
+    "eligible": true
+   },
+   "category": "privacy"
+  }
+ ]
+}

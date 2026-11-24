@@ -1,0 +1,319 @@
+{
+ "category": "pii",
+ "frozen": "2026-11-24",
+ "cases": [
+  {
+   "id": "ho-p01",
+   "lang": "ar",
+   "kind": "pii_redact",
+   "purpose": "Arabic CV header: name, local mobile and email removed; title, city, employer, year kept.",
+   "input": {
+    "text": "نورة بنت سعد القحطاني\nمحللة بيانات | الدمام\nالجوال: 0551234567 | البريد: noura.q@example.sa\n\nالخبرة\n- محللة بيانات في شركة سابك (2021 - الآن)",
+    "document": true
+   },
+   "expect": {
+    "must_remove": [
+     "نورة بنت سعد القحطاني",
+     "0551234567",
+     "noura.q@example.sa"
+    ],
+    "must_keep": [
+     "محللة بيانات",
+     "الدمام",
+     "سابك",
+     "2021"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p02",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Iqama and passport numbers in a personal-details block.",
+   "input": {
+    "text": "Personal details\nIqama No: 2345678901\nPassport: K1234567\nRole sought: Software Engineer in Riyadh"
+   },
+   "expect": {
+    "must_remove": [
+     "2345678901",
+     "K1234567"
+    ],
+    "must_keep": [
+     "Software Engineer",
+     "Riyadh"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p03",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "UK and UAE phone formats removed; the metric and year kept.",
+   "input": {
+    "text": "Call +44 20 7946 0958 or (+971) 50-123-4567. Increased sales by 25% in 2023."
+   },
+   "expect": {
+    "must_remove": [
+     "+44 20 7946 0958",
+     "50-123-4567"
+    ],
+    "must_keep": [
+     "25%",
+     "2023"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p04",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Large metrics, uptime and a ticket number are not PII and must all survive.",
+   "input": {
+    "text": "Processed 1,250,000 transactions per month with 99.95% uptime; resolved ticket #4521 in 2 hours."
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "1,250,000",
+     "99.95%",
+     "#4521",
+     "2 hours"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p05",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Fake GitHub token and API key in pasted README text.",
+   "input": {
+    "text": "Setup: export GITHUB_TOKEN=ghp_FAKEa1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8 and set OPENAI_KEY=sk-proj-FAKEabcdefghijklmnopqrstuvwxyz0123456789 before running the parser."
+   },
+   "expect": {
+    "must_remove": [
+     "ghp_FAKEa1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8",
+     "sk-proj-FAKEabcdefghijklmnopqrstuvwxyz0123456789"
+    ],
+    "must_keep": [
+     "Setup",
+     "parser"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p06",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Saudi IBAN with spaces.",
+   "input": {
+    "text": "Salary account: SA03 8000 0000 6080 1016 7519 (for HR use)."
+   },
+   "expect": {
+    "must_remove": [
+     "SA03 8000 0000 6080 1016 7519"
+    ],
+    "must_keep": [
+     "HR"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p07",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Personal portfolio and GitHub profile links removed; the tool name kept.",
+   "input": {
+    "text": "Portfolio: https://reem-designs.example.com | GitHub: github.com/reemdev | Tools: Figma"
+   },
+   "expect": {
+    "must_remove": [
+     "reem-designs.example.com",
+     "github.com/reemdev"
+    ],
+    "must_keep": [
+     "Figma"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p08",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Street address removed; job title kept.",
+   "input": {
+    "text": "Senior Accountant\nAddress: 4512 King Fahd Road, Al Olaya, Riyadh 12211"
+   },
+   "expect": {
+    "must_remove": [
+     "4512 King Fahd Road"
+    ],
+    "must_keep": [
+     "Senior Accountant"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p09",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Date of birth removed; graduation year kept.",
+   "input": {
+    "text": "Date of Birth: 14/03/1998\nGraduated 2020 with honours."
+   },
+   "expect": {
+    "must_remove": [
+     "14/03/1998"
+    ],
+    "must_keep": [
+     "Graduated 2020"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p10",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Referee name, email and phone removed.",
+   "input": {
+    "text": "References\nDr. Khalid Al-Otaibi, khalid.otaibi@ksu.example.edu, +966 11 467 0000"
+   },
+   "expect": {
+    "must_remove": [
+     "Khalid Al-Otaibi",
+     "khalid.otaibi@ksu.example.edu",
+     "+966 11 467 0000"
+    ],
+    "must_keep": [
+     "References"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p11",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Known name removed; tools and employer that look like names kept.",
+   "input": {
+    "text": "Faisal Al-Dosari - DevOps Engineer\nWorked with Jenkins, Ansible and Tableau at Mozn.",
+    "document": true,
+    "known_names": [
+     "Faisal Al-Dosari"
+    ]
+   },
+   "expect": {
+    "must_remove": [
+     "Faisal Al-Dosari"
+    ],
+    "must_keep": [
+     "DevOps Engineer",
+     "Jenkins",
+     "Ansible",
+     "Tableau",
+     "Mozn"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p12",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Saudi national ID.",
+   "input": {
+    "text": "National ID: 1098765432. Skills: Python, SQL."
+   },
+   "expect": {
+    "must_remove": [
+     "1098765432"
+    ],
+    "must_keep": [
+     "Python",
+     "SQL"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p13",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Card number (published test number) removed.",
+   "input": {
+    "text": "Paid the course fee with card 4111 1111 1111 1111 in 2024."
+   },
+   "expect": {
+    "must_remove": [
+     "4111 1111 1111 1111"
+    ],
+    "must_keep": [
+     "2024"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p14",
+   "lang": "ar",
+   "kind": "pii_redact",
+   "purpose": "Mobile number written in Arabic-Indic digits.",
+   "input": {
+    "text": "هاتف: ٠٥٥٩٨٧٦٥٤٣ — مهندس شبكات"
+   },
+   "expect": {
+    "must_remove": [
+     "٠٥٥٩٨٧٦٥٤٣"
+    ],
+    "must_keep": [
+     "مهندس شبكات"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p15",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Obfuscated email address.",
+   "input": {
+    "text": "Contact: omar [at] example [dot] com for references."
+   },
+   "expect": {
+    "must_remove": [
+     "omar [at] example [dot] com"
+    ],
+    "must_keep": [
+     "references"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "ho-p16",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "JWT bearer token in a pasted log line.",
+   "input": {
+    "text": "Request failed. Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0In0.FAKEsignature12345abc"
+   },
+   "expect": {
+    "must_remove": [
+     "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0In0.FAKEsignature12345abc"
+    ],
+    "must_keep": [
+     "Request failed"
+    ]
+   },
+   "category": "pii"
+  }
+ ]
+}

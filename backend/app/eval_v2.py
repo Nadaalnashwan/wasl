@@ -36,6 +36,9 @@ EVAL_DIR = Path(__file__).resolve().parent.parent / "eval"
 DATA_DIR = EVAL_DIR / "v2"
 RESULTS = EVAL_DIR / "results"
 DATASET_VERSION = "wasl-eval-v2.0"
+# dev = regression set used while building the safeguards; heldout = frozen set never used for tuning
+DATASETS = {"dev": (EVAL_DIR / "v2", "wasl-eval-v2.0", "deterministic-latest"),
+            "heldout": (EVAL_DIR / "heldout", "wasl-heldout-1.0", "deterministic-heldout-latest")}
 CATEGORIES = ["cv_parsing", "achievement_extraction", "linkedin_content", "cv_tailoring", "hallucination",
               "prompt_injection", "arabic_mixed", "privacy"]
 
@@ -297,15 +300,21 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--baseline", default=str(EVAL_DIR / "baseline_deterministic.json"),
                     help="fail if case pass rate or claim recall drops below this file's values")
     ap.add_argument("--write-baseline", action="store_true")
+    ap.add_argument("--dataset", choices=sorted(DATASETS), default="dev",
+                    help="dev (regression set, baseline-gated) or heldout (frozen independent set, report only)")
+    ap.add_argument("--out", default=None, help="result file stem (default depends on --dataset)")
     args = ap.parse_args(argv)
+    global DATA_DIR, DATASET_VERSION
+    DATA_DIR, DATASET_VERSION, stem = DATASETS[args.dataset]
+    stem = args.out or stem
     results = run_all()
     summary = summarise(results)
     summary["at"] = datetime.now(UTC).isoformat()
     summary["git_sha"] = _git_sha()
     RESULTS.mkdir(parents=True, exist_ok=True)
     payload = {"summary": summary, "cases": results}
-    (RESULTS / "deterministic-latest.json").write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-    (RESULTS / "deterministic-latest.md").write_text(report_md(summary, results), encoding="utf-8")
+    (RESULTS / f"{stem}.json").write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    (RESULTS / f"{stem}.md").write_text(report_md(summary, results), encoding="utf-8")
     if args.record:
         from app.db import SessionLocal, init_db
         from app.models import EvalRun
@@ -320,6 +329,8 @@ def main(argv: list[str] | None = None) -> int:
             db.close()
     print(json.dumps({k: summary[k] for k in ("cases", "errors", "case_pass_rate", "claim_detection_precision", "claim_detection_recall",
                                               "false_acceptance_rate", "false_rejection_rate", "pii_recall")}, indent=2))
+    if args.dataset == "heldout":
+        return 0  # the held-out set is reported, never used as a CI gate (gating would invite tuning to it)
     base_path = Path(args.baseline)
     if args.write_baseline:
         base_path.write_text(json.dumps({k: summary[k] for k in ("case_pass_rate", "claim_detection_recall", "claim_detection_precision",

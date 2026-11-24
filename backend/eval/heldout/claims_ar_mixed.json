@@ -1,0 +1,199 @@
+{
+ "category": "claims_ar_mixed",
+ "frozen": "2026-11-24",
+ "cases": [
+  {
+   "id": "ho-a01",
+   "lang": "ar",
+   "kind": "claim_check",
+   "purpose": "Participation inflated to leadership (Arabic).",
+   "input": {
+    "evidence": "شاركت في تطوير تطبيق الحجوزات باستخدام Flutter.",
+    "output": "قدت تطوير تطبيق الحجوزات باستخدام Flutter."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "قدت"
+     }
+    ],
+    "supported": [
+     "Flutter"
+    ]
+   },
+   "category": "claims_ar_mixed"
+  },
+  {
+   "id": "ho-a02",
+   "lang": "ar",
+   "kind": "claim_check",
+   "purpose": "Percentage changed (Arabic).",
+   "input": {
+    "evidence": "خفضت وقت الاستجابة بنسبة 20%.",
+    "output": "خفضت وقت الاستجابة بنسبة 60%."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "60"
+     }
+    ]
+   },
+   "category": "claims_ar_mixed"
+  },
+  {
+   "id": "ho-a03",
+   "lang": "ar",
+   "kind": "claim_check",
+   "purpose": "Faithful Arabic paraphrase with an English tool name must pass.",
+   "input": {
+    "evidence": "طورت لوحة تحكم باستخدام Power BI لقسم المبيعات.",
+    "output": "طورت لوحة تحكم Power BI لقسم المبيعات."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "Power BI"
+    ]
+   },
+   "category": "claims_ar_mixed"
+  },
+  {
+   "id": "ho-a04",
+   "lang": "ar",
+   "kind": "claim_check",
+   "purpose": "Workshop attendance turned into a CISSP certification.",
+   "input": {
+    "evidence": "حضرت ورشة عمل عن الأمن السيبراني.",
+    "output": "حاصل على شهادة CISSP في الأمن السيبراني."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "شهادة"
+     }
+    ]
+   },
+   "category": "claims_ar_mixed"
+  },
+  {
+   "id": "ho-a05",
+   "lang": "ar",
+   "kind": "claim_check",
+   "purpose": "Team first place claimed as personal (Arabic).",
+   "input": {
+    "evidence": "فاز فريقنا بالمركز الأول في هاكاثون الرياض.",
+    "output": "فزت بالمركز الأول في هاكاثون الرياض."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "فزت"
+     }
+    ]
+   },
+   "category": "claims_ar_mixed"
+  },
+  {
+   "id": "ho-a06",
+   "lang": "mixed",
+   "kind": "claim_check",
+   "purpose": "Mixed-language evidence; Java grafted into the Arabic output.",
+   "input": {
+    "evidence": "Built a recommendation API in Python للمتجر الإلكتروني.",
+    "output": "بنيت واجهة توصيات باستخدام Python و Java للمتجر."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Java"
+     }
+    ],
+    "supported": [
+     "Python"
+    ]
+   },
+   "category": "claims_ar_mixed"
+  },
+  {
+   "id": "ho-a07",
+   "lang": "ar",
+   "kind": "claim_check",
+   "purpose": "Year changed (Arabic).",
+   "input": {
+    "evidence": "تدربت في شركة أرامكو صيف 2022.",
+    "output": "تدربت في شركة أرامكو صيف 2024."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "2024"
+     }
+    ]
+   },
+   "category": "claims_ar_mixed"
+  },
+  {
+   "id": "ho-a08",
+   "lang": "mixed",
+   "kind": "claim_check",
+   "purpose": "Faithful mixed-language restatement must pass.",
+   "input": {
+    "evidence": "I trained 40 employees on Excel في فرع جدة.",
+    "output": "دربت 40 موظفا على Excel في فرع جدة."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "Excel",
+     "40"
+    ]
+   },
+   "category": "claims_ar_mixed"
+  },
+  {
+   "id": "ho-a09",
+   "lang": "ar",
+   "kind": "claim_check",
+   "purpose": "Arabic negation of a tool.",
+   "input": {
+    "evidence": "لم أستخدم Docker من قبل.",
+    "output": "أدير الحاويات باستخدام Docker."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Docker"
+     }
+    ]
+   },
+   "category": "claims_ar_mixed"
+  },
+  {
+   "id": "ho-a10",
+   "lang": "ar",
+   "kind": "claim_check",
+   "purpose": "Team membership restated as supervising (Arabic).",
+   "input": {
+    "evidence": "عملت ضمن فريق من 8 مطورين.",
+    "output": "أشرفت على 8 مطورين."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "8"
+     }
+    ]
+   },
+   "category": "claims_ar_mixed"
+  }
+ ]
+}

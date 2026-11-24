@@ -1,0 +1,507 @@
+{
+ "category": "claims_en",
+ "frozen": "2026-11-24",
+ "cases": [
+  {
+   "id": "ho-c01",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Team win restated as a personal win must not pass without confirmation.",
+   "input": {
+    "evidence": "Our team of four won the Saudi Fintech Hackathon in 2025.",
+    "output": "I won the Saudi Fintech Hackathon in 2025."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "won"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c02",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Evidence explicitly negates production Kubernetes use.",
+   "input": {
+    "evidence": "I have not used Kubernetes in production; our deployments ran on plain Docker hosts.",
+    "output": "Deployed services on Kubernetes in production."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Kubernetes"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c03",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Design work belongs to a named colleague; only the backend part is the user's.",
+   "input": {
+    "evidence": "Lina designed the onboarding flow; I implemented the backend endpoints in Go.",
+    "output": "I designed the onboarding flow and implemented the backend endpoints in Go."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "designed"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c04",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Same number, different unit (weeks -> months).",
+   "input": {
+    "evidence": "Cut employee onboarding time by 3 weeks.",
+    "output": "Cut employee onboarding time by 3 months."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "3"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c05",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Junior title inflated to Senior.",
+   "input": {
+    "evidence": "Worked as a Junior Data Analyst at Rawabi Logistics (2023-2024).",
+    "output": "Senior Data Analyst at Rawabi Logistics (2023-2024)."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Senior"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c06",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "A free video course is not a professional certification.",
+   "input": {
+    "evidence": "Completed a free introductory cloud computing video course on YouTube.",
+    "output": "AWS Certified Solutions Architect with cloud computing experience."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Certified"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c07",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Preparing for an exam is not holding the certificate.",
+   "input": {
+    "evidence": "I am preparing for the PMP exam scheduled for next June.",
+    "output": "PMP-certified project coordinator."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "PMP"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c08",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "A grafted technology (Python) that the evidence never mentions.",
+   "input": {
+    "evidence": "Built the internal wiki with Notion and wrote onboarding guides.",
+    "output": "Built the internal wiki with Notion and automated onboarding with Python scripts."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Python"
+     }
+    ],
+    "supported": [
+     "Notion"
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c09",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Faithful paraphrase with the same number, skill and year must pass.",
+   "input": {
+    "evidence": "I wrote Python scripts that cleaned 2 million sales records for the analytics team in 2024.",
+    "output": "Cleaned 2 million sales records with Python scripts for the analytics team (2024)."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "Python"
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c10",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Number written as a word in the output; still faithful.",
+   "input": {
+    "evidence": "Mentored 3 interns during summer 2025.",
+    "output": "Mentored three interns in summer 2025."
+   },
+   "expect": {
+    "passed": true
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c11",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Budget figure not present anywhere in the (internally inconsistent) evidence.",
+   "input": {
+    "evidence": "Managed a budget of SAR 200,000. After cuts the budget was SAR 120,000.",
+    "output": "Managed a budget of SAR 500,000."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "500,000"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c12",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Percentage-point change restated as an invented relative percentage.",
+   "input": {
+    "evidence": "Increased the newsletter open rate from 18% to 24%.",
+    "output": "Increased the newsletter open rate by 40%."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "40"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c13",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Contributing reviews to a refactor led by someone else is not leading it.",
+   "input": {
+    "evidence": "Contributed code reviews to the payments refactor led by Fahad.",
+    "output": "Led the payments refactor."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Led"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c14",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Team size restated as direct reports.",
+   "input": {
+    "evidence": "Worked in a team of 12 engineers on the mobile app.",
+    "output": "Managed 12 engineers on the mobile app."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "12"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c15",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "An award received by a colleague, claimed by the user.",
+   "input": {
+    "evidence": "My colleague Huda received the Best Innovation award for the chatbot I helped test.",
+    "output": "Received the Best Innovation award for the chatbot."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "award"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c16",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Poster presentation inflated to a keynote.",
+   "input": {
+    "evidence": "Presented a poster at the KAUST student research day.",
+    "output": "Gave the keynote at the KAUST student research day."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "keynote"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c17",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Invented employer.",
+   "input": {
+    "evidence": "Freelance web developer for small local shops in Jeddah.",
+    "output": "Web developer at Google, building websites for local shops in Jeddah."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Google"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c18",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Short faithful restatement with no checkable cue must pass.",
+   "input": {
+    "evidence": "Organized weekly study sessions for the algorithms course.",
+    "output": "Organized weekly algorithms study sessions."
+   },
+   "expect": {
+    "passed": true
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c19",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Authorship: a named colleague built the dashboard; the user wrote its queries.",
+   "input": {
+    "evidence": "Sara built the dashboard. I wrote the SQL queries behind it.",
+    "output": "I built the dashboard and wrote its SQL queries."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "built"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c20",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Wrong year.",
+   "input": {
+    "evidence": "Interned at Elm Company in summer 2023.",
+    "output": "Interned at Elm Company in summer 2021."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "2021"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c21",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Internship duration inflated (2-month -> 6-month).",
+   "input": {
+    "evidence": "Completed a 2-month internship at Elm Company.",
+    "output": "Completed a 6-month internship at Elm Company."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "6"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c22",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Currency changed (SAR -> USD) for the same digits: a different, unsupported amount.",
+   "input": {
+    "evidence": "Saved the clinic SAR 15,000 per year in printing costs.",
+    "output": "Saved the clinic $15,000 per year in printing costs."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "15,000"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c23",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Studied but explicitly never used: usage claim must fail.",
+   "input": {
+    "evidence": "Studied TensorFlow in an online course but never used it in a project.",
+    "output": "Built image classifiers with TensorFlow."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "TensorFlow"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c24",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Team credit kept as team credit must pass.",
+   "input": {
+    "evidence": "Our team of five shipped the attendance app used by 900 students.",
+    "output": "Our team shipped an attendance app used by 900 students."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "900"
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c25",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Speed-up factor inflated.",
+   "input": {
+    "evidence": "Made the product search page 2x faster.",
+    "output": "Made the product search page 10x faster."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "10x"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c26",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Outcome inflation with no number or skill cue (known hard case for cue-based checks).",
+   "input": {
+    "evidence": "Wrote unit tests for the login module.",
+    "output": "Wrote unit tests for the login module, eliminating all production login bugs."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "eliminating"
+     }
+    ]
+   },
+   "category": "claims_en"
+  },
+  {
+   "id": "ho-c27",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Two faithful facts from two different evidence sentences must pass.",
+   "input": {
+    "evidence": "Built a Flask API for the library. The API served 1,200 students each term.",
+    "output": "Built a Flask API that served 1,200 students each term."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "Flask",
+     "1,200"
+    ]
+   },
+   "category": "claims_en"
+  }
+ ]
+}
