@@ -16,6 +16,7 @@ os.environ.update({
     "JWT_SECRET": "test-secret-test-secret-test-secret-123",
     "UPLOAD_DIR": str(_tmp / "uploads"),
     "AI_MAX_RETRIES": "2",
+    "ALERT_EVAL_INTERVAL_MINUTES": "0", "ALERT_SLACK_WEBHOOK_URL": "", "ALERT_WEBHOOK_URL": "",
     "LINKEDIN_CLIENT_ID": "", "LINKEDIN_CLIENT_SECRET": "", "GITHUB_CLIENT_ID": "", "GITHUB_CLIENT_SECRET": "",
     # job tests inject fake keys + fake fetchers; real keys from backend/.env must never reach a test
     "JSEARCH_API_KEY": "", "SERPAPI_API_KEY": "",
@@ -120,3 +121,19 @@ SAMPLE_CV = {
     "projects": [], "certifications": [], "awards": [],
     "skills": ["Python", "SQL", "Docker"], "languages": ["Arabic", "English"],
 }
+
+
+def make_admin(client, email: str) -> dict:
+    """Register a user and promote them through the trusted CLI path (scripts/admin.py), never via the API."""
+    from scripts.admin import set_role
+
+    r = client.post("/api/auth/register", json={"email": email, "password": "password123", "full_name": "Admin User"})
+    assert r.status_code == 201, r.text
+    assert set_role(email, "admin", "test") == 0
+    return {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+
+@pytest.fixture
+def admin_auth(client):
+    _counter["n"] += 1
+    return make_admin(client, f"admin{_counter['n']}@test.dev")

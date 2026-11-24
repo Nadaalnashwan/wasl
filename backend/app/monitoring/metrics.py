@@ -3,7 +3,7 @@
 error_logs, eval_runs).
 
 Everything shown on the Monitoring dashboard is calculated from real rows.
-Alerts are threshold rules evaluated on each request to /api/monitoring/metrics.
+Alert rules live in app/monitoring/alerts.py and are evaluated by an independent scheduler.
 """
 
 from __future__ import annotations
@@ -14,13 +14,13 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import settings
 from app.models import AIEvent, ErrorLog, EvalRun, HTTPEvent, QualityEvent
 
 
-def percentile(values: list[float], p: float) -> float:
+def percentile(values: list[float], p: float) -> float | None:
+    """None when there is no data (shown as N/A — never as a healthy 0 ms)."""
     if not values:
-        return 0.0
+        return None
 
     s = sorted(values)
     k = (len(s) - 1) * p / 100
@@ -36,18 +36,33 @@ def compute(
     db: Session,
     days: int = 7,
     user_id: str | None = None,
+    *,
+    provider: str | None = None,
+    model: str | None = None,
+    task: str | None = None,
+    since: datetime | None = None,
 ) -> dict:
-    since = datetime.now(UTC) - timedelta(days=days)
+    since = since or datetime.now(UTC) - timedelta(days=days)
 
-    def scoped(stmt, model):
-        stmt = stmt.where(model.created_at >= since)
-        if user_id and hasattr(model, "user_id"):
-            stmt = stmt.where(model.user_id == user_id)
+    def scoped(stmt, model_cls):
+        stmt = stmt.where(model_cls.created_at >= since)
+        if user_id and hasattr(model_cls, "user_id"):
+            stmt = stmt.where(model_cls.user_id == user_id)
         return stmt
 
-    ai = db.scalars(scoped(select(AIEvent), AIEvent)).all()
+    ai_stmt = scoped(select(AIEvent), AIEvent)
+    if provider:
+        ai_stmt = ai_stmt.where(AIEvent.provider == provider)
+    if model:
+        ai_stmt = ai_stmt.where(AIEvent.model == model)
+    if task:
+        ai_stmt = ai_stmt.where(AIEvent.task == task)
+    ai = db.scalars(ai_stmt).all()
     http = db.scalars(scoped(select(HTTPEvent), HTTPEvent)).all()
-    q = db.scalars(scoped(select(QualityEvent), QualityEvent)).all()
+    q_stmt = scoped(select(QualityEvent), QualityEvent)
+    if task:
+        q_stmt = q_stmt.where(QualityEvent.task == task)
+    q = db.scalars(q_stmt).all()
 
     # AI requests: all attempts sharing a request_id form one logical request.
     by_req: dict[str, list[AIEvent]] = defaultdict(list)
@@ -133,7 +148,7 @@ def compute(
             "avg_latency_ms": (
                 round(sum(values["latencies"]) / len(values["latencies"]))
                 if values["latencies"]
-                else 0
+                else None
             ),
             "p95_latency_ms": percentile(values["latencies"], 95),
         }
@@ -220,8 +235,41 @@ def compute(
         key=lambda route: -route["count"],
     )[:10]
 
-    # Quality metrics.
-    claim_events = [event for event in q if event.kind == "claim_check"]
+    # Quality metrics. Claim checks are recorded per stage: raw (model output before enforcement), final (what the
+    # user receives after revise/enforcement) and approved (published / accepted). v1 rows had no stage -> "final".
+    def _stage(event: QualityEvent) -> str:
+        return (event.details or {}).get("stage") or "final"
+
+    claim_stages = {}
+    for stage_name in ("raw", "final", "approved"):
+        evs = [e for e in q if e.kind == "claim_check" and _stage(e) == stage_name]
+        n_checked = sum(int(e.details.get("claims_checked", 0)) for e in evs)
+        n_unsup = sum(int(e.details.get("unsupported_count", 0)) for e in evs)
+        claim_stages[stage_name] = {
+            "outputs": len(evs),
+            "claims_checked": n_checked,
+            "unsupported": n_unsup,
+            "contradicted": sum(int(e.details.get("contradicted", 0)) for e in evs),
+            "ambiguous": sum(int(e.details.get("ambiguous", 0)) for e in evs),
+            "needs_confirmation": sum(int(e.details.get("needs_confirmation", 0)) for e in evs),
+            "unavailable": sum(int(e.details.get("unavailable", 0)) for e in evs),
+            "outputs_with_unsupported": sum(1 for e in evs if int(e.details.get("unsupported_count", 0)) > 0),
+            # None (not 0.0) when nothing was checked: zero claims is "no data", not "perfect"
+            "unsupported_rate": round(n_unsup / n_checked, 4) if n_checked else None,
+            "acknowledged": sum(1 for e in evs if e.details.get("acknowledged")),
+            "by_task": {},
+        }
+        for e in evs:
+            bt = claim_stages[stage_name]["by_task"].setdefault(e.task or "unknown", {"claims_checked": 0, "unsupported": 0})
+            bt["claims_checked"] += int(e.details.get("claims_checked", 0))
+            bt["unsupported"] += int(e.details.get("unsupported_count", 0))
+    approved = [e for e in q if e.kind == "claim_check" and _stage(e) == "approved"]
+    escaped = sum(int(e.details.get("unsupported_count", 0)) for e in approved if not e.details.get("acknowledged"))
+    escaped += sum(int(e.details.get("unsupported_count", 0)) for e in q if e.kind == "claim_check" and _stage(e) == "final"
+                   and e.task == "cv_tailor")  # tailored CV final re-check: anything flagged bypassed enforcement
+    verifier_versions = sorted({(e.details or {}).get("verifier_version", "claims-v1") for e in q if e.kind == "claim_check"})
+
+    claim_events = [event for event in q if event.kind == "claim_check" and _stage(event) == "final"]
     checked = sum(
         int(event.details.get("claims_checked", 0))
         for event in claim_events
@@ -298,8 +346,12 @@ def compute(
     reviewed = feedback["confirmed"] + feedback["rejected"]
 
     quality = {
+        "claims_by_stage": claim_stages,
+        "unsupported_blocked": max(0, claim_stages["raw"]["unsupported"] - claim_stages["final"]["unsupported"]),
+        "unsupported_escaped": escaped,
+        "verifier_versions": verifier_versions,
         "unsupported_claim_rate": (
-            round(unsupported / checked, 3) if checked else 0.0
+            round(unsupported / checked, 3) if checked else None
         ),
         "claims_checked": checked,
         "unsupported_claims": unsupported,
@@ -356,8 +408,94 @@ def compute(
         .limit(1)
     ).first()
 
+    # ---- models: requested model vs identifier the provider actually returned
+    mstats: dict[tuple[str, str], dict] = defaultdict(lambda: {"attempts": 0, "success": 0, "lat": [], "prompt": 0, "completion": 0,
+                                                               "cost": 0.0, "cost_known": 0, "fallback_success": 0, "returned": Counter()})
+    for e in ai:
+        if e.provider == "none":
+            continue
+        st = mstats[(e.provider, e.model)]
+        st["attempts"] += 1
+        st["prompt"] += e.prompt_tokens
+        st["completion"] += e.completion_tokens
+        if e.est_cost_usd is not None:
+            st["cost"] += e.est_cost_usd
+            st["cost_known"] += 1
+        if e.status == "success":
+            st["success"] += 1
+            st["lat"].append(e.latency_ms)
+            st["fallback_success"] += bool(e.is_fallback)
+            if e.returned_model:
+                st["returned"][e.returned_model] += 1
+    models = [
+        {"provider": p_, "model": m_, "returned_models": dict(v["returned"]), "attempts": v["attempts"],
+         "success_rate": round(v["success"] / v["attempts"], 3) if v["attempts"] else None,
+         "p50_ms": percentile(v["lat"], 50) if v["lat"] else None, "p95_ms": percentile(v["lat"], 95) if v["lat"] else None,
+         "prompt_tokens": v["prompt"], "completion_tokens": v["completion"],
+         "est_cost_usd": round(v["cost"], 6) if v["cost_known"] else None, "fallback_successes": v["fallback_success"]}
+        for (p_, m_), v in sorted(mstats.items())
+    ]
+
+    # ---- cost estimates (list price x tokens, every attempt incl. retries/fallbacks; NOT invoices)
+    def _cost_group(key) -> list[dict]:
+        groups: dict[str, dict] = defaultdict(lambda: {"est_cost_usd": 0.0, "known": 0, "unknown": 0, "tokens": 0})
+        for e in ai:
+            if e.provider == "none":
+                continue
+            g = groups[key(e)]
+            g["tokens"] += e.prompt_tokens + e.completion_tokens
+            if e.est_cost_usd is None:
+                g["unknown"] += 1 if (e.prompt_tokens or e.completion_tokens) else 0
+            else:
+                g["est_cost_usd"] += e.est_cost_usd
+                g["known"] += 1
+        return [{"key": k, "est_cost_usd": round(v["est_cost_usd"], 6) if v["known"] else None, "priced_attempts": v["known"],
+                 "unpriced_attempts": v["unknown"], "tokens": v["tokens"]} for k, v in sorted(groups.items())]
+
+    daily_cost: dict[str, float] = defaultdict(float)
+    for e in ai:
+        if e.est_cost_usd is not None:
+            daily_cost[_aware(e.created_at).strftime("%Y-%m-%d")] += e.est_cost_usd
+    priced = [e for e in ai if e.est_cost_usd is not None]
+    cost = {
+        "basis": "estimate: list price x tokens for every attempt (retries and fallbacks included); not billed cost",
+        "total_est_usd": round(sum(e.est_cost_usd for e in priced), 6) if priced else None,
+        "priced_attempts": len(priced),
+        "unpriced_attempts": sum(1 for e in ai if e.est_cost_usd is None and (e.prompt_tokens or e.completion_tokens)),
+        "retry_and_fallback_share_usd": round(sum(e.est_cost_usd for e in priced if e.attempt > 1 or e.is_fallback), 6) if priced else None,
+        "by_task": _cost_group(lambda e: e.task),
+        "by_model": _cost_group(lambda e: f"{e.provider}/{e.model}"),
+        "by_provider": _cost_group(lambda e: e.provider),
+        "by_key_source": _cost_group(lambda e: "byok" if e.key_source == "user" else "platform"),
+        "daily": [{"day": d, "est_cost_usd": round(v, 6)} for d, v in sorted(daily_cost.items())],
+        "pricing_versions": sorted({e.pricing_version for e in ai if e.pricing_version}),
+    }
+
+    # ---- latency by task (provider-attempt latency vs end-to-end logical request latency)
+    task_lat: dict[str, dict] = defaultdict(lambda: {"attempt": [], "e2e": []})
+    for rid, events in by_req.items():
+        t_name = events[0].task
+        task_lat[t_name]["attempt"] += [e.latency_ms for e in events if e.status == "success"]
+        if rid in ok_reqs:
+            task_lat[t_name]["e2e"].append(sum(e.latency_ms for e in events))
+    latency_by_task = [{"task": k, "attempt_p50_ms": percentile(v["attempt"], 50), "attempt_p95_ms": percentile(v["attempt"], 95),
+                        "e2e_p95_ms": percentile(v["e2e"], 95), "requests": len(v["e2e"])} for k, v in sorted(task_lat.items())]
+    workflow = defaultdict(list)
+    for e in q:
+        if e.kind == "task_completed" and (e.details or {}).get("duration_ms") is not None:
+            workflow[e.task].append(int(e.details["duration_ms"]))
+    workflow_duration = [{"task": k, "count": len(v), "p50_ms": percentile(v, 50), "p95_ms": percentile(v, 95)} for k, v in sorted(workflow.items())]
+
+    status_distribution = dict(sorted(Counter(f"{e.status_code // 100}xx" for e in http).items()))
+    slowest = sorted(route_stats_all(http), key=lambda r: -(r["p95_ms"] or 0))[:8]
+
     metrics = {
         "window_days": days,
+        "filters": {"provider": provider, "model": model, "task": task},
+        "models": models,
+        "cost": cost,
+        "latency_by_task": latency_by_task,
+        "workflow_duration": workflow_duration,
         "scope": "mine" if user_id else "all",
         "generated_at": datetime.now(UTC).isoformat(),
         "ai": {
@@ -367,11 +505,15 @@ def compute(
             "failure_rate": failure_rate,
             "attempts": len(ai),
             "attempt_error_rate": attempt_error_rate,
+            "rate_limit_errors": sum(1 for e in ai if e.error_type == "rate_limit"),
+            "timeout_errors": sum(1 for e in ai if e.error_type in ("timeout", "deadline")),
+            "privacy_blocked_requests": sum(1 for e in ai if e.error_type == "privacy_policy"),
+            "redacted_requests": len({e.request_id for e in ai if e.redactions}),
             "retried_requests": len(retried_reqs),
             "fallback_requests": len(fallback_reqs),
             "fallback_rate": fallback_rate,
             "latency_ms": {
-                "avg": round(sum(succ_lat) / len(succ_lat)) if succ_lat else 0,
+                "avg": round(sum(succ_lat) / len(succ_lat)) if succ_lat else None,
                 "p50": percentile(succ_lat, 50),
                 "p95": percentile(succ_lat, 95),
                 "p99": percentile(succ_lat, 99),
@@ -429,6 +571,8 @@ def compute(
             "p50_ms": percentile(http_lat, 50),
             "p95_ms": percentile(http_lat, 95),
             "routes": route_stats,
+            "status_distribution": status_distribution,
+            "slowest_routes": slowest,
         },
         "quality": quality,
         "recent_errors": [
@@ -454,13 +598,14 @@ def compute(
             }
             for event in recent_failures
         ],
-        # EvalRun has no model column, so do not access latest_eval.model.
         "latest_eval": (
             {
                 "id": latest_eval.id,
                 "at": latest_eval.created_at.isoformat(),
                 "provider": latest_eval.provider,
-                "model": "",
+                "model": latest_eval.model or None,
+                "kind": latest_eval.kind,
+                "dataset_version": latest_eval.dataset_version,
                 "summary": latest_eval.summary,
             }
             if latest_eval
@@ -468,98 +613,17 @@ def compute(
         ),
     }
 
-    metrics["alerts"] = evaluate_alerts(metrics)
+    from app.monitoring.alerts import evaluate_rules
+
+    metrics["alerts"] = evaluate_rules(metrics)
     return metrics
 
 
-def evaluate_alerts(m: dict) -> list[dict]:
-    alerts = []
-    ai = m["ai"]
-    min_n = 5  # Avoid alerting on tiny samples.
+def route_stats_all(http: list[HTTPEvent]) -> list[dict]:
+    routes: dict[str, list[HTTPEvent]] = defaultdict(list)
+    for e in http:
+        routes[e.route].append(e)
+    return [{"route": r, "count": len(evs), "errors_5xx": sum(1 for e in evs if e.status_code >= 500),
+             "p95_ms": percentile([e.latency_ms for e in evs], 95)} for r, evs in routes.items()]
 
-    def add(level, key, title, value, threshold, hint):
-        alerts.append(
-            {
-                "level": level,
-                "key": key,
-                "title": title,
-                "value": value,
-                "threshold": threshold,
-                "investigate": hint,
-            }
-        )
 
-    if (
-        ai["total_requests"] >= min_n
-        and ai["failure_rate"] > settings.alert_failure_rate
-    ):
-        add(
-            "critical",
-            "ai_failure_rate",
-            "AI request failure rate is high",
-            ai["failure_rate"],
-            settings.alert_failure_rate,
-            "Check 'Error types' — rate_limit means free-tier quota; "
-            "auth means an invalid/expired key; validation means the "
-            "model's JSON no longer matches the schema.",
-        )
-
-    if (
-        ai["successful_requests"] >= min_n
-        and ai["latency_ms"]["p95"] > settings.alert_p95_latency_ms
-    ):
-        add(
-            "warning",
-            "p95_latency",
-            "AI p95 latency above target",
-            ai["latency_ms"]["p95"],
-            settings.alert_p95_latency_ms,
-            "Compare per-provider p95. If one provider is slow, lower it "
-            "in AI_PROVIDER_PRIORITY or switch the task to the fast tier.",
-        )
-
-    if (
-        ai["successful_requests"] >= min_n
-        and ai["fallback_rate"] > settings.alert_fallback_rate
-    ):
-        add(
-            "warning",
-            "fallback_rate",
-            "Frequent provider fallback",
-            ai["fallback_rate"],
-            settings.alert_fallback_rate,
-            "The primary provider is failing often. Inspect recent AI "
-            "failures for its error_type and HTTP status.",
-        )
-
-    quality = m["quality"]
-    if (
-        quality["claims_checked"] >= 10
-        and quality["unsupported_claim_rate"]
-        > settings.alert_unsupported_claim_rate
-    ):
-        add(
-            "warning",
-            "unsupported_claims",
-            "AI outputs contain unsupported claims",
-            quality["unsupported_claim_rate"],
-            settings.alert_unsupported_claim_rate,
-            "Open the evaluation report: which task produces them? "
-            "Tighten the prompt or force the revise step.",
-        )
-
-    if (
-        m["http"]["requests"] >= 20
-        and m["http"]["error_rate_5xx"] > 0.05
-    ):
-        add(
-            "critical",
-            "http_5xx",
-            "Server errors above 5%",
-            m["http"]["error_rate_5xx"],
-            0.05,
-            "See 'Recent errors' — each has an error id that is also "
-            "returned to the user in the error message.",
-        )
-
-    return alerts

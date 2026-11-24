@@ -130,7 +130,8 @@ class Redactor:
         if self.cv_header:
             for line in text.splitlines():
                 line = line.strip()
-                if not line:
+                # skip our own prompt scaffolding ("CV text:", <untrusted_data …>) to reach the document's first line
+                if not line or re.match(r"(?i)^(<\/?untrusted_data|cv text\s*:|document\s*:)", line):
                     continue
                 words = line.split()
                 if (

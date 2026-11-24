@@ -230,17 +230,21 @@ def test_ai_unavailable_is_reported_not_faked(client, auth, fake_llm):
     assert r.status_code == 503 and r.json()["code"] == "ai_unavailable"
 
 
-def test_monitoring_reflects_real_events(client, auth):
+def test_monitoring_reflects_real_events(client, auth, admin_auth):
     _master(client, auth)
     sug = client.post("/api/achievements", json={**ACH, "title": "Monitoring demo project", "description": "Built a monitoring demo in Python."}, headers=auth).json()["cv_update"]
     if sug["status"] == "created":
         client.post(f"/api/cv/suggestions/{sug['suggestion']['id']}/accept", headers=auth)
-    m = client.get("/api/monitoring/metrics?days=1&scope=all", headers=auth).json()
+    # deployment-wide metrics are admin-only (v1 exposed them to every user via scope=all)
+    assert client.get("/api/monitoring/metrics?days=1", headers=auth).status_code == 403
+    m = client.get("/api/admin/monitoring/metrics?days=1", headers=admin_auth).json()
     assert m["ai"]["total_requests"] > 0 and m["ai"]["attempts"] >= m["ai"]["total_requests"]
     assert m["ai"]["latency_ms"]["p95"] >= 0
     assert m["quality"]["cv_decisions"]["accepted"] >= 1
-    assert m["quality"]["claims_checked"] > 0
+    assert m["quality"]["claims_by_stage"]["raw"]["claims_checked"] > 0
     assert m["http"]["requests"] > 0
     assert all(not r["route"].count("/") or "{" in r["route"] or r["route"].startswith("/api") for r in m["http"]["routes"])
-    mine = client.get("/api/monitoring/metrics?days=1&scope=mine", headers=auth).json()
-    assert mine["ai"]["total_requests"] <= m["ai"]["total_requests"]
+    # every attempt is traceable to a registry version and model
+    assert m["models"] and all(x["model"] for x in m["models"])
+    legacy = client.get("/api/monitoring/metrics?days=1", headers=admin_auth)
+    assert legacy.status_code == 200

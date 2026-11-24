@@ -1,77 +1,31 @@
+"""DEPRECATED v1 monitoring API, kept only so old clients get a clear answer.
 
+v1 let any signed-in user read deployment-wide metrics (`scope=all`). Every route now requires the admin role
+and simply forwards to the v2 admin API (app/routers/admin.py). No route here is reachable by normal users.
+"""
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.deps import get_current_user, get_db
-from app.models import EvalRun, User
-from app.monitoring.metrics import compute
+from app.deps import get_db
+from app.routers import admin
+from app.security.authz import require_admin
 
-router = APIRouter(prefix="/api/monitoring", tags=["monitoring"])
+router = APIRouter(prefix="/api/monitoring", tags=["monitoring (deprecated)"], dependencies=[Depends(require_admin)],
+                   deprecated=True)
 
 
 @router.get("/metrics")
-def metrics(
-    days: int = Query(7, ge=1, le=90),
-    scope: str = Query("all", pattern="^(all|mine)$"),
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """Aggregated operational metrics. 'all' = whole deployment
-    (aggregates only, no user content).
-    """
-    return compute(
-        db,
-        days,
-        user.id if scope == "mine" else None,
-    )
+def metrics(days: int = Query(7, ge=1, le=90), db: Session = Depends(get_db)):
+    return admin.metrics(days=days, provider=None, model=None, task=None, db=db)
 
 
 @router.get("/evals")
-def evals(
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """Return the latest evaluation runs."""
-    rows = db.scalars(
-        select(EvalRun)
-        .order_by(EvalRun.created_at.desc())
-        .limit(20)
-    ).all()
-
-    return [
-        {
-            "id": r.id,
-            "at": r.created_at.isoformat(),
-            "dataset_version": r.dataset_version,
-            "provider": r.provider,
-            "model": "",
-            "summary": r.summary,
-        }
-        for r in rows
-    ]
+def evals(db: Session = Depends(get_db)):
+    return admin.evals(kind=None, db=db)
 
 
 @router.get("/evals/{run_id}")
-def eval_run(
-    run_id: str,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """Return one evaluation run and its test cases."""
-    r = db.get(EvalRun, run_id)
-
-    if not r:
-        return None
-
-    return {
-        "id": r.id,
-        "at": r.created_at.isoformat(),
-        "dataset_version": r.dataset_version,
-        "provider": r.provider,
-        "model": "",
-        "summary": r.summary,
-        "cases": r.cases,
-    }
+def eval_run(run_id: str, db: Session = Depends(get_db)):
+    return admin.eval_run(run_id, db)

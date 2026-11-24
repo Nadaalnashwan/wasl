@@ -1,6 +1,7 @@
 """Shared FastAPI dependencies + small helpers used across routers."""
 from __future__ import annotations
 
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -19,7 +20,8 @@ __all__ = ["get_db", "get_current_user", "track_task", "owned", "master_cv", "ac
 
 @contextmanager
 def track_task(task: str, user: User | None) -> Iterator[None]:
-    """Record task_completed / task_failed quality events around a user-facing AI task."""
+    """Record task_completed / task_failed quality events (with end-to-end duration) around a user-facing AI task."""
+    t0 = time.perf_counter()
     try:
         yield
     except AIUnavailableError:
@@ -36,7 +38,8 @@ def track_task(task: str, user: User | None) -> Iterator[None]:
                        details={"reason": "exception"})
         raise
     else:
-        record_quality("task_completed", user_id=user.id if user else None, task=task, outcome="success")
+        record_quality("task_completed", user_id=user.id if user else None, task=task, outcome="success",
+                       details={"duration_ms": int((time.perf_counter() - t0) * 1000)})
 
 
 def owned(db: Session, model, obj_id: str, user: User):

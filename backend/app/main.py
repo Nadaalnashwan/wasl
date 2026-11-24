@@ -15,7 +15,7 @@ from app.ai.router import AIUnavailableError
 from app.config import settings
 from app.db import init_db
 from app.monitoring.recorder import record_error, record_http_event
-from app.routers import achievements, auth, career, cv, dashboard, discovery, integrations, jobs, monitoring, posts, user_settings
+from app.routers import achievements, admin, auth, career, cv, dashboard, discovery, integrations, jobs, monitoring, posts, user_settings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("wasl")
@@ -23,8 +23,16 @@ log = logging.getLogger("wasl")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    import asyncio
+
+    from app.monitoring.alerts import scheduler_loop
+
     init_db()
+    # alerts are evaluated independently of anyone opening the dashboard (ALERT_EVAL_INTERVAL_MINUTES=0 disables)
+    task = asyncio.create_task(scheduler_loop()) if settings.alert_eval_interval_minutes > 0 else None
     yield
+    if task:
+        task.cancel()
 
 
 app = FastAPI(
@@ -55,7 +63,7 @@ async def monitor_requests(request: Request, call_next):
     finally:
         route = request.scope.get("route")
         path = getattr(route, "path", None)
-        if path and path.startswith("/api") and not path.startswith("/api/monitoring"):
+        if path and path.startswith("/api") and not path.startswith(("/api/monitoring", "/api/admin")):
             record_http_event(
                 method=request.method,
                 route=path,
@@ -118,6 +126,7 @@ for r in (
     integrations,
     user_settings,
     monitoring,
+    admin,
 ):
     app.include_router(r.router)
 
