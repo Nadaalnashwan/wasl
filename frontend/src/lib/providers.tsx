@@ -86,6 +86,20 @@ export const useTheme = () => useContext(ThemeContext);
 
 /* ------------------------------------------------------------------ auth */
 
+/** Issue (token) or clear (null) the HttpOnly admin session cookie via the Next route handler. */
+export async function syncAdminSession(token: string | null) {
+  try {
+    await fetch("/api/admin-session", {
+      method: token ? "POST" : "DELETE",
+      headers: token ? { "Content-Type": "application/json" } : undefined,
+      body: token ? JSON.stringify({ token }) : undefined,
+      credentials: "same-origin",
+    });
+  } catch {
+    // best effort: the /admin gate will retry
+  }
+}
+
 const AUTH_MODE =
   process.env.NEXT_PUBLIC_AUTH_MODE === "supabase"
     ? "supabase"
@@ -181,6 +195,7 @@ function AuthProvider({
     }
 
     setUser(null);
+    void syncAdminSession(null);
   }, []);
 
   const refresh = useCallback(async () => {
@@ -194,6 +209,9 @@ function AuthProvider({
 
       const currentUser = await api<User>("/api/auth/me");
       setUser(currentUser);
+      // Admins get an HttpOnly session cookie the /admin proxy can verify server-side. The role is checked by the
+      // backend inside the route handler — this call is a convenience, not the security boundary.
+      if (currentUser.role === "admin") void syncAdminSession(token);
     } catch (error) {
       if (
         error instanceof ApiError &&
@@ -455,15 +473,15 @@ function ToastProvider({
           <div
             key={toast.id}
             role={toast.kind === "error" ? "alert" : "status"}
-            className={`sketch pop-in pointer-events-auto px-4 py-3 text-sm ${
-              toast.kind === "error"
-                ? "!bg-bad-fill"
-                : toast.kind === "ok"
-                  ? "!bg-ok-fill"
-                  : "!bg-sky"
-            }`}
+            className={`fade-in pointer-events-auto flex items-start gap-2.5 rounded-lg border border-border bg-surface px-4 py-3 text-sm text-fg shadow-lg`}
           >
-            {toast.text}
+            <span
+              aria-hidden
+              className={`mt-1.5 size-1.5 shrink-0 rounded-full ${
+                toast.kind === "error" ? "bg-bad" : toast.kind === "ok" ? "bg-ok" : "bg-primary"
+              }`}
+            />
+            <span className="min-w-0 flex-1">{toast.text}</span>
           </div>
         ))}
       </div>

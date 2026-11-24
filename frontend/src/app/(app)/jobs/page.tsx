@@ -1,27 +1,25 @@
 "use client";
 
-import { Briefcase, Gauge, RefreshCw, Search, Trash2, UserRound } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AiWorking, EmptyState, ErrorNote, Loading } from "@/components/feedback";
-import { fill, JobCard, JobMeta, MatchRing } from "@/components/jobs";
-import { ClawArt } from "@/components/sketch/illustrations";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { AiWorking, EmptyState, ErrorNote, Notice, SkeletonRows } from "@/components/feedback";
+import { fill } from "@/components/jobs";
+import { JobDetail } from "@/components/jobs/detail";
+import { FilterBar, type Filters, isFiltered, NO_FILTERS, ResultsList } from "@/components/jobs/results";
+import { Tracker } from "@/components/jobs/tracker";
 import { Button } from "@/components/ui/button";
-import { Badge, Card, PageHeader } from "@/components/ui/card";
-import { Field, Segmented, Select, Textarea } from "@/components/ui/form";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/overlay";
+import { PageHeader } from "@/components/ui/card";
+import { Dialog, DrawerContent, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/overlay";
 import { api, ApiError } from "@/lib/api";
 import { useAction, useApi } from "@/lib/hooks";
 import { useI18n, type TKey } from "@/lib/i18n";
 import { useToast } from "@/lib/providers";
 import type { JobItem, JobsResponse, SavedJob, TrackStatus } from "@/lib/types";
-import { fmtDate, timeAgo } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
 
 const PAGE = 10;
-const STATUSES: TrackStatus[] = ["saved", "applied", "interviewing", "offer", "rejected"];
-
-type Filters = { city: string; type: string; level: string; remote: "any" | "remote" | "onsite"; sort: "match" | "newest" };
-const NO_FILTERS: Filters = { city: "", type: "", level: "", remote: "any", sort: "match" };
+const SPLIT_QUERY = "(min-width: 1280px)";
 
 function query(f: Filters, offset: number) {
   const p = new URLSearchParams({ remote: f.remote, sort: f.sort, offset: String(offset), limit: String(PAGE) });
@@ -31,10 +29,23 @@ function query(f: Filters, offset: number) {
   return `/api/jobs/recommendations?${p}`;
 }
 
+function useMediaQuery(q: string) {
+  return useSyncExternalStore(
+    (cb) => {
+      const m = window.matchMedia(q);
+      m.addEventListener("change", cb);
+      return () => m.removeEventListener("change", cb);
+    },
+    () => window.matchMedia(q).matches,
+    () => false,
+  );
+}
+
 export default function JobsPage() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const toast = useToast();
   const { pending, run } = useAction();
+  const split = useMediaQuery(SPLIT_QUERY);
 
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [data, setData] = useState<JobsResponse | null>(null);
@@ -43,6 +54,8 @@ export default function JobsPage() {
   const [more, setMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const autoRefreshed = useRef(false);
   const saved = useApi<SavedJob[]>("/api/jobs/saved");
 
@@ -72,15 +85,14 @@ export default function JobsPage() {
         setItems(res.items);
         const r = res.refresh;
         if (r && !quiet) {
-          const calls = Object.values(r.calls).reduce((a, b) => a + b, 0);
-          toast("ok", fill(t("jobs.found"), { n: r.found, c: calls, h: r.cache_hits }));
+          toast("ok", fill(t("jobs2.found"), { n: r.found }));
           if (r.errors.length) toast("info", t("jobs.source.error"));
-          else if (r.skipped.length) toast("info", t("jobs.skipped"));
+          else if (r.skipped.length) toast("info", t("jobs2.skipped"));
         }
       } catch (e) {
         const err = e as ApiError;
         const reason = (err.detail as { reason?: string } | undefined)?.reason;
-        if (err.status === 429) toast("info", t(reason === "daily_limit" ? "jobs.dailylimit" : "jobs.cooldown"));
+        if (err.status === 429) toast("info", t(reason === "daily_limit" ? "jobs2.blocked.daily_limit" : "jobs2.blocked.cooldown"));
         else if (err.status === 503 && err.code !== "ai_unavailable") toast("error", t("jobs.notconfigured"));
         else setError(err);
       } finally {
@@ -95,6 +107,7 @@ export default function JobsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching on mount
     load(NO_FILTERS).then((res) => {
       if (!res || autoRefreshed.current) return;
+      if (res.providers_configured?.length === 0) return;
       if (res.state === "needs_refresh" || (res.cv_changed && res.can_refresh)) {
         autoRefreshed.current = true;
         refresh(false, true);
@@ -106,6 +119,11 @@ export default function JobsPage() {
     const next = { ...filters, [k]: v };
     setFilters(next);
     load(next);
+  }
+
+  function resetFilters() {
+    setFilters(NO_FILTERS);
+    load(NO_FILTERS);
   }
 
   async function loadMore() {
@@ -120,57 +138,96 @@ export default function JobsPage() {
     }
   }
 
-  function patchItem(id: string, saved: JobItem["saved"]) {
-    setItems((cur) => cur.map((j) => (j.id === id ? { ...j, saved } : j)));
+  function patchItem(id: string, s: JobItem["saved"]) {
+    setItems((cur) => cur.map((j) => (j.id === id ? { ...j, saved: s } : j)));
   }
 
   async function onSave(job: JobItem) {
     if (job.saved) {
-      await run(`save:${job.id}`, async () => {
-        await api(`/api/jobs/saved/${job.saved!.id}`, { method: "DELETE" });
-        patchItem(job.id, null);
-        toast("ok", t("jobs.toast.removed"));
-        saved.reload();
-      }, (e) => toast("error", e.message));
+      await run(
+        `save:${job.id}`,
+        async () => {
+          await api(`/api/jobs/saved/${job.saved!.id}`, { method: "DELETE" });
+          patchItem(job.id, null);
+          toast("ok", t("jobs.toast.removed"));
+          saved.reload();
+        },
+        (e) => toast("error", e.message),
+      );
       return;
     }
-    await run(`save:${job.id}`, async () => {
-      const s = await api<SavedJob>("/api/jobs/saved", { method: "POST", json: { listing_id: job.id } });
-      patchItem(job.id, { id: s.id, status: s.status });
-      toast("ok", t("jobs.toast.saved"));
-      saved.reload();
-    }, (e) => toast("error", e.message));
+    await run(
+      `save:${job.id}`,
+      async () => {
+        const s = await api<SavedJob>("/api/jobs/saved", { method: "POST", json: { listing_id: job.id } });
+        patchItem(job.id, { id: s.id, status: s.status });
+        toast("ok", t("jobs.toast.saved"));
+        saved.reload();
+      },
+      (e) => toast("error", e.message),
+    );
   }
 
   async function onTrack(job: JobItem, status: TrackStatus) {
-    await run(`track:${job.id}`, async () => {
-      const s = await api<SavedJob>("/api/jobs/saved", { method: "POST", json: { listing_id: job.id, status } });
-      patchItem(job.id, { id: s.id, status: s.status });
-      toast("ok", t(status === "applied" ? "jobs.toast.applied" : "jobs.toast.saved"));
-      saved.reload();
-    }, (e) => toast("error", e.message));
+    await run(
+      `track:${job.id}`,
+      async () => {
+        const s = await api<SavedJob>("/api/jobs/saved", { method: "POST", json: { listing_id: job.id, status } });
+        patchItem(job.id, { id: s.id, status: s.status });
+        toast("ok", t(status === "applied" ? "jobs.toast.applied" : "jobs.toast.saved"));
+        saved.reload();
+      },
+      (e) => toast("error", e.message),
+    );
+  }
+
+  async function onStatus(job: JobItem, status: TrackStatus) {
+    if (!job.saved) return onTrack(job, status);
+    await run(
+      `status:${job.id}`,
+      async () => {
+        const s = await api<SavedJob>(`/api/jobs/saved/${job.saved!.id}`, { method: "PATCH", json: { status } });
+        patchItem(job.id, { id: s.id, status: s.status });
+        toast("ok", t(status === "applied" ? "jobs.toast.applied" : "jobs.toast.saved"));
+        saved.reload();
+      },
+      (e) => toast("error", e.message),
+    );
+  }
+
+  function select(id: string) {
+    setSelectedId(id);
+    if (!split) setDrawerOpen(true);
   }
 
   const profile = data?.profile;
-  const facets = data?.facets;
-  const filtered = filters.city || filters.type || filters.level || filters.remote !== "any";
+  const filtered = isFiltered(filters);
   const total = data?.total ?? 0;
+  const noProviders = !!data && (data.providers_configured?.length ?? 0) === 0;
+  const blocked = data?.refresh_blocked === "daily_limit";
+  const selected = items.find((j) => j.id === selectedId) ?? (split ? items[0] : undefined) ?? null;
+  const actions = { pending, onSave, onTrack, onStatus };
 
   return (
     <div>
       <PageHeader
         title={t("jobs.title")}
         sub={t("jobs.sub")}
-        art={<ClawArt className="h-28 w-auto" />}
         actions={
-          data?.state !== "no_cv" && (
-            <div className="flex flex-col items-end gap-1">
-              <Button onClick={() => refresh(true)} loading={refreshing} disabled={refreshing || data?.refresh_blocked === "daily_limit"}>
+          data &&
+          data.state !== "no_cv" &&
+          !noProviders && (
+            <div className="flex flex-col items-start gap-1 sm:items-end">
+              <Button variant="secondary" onClick={() => refresh(true)} loading={refreshing} disabled={refreshing || blocked}>
                 {!refreshing && <RefreshCw />}
                 {refreshing ? t("jobs.refreshing") : t("jobs.refresh")}
               </Button>
-              <span className="text-xs text-ink-faint">
-                {data?.last_refreshed_at ? `${t("jobs.updated")} ${timeAgo(data.last_refreshed_at)}` : t("jobs.never")}
+              <span className="text-xs text-fg-3" aria-live="polite">
+                {blocked
+                  ? t("jobs2.blocked.daily_limit")
+                  : data.last_refreshed_at
+                    ? `${t("jobs.updated")} ${timeAgo(data.last_refreshed_at)}`
+                    : t("jobs.never")}
               </span>
             </div>
           )
@@ -193,102 +250,59 @@ export default function JobsPage() {
         <Tabs defaultValue="recommended">
           <TabsList>
             <TabsTrigger value="recommended">
-              <Search className="me-1.5 inline size-4" />
               {t("jobs.tab.recommended")}
-              {total > 0 && ` (${total})`}
+              {total > 0 && <span className="num text-fg-3">{total}</span>}
             </TabsTrigger>
             <TabsTrigger value="saved">
-              <Briefcase className="me-1.5 inline size-4" />
               {t("jobs.tab.saved")}
-              {saved.data?.length ? ` (${saved.data.length})` : ""}
+              {saved.data?.length ? <span className="num text-fg-3">{saved.data.length}</span> : null}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="recommended" className="flex flex-col gap-6">
+          <TabsContent value="recommended" className="flex flex-col gap-5">
             {profile && (
-              <Card tone="sky" className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <UserRound className="size-5" />
-                  <span className="font-hand text-xl">{t("jobs.profile")}</span>
-                  {profile.target_titles.map((title) => (
-                    <Badge key={title} className="bg-paper text-sm text-ink">{title}</Badge>
+              <div className="flex flex-col gap-1.5 text-sm">
+                <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-fg-2">
+                  <span className="text-fg-3">{t("jobs.profile")}</span>
+                  {profile.target_titles.map((title, i) => (
+                    <span key={title} className="font-medium text-fg" dir="auto">
+                      {title}
+                      {i < profile.target_titles.length - 1 && <span className="text-fg-3">,</span>}
+                    </span>
                   ))}
-                </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-soft">
+                  <span className="text-fg-3">·</span>
                   <span>
-                    {t("jobs.profile.level")}: <b className="text-ink">{t(`jobs.level.${profile.level}` as TKey)}</b>
+                    {t(`jobs.level.${profile.level}` as TKey)}
                     {profile.include_internships && ` · ${t("jobs.profile.internships")}`}
                   </span>
-                  <span>~{profile.years} {t("jobs.profile.years")}</span>
-                  <span className="text-xs text-ink-faint">{t("jobs.profile.basis")}</span>
-                </div>
-                {data.cv_changed && <p className="rounded-xl bg-warn-fill p-2 text-sm">{t("jobs.cvchanged")}</p>}
-              </Card>
+                  <span className="text-fg-3">·</span>
+                  <span className="num">
+                    ~{profile.years} {t("jobs.profile.years")}
+                  </span>
+                </p>
+                <p className="text-xs text-fg-3">
+                  {t("jobs2.profile.change")}{" "}
+                  <Link href="/cv" className="font-medium text-primary-text hover:underline">
+                    {t("jobs2.profile.edit")}
+                  </Link>
+                </p>
+              </div>
             )}
+
+            {noProviders && <Notice tone="warn" title={t("jobs2.noproviders.t")}>{t("jobs2.noproviders.d")}</Notice>}
+            {data.cv_changed && !noProviders && <Notice tone="info">{t("jobs.cvchanged")}</Notice>}
 
             <ErrorNote error={error} onRetry={() => load(filters)} />
 
-            {refreshing && (
-              <AiWorking steps={[t("jobs.steps.cv"), t("jobs.steps.search"), t("jobs.steps.dedupe"), t("jobs.steps.match")]} />
-            )}
+            {refreshing && <AiWorking steps={[t("jobs2.steps.cv"), t("jobs2.steps.search"), t("jobs2.steps.dedupe"), t("jobs2.steps.match")]} />}
 
             {(data.state === "ok" || filtered) && (
-              <Card tone="tint" className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Field label={t("jobs.filter.city")}>
-                  <Select value={filters.city} onChange={(e) => setFilter("city", e.target.value)}>
-                    <option value="">{t("jobs.filter.any")}</option>
-                    {facets?.cities.map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {c.value === "Other" ? t("jobs.city.Other") : c.value} ({c.count})
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label={t("jobs.filter.type")}>
-                  <Select value={filters.type} onChange={(e) => setFilter("type", e.target.value)}>
-                    <option value="">{t("jobs.filter.any")}</option>
-                    {facets?.types.map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {t(`jobs.type.${c.value}` as TKey)} ({c.count})
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label={t("jobs.filter.level")}>
-                  <Select value={filters.level} onChange={(e) => setFilter("level", e.target.value)}>
-                    <option value="">{t("jobs.filter.any")}</option>
-                    {facets?.levels.map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {t(`jobs.level.${c.value}` as TKey)} ({c.count})
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label={t("jobs.filter.sort")}>
-                  <Select value={filters.sort} onChange={(e) => setFilter("sort", e.target.value as Filters["sort"])}>
-                    <option value="match">{t("jobs.sort.match")}</option>
-                    <option value="newest">{t("jobs.sort.newest")}</option>
-                  </Select>
-                </Field>
-                <Field label={t("jobs.filter.remote")} group className="sm:col-span-2 lg:col-span-3">
-                  <Segmented
-                    ariaLabel={t("jobs.filter.remote")}
-                    value={filters.remote}
-                    onChange={(v) => setFilter("remote", v)}
-                    options={(["any", "remote", "onsite"] as const).map((v) => ({ value: v, label: t(`jobs.remote.${v}`) }))}
-                  />
-                </Field>
-                {filtered && (
-                  <div className="flex items-end">
-                    <Button variant="ghost" size="sm" onClick={() => { setFilters(NO_FILTERS); load(NO_FILTERS); }}>
-                      {t("jobs.filter.reset")}
-                    </Button>
-                  </div>
-                )}
-              </Card>
+              <div className="border-y border-border py-3">
+                <FilterBar filters={filters} facets={data.facets} onChange={setFilter} onReset={resetFilters} />
+              </div>
             )}
 
-            {loading && !items.length && !refreshing && <Loading />}
+            {loading && !items.length && !refreshing && <SkeletonRows rows={4} />}
 
             {!loading && !refreshing && items.length === 0 && (data.state === "empty" || data.state === "needs_refresh" || filtered) && (
               <EmptyState
@@ -296,11 +310,11 @@ export default function JobsPage() {
                 text={filtered ? undefined : t("jobs.empty.d")}
                 action={
                   filtered ? (
-                    <Button variant="outline" onClick={() => { setFilters(NO_FILTERS); load(NO_FILTERS); }}>
+                    <Button variant="outline" onClick={resetFilters}>
                       {t("jobs.filter.reset")}
                     </Button>
-                  ) : (
-                    <Button onClick={() => refresh(true)} loading={refreshing}>
+                  ) : noProviders ? undefined : (
+                    <Button onClick={() => refresh(true)} loading={refreshing} disabled={blocked}>
                       <RefreshCw /> {t("jobs.refresh")}
                     </Button>
                   )
@@ -309,170 +323,62 @@ export default function JobsPage() {
             )}
 
             {items.length > 0 && (
-              <div className={loading ? "opacity-60 transition-opacity" : "transition-opacity"} aria-busy={loading}>
-                <div className="grid gap-5 xl:grid-cols-2">
-                  {items.map((job) => (
-                    <JobCard key={job.id} job={job} pending={pending} onSave={onSave} onTrack={onTrack} />
-                  ))}
+              <div className="xl:grid xl:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] xl:items-start xl:gap-6">
+                <div
+                  className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}
+                  aria-busy={loading}
+                  aria-live="polite"
+                >
+                  <div className="overflow-hidden rounded-xl border border-border bg-surface">
+                    <ResultsList items={items} selectedId={selected?.id ?? null} onSelect={select} />
+                    <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
+                      <span className="num text-xs text-fg-3">{fill(t("jobs.showing"), { n: items.length, t: total })}</span>
+                      {items.length < total && (
+                        <Button variant="outline" size="sm" onClick={loadMore} loading={more}>
+                          {t("jobs.more")}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-6 flex flex-col items-center gap-2">
-                  <span className="text-sm text-ink-faint">{fill(t("jobs.showing"), { n: items.length, t: total })}</span>
-                  {items.length < total && (
-                    <Button variant="outline" onClick={loadMore} loading={more}>
-                      {t("jobs.more")}
-                    </Button>
-                  )}
-                </div>
+
+                {split && (
+                  <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto rounded-xl border border-border bg-surface">
+                    {selected ? (
+                      <JobDetail key={selected.id} item={selected} {...actions} />
+                    ) : (
+                      <p className="px-5 py-12 text-center text-sm text-fg-3">{t("jobs2.select")}</p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
-
-            <UsageNote data={data} />
           </TabsContent>
 
           <TabsContent value="saved">
-            <Tracker rows={saved.data} loading={saved.loading} error={saved.error} reload={saved.reload}
+            <Tracker
+              rows={saved.data}
+              loading={saved.loading}
+              error={saved.error}
+              reload={saved.reload}
               onChanged={(row) => patchItem(row.listing_id ?? "", row.status ? { id: row.id, status: row.status } : null)}
-              locale={locale} />
+            />
           </TabsContent>
         </Tabs>
       )}
 
-      {!data && loading && <Loading />}
+      {!split && (
+        <Dialog open={drawerOpen && !!selected} onOpenChange={setDrawerOpen}>
+          {selected && (
+            <DrawerContent title={selected.title} description={selected.company || undefined}>
+              <JobDetail key={selected.id} item={selected} {...actions} className="-mx-5 -my-4" />
+            </DrawerContent>
+          )}
+        </Dialog>
+      )}
+
+      {!data && loading && <SkeletonRows rows={4} />}
       {!data && !loading && <ErrorNote error={error} onRetry={() => load(filters)} />}
-    </div>
-  );
-}
-
-function UsageNote({ data }: { data: JobsResponse }) {
-  const { t } = useI18n();
-  const rows = (["jsearch", "serpapi"] as const).filter((p) => data.usage[p]?.configured);
-  if (!rows.length) return null;
-  return (
-    <div className="sketch-dashed flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 text-xs text-ink-soft">
-      <span className="flex items-center gap-1.5 font-semibold text-ink">
-        <Gauge className="size-4" /> {t("jobs.usage")}
-      </span>
-      {rows.map((p) => (
-        <span key={p}>
-          {p === "jsearch" ? "JSearch" : "Google Jobs (SerpApi)"}: <b className="text-ink">{data.usage[p].used}</b> / {data.usage[p].limit}
-        </span>
-      ))}
-      <span className="basis-full text-ink-faint">{t("jobs.usage.d")}</span>
-    </div>
-  );
-}
-
-function Tracker({
-  rows,
-  loading,
-  error,
-  reload,
-  onChanged,
-  locale,
-}: {
-  rows: SavedJob[] | null;
-  loading: boolean;
-  error: ApiError | null;
-  reload: () => void;
-  onChanged: (row: { id: string; listing_id: string | null; status: TrackStatus | null }) => void;
-  locale: string;
-}) {
-  const { t } = useI18n();
-  const toast = useToast();
-  const [notes, setNotes] = useState<Record<string, string>>({});
-
-  async function patch(row: SavedJob, body: Partial<Pick<SavedJob, "status" | "notes">>) {
-    try {
-      const r = await api<SavedJob>(`/api/jobs/saved/${row.id}`, { method: "PATCH", json: body });
-      if (body.status) onChanged({ id: r.id, listing_id: r.listing_id, status: r.status });
-      reload();
-    } catch (e) {
-      toast("error", (e as ApiError).message);
-    }
-  }
-
-  async function remove(row: SavedJob) {
-    try {
-      await api(`/api/jobs/saved/${row.id}`, { method: "DELETE" });
-      onChanged({ id: row.id, listing_id: row.listing_id, status: null });
-      toast("ok", t("jobs.toast.removed"));
-      reload();
-    } catch (e) {
-      toast("error", (e as ApiError).message);
-    }
-  }
-
-  if (error) return <ErrorNote error={error} onRetry={reload} />;
-  if (loading && !rows) return <Loading />;
-  if (!rows?.length) return <EmptyState title={t("jobs.track.empty")} text={t("jobs.track.empty.d")} />;
-
-  const counts = Object.fromEntries(STATUSES.map((s) => [s, rows.filter((r) => r.status === s).length]));
-  return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap gap-2" aria-label={t("jobs.tab.saved")}>
-        {STATUSES.map((s) => (
-          <Badge key={s} tone={s === "offer" ? "ok" : s === "rejected" ? "bad" : s === "interviewing" ? "warn" : s === "applied" ? "brand" : "neutral"} className="text-sm">
-            {t(`track.${s}` as TKey)}: {counts[s]}
-          </Badge>
-        ))}
-      </div>
-      {rows.map((row) => (
-        <Card key={row.id} className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-start gap-4">
-            <div className="min-w-0 flex-1">
-              <h3 className="font-hand text-2xl leading-tight" dir="auto">{row.job.title}</h3>
-              <div className="text-sm text-ink-soft" dir="auto">
-                <b className="text-ink">{row.job.company}</b>
-              </div>
-              <div className="mt-2">
-                <JobMeta job={row.job} />
-              </div>
-              {row.expired && <Badge tone="warn" className="mt-2">{t("jobs.track.expired")}</Badge>}
-              {row.applied_at && (
-                <p className="mt-2 text-xs text-ink-faint">
-                  {t("jobs.track.applied_on")}: {fmtDate(row.applied_at, locale)}
-                </p>
-              )}
-            </div>
-            {row.match_score !== null && <MatchRing score={Math.round(row.match_score)} size={60} label={t("jobs.match")} />}
-          </div>
-          <div className="grid gap-4 md:grid-cols-[220px_1fr]">
-            <Field label={t("jobs.track")}>
-              <Select value={row.status} onChange={(e) => patch(row, { status: e.target.value as TrackStatus })}>
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>{t(`track.${s}` as TKey)}</option>
-                ))}
-              </Select>
-            </Field>
-            <Field label={t("jobs.track.notes")}>
-              <Textarea
-                className="min-h-11"
-                rows={1}
-                maxLength={2000}
-                dir="auto"
-                value={notes[row.id] ?? row.notes}
-                onChange={(e) => setNotes((n) => ({ ...n, [row.id]: e.target.value }))}
-                onBlur={() => notes[row.id] !== undefined && notes[row.id] !== row.notes && patch(row, { notes: notes[row.id] })}
-              />
-            </Field>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {row.job.apply_url && !row.expired && (
-              <Button asChild size="sm">
-                <a href={row.job.apply_url} target="_blank" rel="noopener noreferrer nofollow">{t("jobs.apply")}</a>
-              </Button>
-            )}
-            {row.listing_id && !row.expired && (
-              <Button asChild size="sm" variant="secondary">
-                <Link href={`/tailor?job=${row.listing_id}`}>{t("jobs.tailor")}</Link>
-              </Button>
-            )}
-            <Button size="sm" variant="ghost" onClick={() => remove(row)}>
-              <Trash2 /> {t("jobs.track.remove")}
-            </Button>
-          </div>
-        </Card>
-      ))}
     </div>
   );
 }

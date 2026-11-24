@@ -1,0 +1,66 @@
+name: CI
+
+# Deterministic checks only: no secrets, no live AI providers. Safe for pull requests from forks.
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Lint
+        run: ruff check app scripts tests
+      - name: Unit + integration tests (fake LLM provider)
+        run: pytest -q
+      - name: Authorization + PII regression (explicit)
+        run: pytest -q tests/test_security.py
+      - name: Deterministic AI regression evaluation (no LLM; fails on regression vs baseline)
+        run: python -m app.eval_v2
+      - name: Upload evaluation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deterministic-eval
+          path: backend/eval/results/deterministic-latest.*
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_AUTH_MODE: local
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Production build (also generates next-env.d.ts)
+        run: npm run build
+      - name: Type check
+        run: npx tsc --noEmit

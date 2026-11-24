@@ -3,51 +3,167 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { X } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "./button";
 
 /* ----------------------------------------------------------- Dialog */
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogClose = DialogPrimitive.Close;
 
-export function DialogContent({ title, description, children, className, wide }: { title: string; description?: string; children: React.ReactNode; className?: string; wide?: boolean }) {
+export function DialogContent({
+  title,
+  description,
+  children,
+  className,
+  wide,
+  footer,
+}: {
+  title: string;
+  description?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+  wide?: boolean;
+  footer?: React.ReactNode;
+}) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-[2px]" />
+      <DialogPrimitive.Overlay className="fade-in fixed inset-0 z-50 bg-[#0f172a]/40 backdrop-blur-[1px]" />
       <DialogPrimitive.Content
         className={cn(
-          "sketch fixed left-1/2 top-1/2 z-50 max-h-[88vh] w-[min(94vw,560px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto p-6",
-          wide && "w-[min(96vw,1100px)]",
+          "fade-in fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[min(94vw,520px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-border bg-surface shadow-lg",
+          wide && "w-[min(96vw,1080px)]",
           className,
         )}
       >
-        <div className="mb-4 flex items-start gap-3">
-          <div className="flex-1">
-            <DialogPrimitive.Title className="font-hand text-3xl">{title}</DialogPrimitive.Title>
-            {description && <DialogPrimitive.Description className="mt-1 text-sm text-ink-soft">{description}</DialogPrimitive.Description>}
+        <div className="flex items-start gap-3 border-b border-border px-5 py-4">
+          <div className="min-w-0 flex-1">
+            <DialogPrimitive.Title className="text-heading font-semibold text-fg">{title}</DialogPrimitive.Title>
+            {description ? (
+              <DialogPrimitive.Description className="mt-1 text-sm text-fg-2">{description}</DialogPrimitive.Description>
+            ) : (
+              <DialogPrimitive.Description className="sr-only">{title}</DialogPrimitive.Description>
+            )}
           </div>
-          <DialogPrimitive.Close className="sketch-btn grid size-9 place-items-center bg-paper" aria-label="Close">
+          <DialogPrimitive.Close
+            className="-me-1 grid size-8 place-items-center rounded-md text-fg-3 hover:bg-surface-2 hover:text-fg"
+            aria-label="Close"
+          >
             <X className="size-4" />
           </DialogPrimitive.Close>
         </div>
-        {children}
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
+        {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-border px-5 py-3">{footer}</div>}
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
   );
 }
 
-/* ----------------------------------------------------------- Tabs */
+/** Confirmation dialog for destructive or outward-facing actions. */
+export function ConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  confirmLabel,
+  cancelLabel = "Cancel",
+  onConfirm,
+  destructive,
+  loading,
+  confirmDisabled,
+  children,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  title: string;
+  description?: React.ReactNode;
+  confirmLabel: string;
+  cancelLabel?: string;
+  onConfirm: () => void;
+  destructive?: boolean;
+  loading?: boolean;
+  /** e.g. until a typed confirmation or acknowledgement checkbox is complete */
+  confirmDisabled?: boolean;
+  children?: React.ReactNode;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        title={title}
+        description={description}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>
+              {cancelLabel}
+            </Button>
+            <Button variant={destructive ? "danger-solid" : "primary"} onClick={onConfirm} loading={loading} disabled={confirmDisabled}>
+              {confirmLabel}
+            </Button>
+          </>
+        }
+      >
+        {children}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ----------------------------------------------------------- Drawer (side sheet) */
+export function DrawerContent({
+  title,
+  description,
+  children,
+  className,
+  footer,
+}: {
+  title: string;
+  description?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+  footer?: React.ReactNode;
+}) {
+  return (
+    <DialogPrimitive.Portal>
+      <DialogPrimitive.Overlay className="fade-in fixed inset-0 z-50 bg-[#0f172a]/40" />
+      <DialogPrimitive.Content
+        className={cn(
+          "fixed inset-y-0 end-0 z-50 flex w-[min(100vw,560px)] flex-col border-s border-border bg-surface shadow-lg",
+          className,
+        )}
+      >
+        <div className="flex items-start gap-3 border-b border-border px-5 py-4">
+          <div className="min-w-0 flex-1">
+            <DialogPrimitive.Title className="text-heading font-semibold text-fg">{title}</DialogPrimitive.Title>
+            {description ? (
+              <DialogPrimitive.Description className="mt-1 text-sm text-fg-2">{description}</DialogPrimitive.Description>
+            ) : (
+              <DialogPrimitive.Description className="sr-only">{title}</DialogPrimitive.Description>
+            )}
+          </div>
+          <DialogPrimitive.Close className="grid size-8 place-items-center rounded-md text-fg-3 hover:bg-surface-2 hover:text-fg" aria-label="Close">
+            <X className="size-4" />
+          </DialogPrimitive.Close>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
+        {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-border px-5 py-3">{footer}</div>}
+      </DialogPrimitive.Content>
+    </DialogPrimitive.Portal>
+  );
+}
+
+/* ----------------------------------------------------------- Tabs (underline style) */
 export const Tabs = TabsPrimitive.Root;
 export function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
-  return <TabsPrimitive.List className={cn("mb-5 flex flex-wrap gap-2", className)} {...props} />;
+  return <TabsPrimitive.List className={cn("mb-6 flex gap-5 overflow-x-auto border-b border-border", className)} {...props} />;
 }
 export function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "sketch-pill bg-paper px-4 py-1.5 font-hand text-lg transition-colors hover:bg-sky data-[state=active]:bg-ink data-[state=active]:text-paper",
+        "-mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 border-transparent pb-2.5 text-sm font-medium text-fg-3 transition-colors hover:text-fg data-[state=active]:border-primary data-[state=active]:text-fg [&_svg]:size-4",
         className,
       )}
       {...props}
@@ -61,12 +177,32 @@ export function Switch({ className, ...props }: React.ComponentProps<typeof Swit
   return (
     <SwitchPrimitive.Root
       className={cn(
-        "relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-ink bg-paper-3 transition-colors data-[state=checked]:bg-brand",
+        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full bg-border-strong transition-colors data-[state=checked]:bg-primary disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}
       {...props}
     >
-      <SwitchPrimitive.Thumb className="block size-5 rounded-full border-2 border-ink bg-paper transition-transform data-[state=checked]:translate-x-5 rtl:data-[state=checked]:-translate-x-5 ltr:translate-x-0.5 rtl:-translate-x-0.5" />
+      <SwitchPrimitive.Thumb className="block size-4 rounded-full bg-white shadow-sm transition-transform ltr:translate-x-0.5 rtl:-translate-x-0.5 ltr:data-[state=checked]:translate-x-[18px] rtl:data-[state=checked]:-translate-x-[18px]" />
     </SwitchPrimitive.Root>
+  );
+}
+
+/* ----------------------------------------------------------- Tooltip */
+export function Tooltip({ content, children, side = "top" }: { content: React.ReactNode; children: React.ReactNode; side?: "top" | "bottom" | "left" | "right" }) {
+  return (
+    <TooltipPrimitive.Provider delayDuration={250}>
+      <TooltipPrimitive.Root>
+        <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
+        <TooltipPrimitive.Portal>
+          <TooltipPrimitive.Content
+            side={side}
+            sideOffset={6}
+            className="fade-in z-[60] max-w-xs rounded-md bg-fg px-2.5 py-1.5 text-xs leading-snug text-bg shadow-md"
+          >
+            {content}
+          </TooltipPrimitive.Content>
+        </TooltipPrimitive.Portal>
+      </TooltipPrimitive.Root>
+    </TooltipPrimitive.Provider>
   );
 }

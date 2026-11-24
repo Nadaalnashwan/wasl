@@ -5,14 +5,27 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 export type Locale = "en" | "ar";
 
-const en = {
+import achievements from "./locales/achievements";
+import admin from "./locales/admin";
+import authMsgs from "./locales/auth";
+import career from "./locales/career";
+import cvMsgs from "./locales/cv";
+import dashboard from "./locales/dashboard";
+import jobsMsgs from "./locales/jobs";
+import landing from "./locales/landing";
+import settingsMsgs from "./locales/settings";
+import studio from "./locales/studio";
+
+const AREAS = [landing, authMsgs, dashboard, achievements, cvMsgs, studio, jobsMsgs, career, settingsMsgs, admin] as const;
+
+const baseEn = {
   "brand.tagline": "Connect your achievements to your career",
-  "nav.dashboard": "Career Hub",
-  "nav.studio": "Post Studio",
-  "nav.cv": "CV Manager",
-  "nav.tailor": "CV Tailoring",
-  "nav.gap": "Gap Analyzer",
-  "nav.jobs": "Job Matches",
+  "nav.dashboard": "Overview",
+  "nav.studio": "Content Studio",
+  "nav.cv": "Master CV",
+  "nav.tailor": "Tailor a CV",
+  "nav.gap": "Skill gaps",
+  "nav.jobs": "Jobs",
   "jobs.title": "Job Recommendations",
   "jobs.sub": "Real openings in Saudi Arabia, matched to your Master CV. Every score shows exactly where it comes from.",
   "jobs.refresh": "Find new jobs",
@@ -114,11 +127,12 @@ const en = {
   "dash.jobs.all": "See all jobs",
   "dash.jobs.empty": "Find real jobs in Saudi Arabia that fit your CV.",
   "tailor.fromjob": "Job description loaded from your recommendation:",
-  "nav.monitoring": "Monitoring",
   "nav.settings": "Settings",
+  "nav.achievements": "Achievements",
+  "nav.admin": "Admin console",
   "nav.group.workspace": "Workspace",
   "nav.group.career": "Career tools",
-  "nav.group.system": "System",
+  "nav.group.system": "Account",
   "nav.signout": "Sign out",
   "common.save": "Save",
   "common.cancel": "Cancel",
@@ -137,8 +151,8 @@ const en = {
   "common.new": "New",
   "common.back": "Back",
   "common.none": "Nothing here yet",
-  "theme.light": "Paper",
-  "theme.dark": "Blueprint",
+  "theme.light": "Light",
+  "theme.dark": "Dark",
   "landing.cta": "Sign up",
   "landing.signin": "Sign in",
   "landing.hero.title": "Document an achievement once. Use it everywhere.",
@@ -316,16 +330,16 @@ const en = {
   "src.upload": "upload",
 };
 
-type Dict = Record<keyof typeof en, string>;
+type BaseDict = Record<keyof typeof baseEn, string>;
 
-const ar: Dict = {
+const baseAr: BaseDict = {
   "brand.tagline": "اربط إنجازاتك بمسيرتك المهنية",
-  "nav.dashboard": "لوحة التحكم",
-  "nav.studio": "استوديو المنشورات",
-  "nav.cv": "إدارة السيرة الذاتية",
+  "nav.dashboard": "نظرة عامة",
+  "nav.studio": "استوديو المحتوى",
+  "nav.cv": "السيرة الرئيسية",
   "nav.tailor": "تخصيص السيرة",
-  "nav.gap": "تحليل الفجوات",
-  "nav.jobs": "الوظائف المناسبة",
+  "nav.gap": "فجوات المهارات",
+  "nav.jobs": "الوظائف",
   "jobs.title": "توصيات الوظائف",
   "jobs.sub": "وظائف حقيقية في السعودية تتم مطابقتها مع سيرتك الرئيسية، وكل نسبة توضّح مصدرها بالتفصيل.",
   "jobs.refresh": "ابحث عن وظائف جديدة",
@@ -427,11 +441,12 @@ const ar: Dict = {
   "dash.jobs.all": "كل الوظائف",
   "dash.jobs.empty": "اعثر على وظائف حقيقية في السعودية تناسب سيرتك.",
   "tailor.fromjob": "تم تحميل وصف الوظيفة من التوصيات:",
-  "nav.monitoring": "المراقبة",
   "nav.settings": "الإعدادات",
+  "nav.achievements": "الإنجازات",
+  "nav.admin": "لوحة الإدارة",
   "nav.group.workspace": "مساحة العمل",
   "nav.group.career": "أدوات المسيرة",
-  "nav.group.system": "النظام",
+  "nav.group.system": "الحساب",
   "nav.signout": "تسجيل الخروج",
   "common.save": "حفظ",
   "common.cancel": "إلغاء",
@@ -450,8 +465,8 @@ const ar: Dict = {
   "common.new": "جديد",
   "common.back": "رجوع",
   "common.none": "لا يوجد شيء بعد",
-  "theme.light": "ورقي",
-  "theme.dark": "مخطط أزرق",
+  "theme.light": "فاتح",
+  "theme.dark": "داكن",
   "landing.cta": "إنشاء حساب",
   "landing.signin": "تسجيل الدخول",
   "landing.hero.title": "وثّق إنجازك مرة واحدة. واستخدمه في كل مكان.",
@@ -629,7 +644,13 @@ const ar: Dict = {
   "src.upload": "ملف",
 };
 
+const en = Object.assign({}, baseEn, ...AREAS.map((a) => a.en)) as typeof baseEn &
+  (typeof landing)["en"] & (typeof authMsgs)["en"] & (typeof dashboard)["en"] & (typeof achievements)["en"] &
+  (typeof cvMsgs)["en"] & (typeof studio)["en"] & (typeof jobsMsgs)["en"] & (typeof career)["en"] &
+  (typeof settingsMsgs)["en"] & (typeof admin)["en"];
 export type TKey = keyof typeof en;
+type Dict = Record<TKey, string>;
+const ar = Object.assign({}, baseAr, ...AREAS.map((a) => a.ar)) as Dict;
 
 const dicts: Record<Locale, Dict> = { en, ar };
 

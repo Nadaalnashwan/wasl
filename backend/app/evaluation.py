@@ -18,17 +18,17 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from app.ai.claims import check_claims
+from app.ai.claims import VERIFIER_VERSION, check_claims
 from app.ai.providers.registry import platform_providers
 from app.ai.router import AIUnavailableError
 from app.ai.skills import canonical
 from app.ai.workflows.career import run_career
 from app.ai.workflows.content import evidence_text, generate_post
 from app.ai.workflows.discovery import discover
+from app.config import settings
 from app.db import SessionLocal, init_db
 from app.models import AIEvent, EvalRun
 
@@ -160,11 +160,8 @@ async def eval_post(case: dict) -> dict:
             for item in claims["unsupported"]
         )
 
-    first_pass_unsupported = (
-        result["claims"]["unsupported_count"]
-        if result.get("revisions", 0) == 0
-        else None
-    )
+    raw = result.get("raw_claims") or result["claims"]
+    first_pass_unsupported = raw["unsupported_count"]
 
     return {
         "checks": checks,
@@ -173,6 +170,7 @@ async def eval_post(case: dict) -> dict:
         "unsupported_items": claims["unsupported"],
         "revisions": result.get("revisions", 0),
         "first_pass_unsupported": first_pass_unsupported,
+        "raw_claims_checked": raw["claims_checked"],
     }
 
 
@@ -254,8 +252,40 @@ async def eval_career(case: dict, fixtures: dict, mode: str) -> dict:
     return output
 
 
-async def run(limit: int | None = None) -> dict:
+class BudgetExceeded(Exception):
+    pass
+
+
+def _calls_since(started: datetime) -> int:
+    db = SessionLocal()
+    try:
+        return db.query(AIEvent).filter(AIEvent.created_at >= started, AIEvent.provider != "none").count()
+    finally:
+        db.close()
+
+
+def _v2_generation_cases() -> list[dict]:
+    """Live generation on the v2 adversarial evidence (LinkedIn + hallucination files): the REAL model writes a
+    post from evidence that invites inflation; we measure raw (first draft) and final unsupported-claim rates."""
+    out = []
+    for name in ("linkedin_content.json", "hallucination.json"):
+        f = EVAL_DIR / "v2" / name
+        if not f.exists():
+            continue
+        for c in json.loads(f.read_text(encoding="utf-8"))["cases"]:
+            if c.get("kind") == "claim_check":
+                out.append({"id": "live-" + c["id"], "task": "post", "type": "v2_" + c["category"], "tone": "professional",
+                            "language": "ar" if c.get("lang") == "ar" else "en",
+                            "achievement": {"title": "", "description": c["input"]["evidence"]},
+                            "expect": {"max_unsupported": 0, "language": "ar" if c.get("lang") == "ar" else "en"}})
+    return out
+
+
+async def run(limit: int | None = None, *, max_calls: int = 60, v2_generation: int = 20, kind: str = "live",
+              provider_only: str | None = None) -> dict:
     init_db()
+    if provider_only:
+        settings.ai_provider_priority = provider_only  # benchmark: route everything to one provider
 
     providers = platform_providers()
     if not providers or providers == ["fake"]:
@@ -270,8 +300,12 @@ async def run(limit: int | None = None) -> dict:
     )
     started = datetime.now(UTC)
     results = []
+    cases = data["cases"][:limit] + _v2_generation_cases()[:v2_generation]
 
-    for case in data["cases"][:limit]:
+    for case in cases:
+        if _calls_since(started) >= max_calls:
+            print(f"budget of {max_calls} provider calls reached — stopping (remaining cases not run)")
+            break
         start_case = datetime.now(UTC)
 
         try:
@@ -335,13 +369,25 @@ async def run(limit: int | None = None) -> dict:
         )
 
         provider = ", ".join(sorted({p for p, _ in used})) or ",".join(providers)
-        model = ", ".join(sorted({m for _, m in used}))
+        model = ", ".join(sorted({m for _, m in used})) or "unavailable (no successful call)"
+        attempts = db.query(AIEvent).filter(AIEvent.created_at >= started, AIEvent.provider != "none").all()
+        lat = sorted(e.latency_ms for e in attempts if e.status == "success")
+        summary["provider_calls"] = len(attempts)
+        summary["budget_max_calls"] = max_calls
+        summary["tokens"] = sum(e.prompt_tokens + e.completion_tokens for e in attempts)
+        costs = [e.est_cost_usd for e in attempts if e.est_cost_usd is not None]
+        summary["est_cost_usd"] = round(sum(costs), 6) if costs else None
+        summary["p50_latency_ms"] = lat[len(lat) // 2] if lat else None
+        summary["p95_latency_ms"] = lat[min(len(lat) - 1, int(len(lat) * 0.95))] if lat else None
+        summary["privacy_blocked"] = sum(1 for r in results if r.get("error") and "privacy" in r["error"])
+        summary["verifier_version"] = VERIFIER_VERSION
 
-        # EvalRun does not define a model column. Keep model in the reports,
-        # but only pass fields supported by the database model here.
         row = EvalRun(
-            dataset_version=data["version"],
+            dataset_version=data["version"] + "+v2gen",
             provider=provider,
+            model=model[:200],
+            kind=kind,
+            verifier_version=VERIFIER_VERSION,
             summary=summary,
             cases=results,
         )
@@ -444,10 +490,17 @@ def summarise(results: list[dict]) -> dict:
             )
             if extraction else None
         ),
+        # final = after the revise loop (what users get); raw = the model's first draft.
+        # None (not 0.0) when no claims were checked — zero checks is not evidence of quality.
         "post_unsupported_claim_rate": (
             round(unsupported / claims_checked, 3)
-            if claims_checked else 0.0
+            if claims_checked else None
         ),
+        "post_raw_unsupported_claim_rate": (
+            round(sum(r.get("first_pass_unsupported") or 0 for r in posts) / raw_checked, 3)
+            if (raw_checked := sum(r.get("raw_claims_checked", 0) for r in posts)) else None
+        ),
+        "post_claims_checked": claims_checked,
         "posts_revised": sum(
             1 for result in posts if result.get("revisions")
         ),
@@ -520,6 +573,41 @@ def report_md(
     return "\n".join(lines) + "\n"
 
 
+async def benchmark(max_calls: int) -> dict:
+    """Same cases on each configured provider separately (budget split evenly). Writes eval/results/benchmark-latest.md."""
+    order = [p for p in settings.provider_priority() if p in platform_providers()]
+    if not order:
+        raise SystemExit("No real AI provider configured. Benchmark not run.")
+    per = max(1, max_calls // len(order))
+    rows = {}
+    original = settings.ai_provider_priority
+    try:
+        for p in order:
+            print(f"--- benchmark: {p} (budget {per} calls)")
+            rows[p] = await run(None, max_calls=per, v2_generation=8, kind="benchmark", provider_only=p)
+    finally:
+        settings.ai_provider_priority = original
+    keys = ["cases", "errors", "task_success_rate", "extraction_case_accuracy", "evidence_quote_verification_rate",
+            "post_raw_unsupported_claim_rate", "post_unsupported_claim_rate", "tailor_no_invention_rate", "provider_calls",
+            "tokens", "est_cost_usd", "p50_latency_ms", "p95_latency_ms", "privacy_blocked"]
+    md = ["# Provider benchmark", "", "Same cases per provider; personal-data tasks respect the privacy policy (blocked = not eligible).", "",
+          "| Metric | " + " | ".join(order) + " |", "|---|" + "---|" * len(order)]
+    for k in keys:
+        md.append(f"| {k} | " + " | ".join(str(rows[p].get(k)) for p in order) + " |")
+    (EVAL_DIR / "results" / "benchmark-latest.md").write_text("\n".join(md) + "\n", encoding="utf-8")
+    return rows
+
+
 if __name__ == "__main__":
-    limit = int(sys.argv[1]) if len(sys.argv) > 1 else None
-    print(json.dumps(asyncio.run(run(limit)), indent=2))
+    import argparse
+
+    ap = argparse.ArgumentParser(description="Live evaluation against REAL providers (bounded by --max-calls).")
+    ap.add_argument("limit", nargs="?", type=int, default=None, help="max v1 cases")
+    ap.add_argument("--max-calls", type=int, default=60)
+    ap.add_argument("--v2-generation", type=int, default=20, help="how many v2 adversarial evidence cases to generate posts for")
+    ap.add_argument("--benchmark", action="store_true")
+    args = ap.parse_args()
+    if args.benchmark:
+        print(json.dumps(asyncio.run(benchmark(args.max_calls)), indent=2, default=str))
+    else:
+        print(json.dumps(asyncio.run(run(args.limit, max_calls=args.max_calls, v2_generation=args.v2_generation)), indent=2))

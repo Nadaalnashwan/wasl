@@ -15,7 +15,7 @@ from app.ai.schemas import CVData, GeneratedPost
 from app.config import settings
 from app.db import SessionLocal
 from app.migrate import upgrade
-from app.models import AdminAuditLog, AlertIncident, User
+from app.models import AdminAuditLog, AlertIncident
 from app.monitoring import alerts
 from app.security.pii import Redactor, contains_pii
 from scripts.admin import set_role

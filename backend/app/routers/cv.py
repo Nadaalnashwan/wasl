@@ -30,6 +30,9 @@ router = APIRouter(prefix="/api/cv", tags=["cv"])
 class MasterIn(BaseModel):
     data: CVData
     change_summary: str = Field(default="Edited manually", max_length=300)
+    # optimistic concurrency: the version the editor loaded. If the Master CV moved on (another tab, an accepted
+    # suggestion, a restore) the save is rejected instead of silently overwriting newer content.
+    base_version: int | None = Field(default=None, ge=1)
 
 
 class EditAcceptIn(BaseModel):
@@ -72,6 +75,11 @@ def get_master(user: User = Depends(get_current_user), db: Session = Depends(get
 
 @router.put("/master")
 def put_master(body: MasterIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    current = master_cv(db, user)
+    if body.base_version is not None and current is not None and current.version != body.base_version:
+        raise HTTPException(409, {"message": f"Your Master CV changed (now version {current.version}) since you started editing "
+                                             f"version {body.base_version}. Reload to review the latest version before saving.",
+                                  "code": "version_conflict", "current_version": current.version})
     return cv_out(save_master(db, user, body.data.model_dump(), body.change_summary))
 
 

@@ -1,0 +1,59 @@
+name: Live AI evaluation
+
+# Calls REAL providers with repository secrets, so it never runs on pull requests (forks cannot reach secrets)
+# and every run is capped by an explicit call budget. Results are labelled kind=live / kind=benchmark and are
+# never mixed with the deterministic (fake-provider) numbers.
+on:
+  workflow_dispatch:
+    inputs:
+      max_calls:
+        description: "Hard cap on provider calls for this run"
+        default: "60"
+      benchmark:
+        description: "Also compare providers on the same cases (uses more of the budget)"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "0 3 * * 1"   # weekly, Monday 03:00 UTC
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-eval
+  cancel-in-progress: false
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    environment: live-eval   # protect with required reviewers in repo settings
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      GEMINI_PAID_TIER: ${{ vars.GEMINI_PAID_TIER || 'false' }}
+      GROQ_ZDR_ENABLED: ${{ vars.GROQ_ZDR_ENABLED || 'false' }}
+      ALERT_EVAL_INTERVAL_MINUTES: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - run: pip install -r requirements.txt
+      - name: Live evaluation (bounded)
+        run: python -m app.evaluation --max-calls "${{ github.event.inputs.max_calls || '60' }}"
+      - name: Provider benchmark (bounded)
+        if: ${{ github.event.inputs.benchmark == 'true' }}
+        run: python -m app.evaluation --benchmark --max-calls "${{ github.event.inputs.max_calls || '60' }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-eval
+          path: backend/eval/results/

@@ -1,326 +1,109 @@
-
 "use client";
 
-import {
-  Link2,
-  Save,
-  Unplug,
-  UserRound,
-} from "lucide-react";
 import { useEffect, useState } from "react";
-import { LinkedinIcon } from "@/components/brand-icons";
-import { Button } from "@/components/ui/button";
-import { Badge, Card, CardTitle, PageHeader } from "@/components/ui/card";
-import { Field, Input, Segmented } from "@/components/ui/form";
-import { api, ApiError } from "@/lib/api";
+import { AiProvidersSection, ApiKeysSection } from "@/components/settings/ai";
+import { callbackMessage, IntegrationsSection } from "@/components/settings/integrations";
+import { DataSection, PrivacySection } from "@/components/settings/privacy";
+import { AccountSection, AppearanceSection, ProfileSection } from "@/components/settings/profile";
+import type { AiSettings } from "@/components/settings/shared";
+import { PageHeader } from "@/components/ui/card";
 import { useApi } from "@/lib/hooks";
-import { useI18n } from "@/lib/i18n";
-import { useAuth, useToast } from "@/lib/providers";
+import { useI18n, type TKey } from "@/lib/i18n";
+import { useToast } from "@/lib/providers";
 import type { IntegrationStatus } from "@/lib/types";
-import { fmtDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
-function Connection({
-  id,
-  name,
-  icon,
-  status,
-  onChange,
-}: {
-  id: "linkedin";
-  name: string;
-  icon: React.ReactNode;
-  status?: IntegrationStatus;
-  onChange: () => void;
-}) {
-  const { locale } = useI18n();
-  const toast = useToast();
-  const [busy, setBusy] = useState(false);
+const SECTIONS: { id: string; key: TKey }[] = [
+  { id: "profile", key: "settings2.sec.profile" },
+  { id: "account", key: "settings2.sec.account" },
+  { id: "appearance", key: "settings2.sec.appearance" },
+  { id: "integrations", key: "settings2.sec.integrations" },
+  { id: "ai", key: "settings2.sec.ai" },
+  { id: "keys", key: "settings2.sec.keys" },
+  { id: "privacy", key: "settings2.sec.privacy" },
+  { id: "data", key: "settings2.sec.data" },
+];
 
-  async function connect() {
-    setBusy(true);
-
-    try {
-      const { url } = await api<{ url: string }>(
-        `/api/integrations/${id}/authorize`
-      );
-
-      window.location.href = url;
-    } catch (e) {
-      toast("error", (e as ApiError).message);
-      setBusy(false);
-    }
-  }
-
-  async function disconnect() {
-    setBusy(true);
-
-    try {
-      await api(`/api/integrations/${id}`, {
-        method: "DELETE",
-      });
-
-      onChange();
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const state = !status
-    ? "…"
-    : !status.configured_on_server
-      ? "unavailable"
-      : status.connected
-        ? "connected"
-        : status.status === "expired"
-          ? "expired"
-          : "disconnected";
-
-  const tone =
-    state === "connected"
-      ? "ok"
-      : state === "unavailable"
-        ? "neutral"
-        : state === "expired"
-          ? "bad"
-          : "warn";
-
-  return (
-    <div className="sketch-soft flex flex-col gap-3 p-4">
-      <div className="flex items-center gap-3">
-        <span className="grid size-10 place-items-center rounded-xl border-2 border-ink bg-sky [&_svg]:size-5">
-          {icon}
-        </span>
-
-        <div className="flex-1">
-          <div className="font-hand text-xl">
-            {name}
-          </div>
-
-          {status?.account_name && (
-            <div className="text-xs text-ink-soft">
-              {status.account_name}
-            </div>
-          )}
-        </div>
-
-        <Badge tone={tone}>
-          {state}
-        </Badge>
-      </div>
-
-      {state === "unavailable" && (
-        <p className="text-xs text-ink-soft">
-          {locale === "ar"
-            ? "لم تُضبط بيانات تطبيق OAuth على الخادم. راجع docs/SETUP.md لإعدادها."
-            : "OAuth app credentials are not configured on the server. See docs/SETUP.md to enable this integration."}
-        </p>
-      )}
-
-      {status?.connected && (
-        <p className="text-xs text-ink-faint">
-          scopes: {status.scopes || "—"}{" "}
-          {status.expires_at && (
-            <>
-              · expires{" "}
-              {fmtDate(status.expires_at, locale)}
-            </>
-          )}
-        </p>
-      )}
-
-      {status?.configured_on_server && (
-        <div className="flex gap-2">
-          {status.connected ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={disconnect}
-              loading={busy}
-            >
-              <Unplug />
-              {locale === "ar"
-                ? "فصل"
-                : "Disconnect"}
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              onClick={connect}
-              loading={busy}
-            >
-              <Link2 />
-              {locale === "ar"
-                ? "ربط"
-                : "Connect"}
-            </Button>
-          )}
-        </div>
-      )}
-    </div>
-  );
+/** Highlights the section currently in view. */
+function useActiveSection(ids: string[]) {
+  const [active, setActive] = useState(ids[0]);
+  useEffect(() => {
+    const els = ids.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => !!el);
+    if (!els.length || typeof IntersectionObserver === "undefined") return;
+    const visible = new Map<string, boolean>();
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => visible.set(e.target.id, e.isIntersecting));
+        const first = ids.find((id) => visible.get(id));
+        if (first) setActive(first);
+      },
+      { rootMargin: "-15% 0px -65% 0px" },
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [ids]);
+  return [active, setActive] as const;
 }
 
+const IDS = SECTIONS.map((s) => s.id);
+
 export default function SettingsPage() {
-  const { t, locale, setLocale } = useI18n();
-  const { user, refresh } = useAuth();
+  const { t } = useI18n();
   const toast = useToast();
+  const integrations = useApi<Record<string, IntegrationStatus>>("/api/integrations");
+  const ai = useApi<AiSettings>("/api/settings/ai");
+  const [active, setActive] = useActiveSection(IDS);
 
-  const integrations =
-    useApi<Record<string, IntegrationStatus>>(
-      "/api/integrations"
-    );
-
-  const [name, setName] = useState(
-    user?.full_name ?? ""
-  );
-
-  const [headline, setHeadline] = useState(
-    user?.headline ?? ""
-  );
-
-  const [saving, setSaving] = useState(false);
-
+  // OAuth callback lands on /settings?integration=..&result=..
   useEffect(() => {
-    const p = new URLSearchParams(
-      window.location.search
-    );
-
+    const p = new URLSearchParams(window.location.search);
     const which = p.get("integration");
     const result = p.get("result");
-
     if (which && result) {
-      toast(
-        result === "connected" ? "ok" : "error",
-        `${which}: ${result.replace("_", " ")}`
-      );
-
-      window.history.replaceState(
-        null,
-        "",
-        "/settings"
-      );
+      const msg = callbackMessage(t, which, result);
+      toast(msg.ok ? "ok" : "error", msg.text);
+      window.history.replaceState(null, "", "/settings#integrations");
+      document.getElementById("integrations")?.scrollIntoView({ block: "start" });
     }
-  }, [toast]);
+  }, [toast, t]);
 
-  async function saveProfile() {
-    setSaving(true);
-
-    try {
-      await api("/api/auth/me", {
-        method: "PATCH",
-        json: {
-          full_name: name,
-          headline,
-          locale,
-        },
-      });
-
-      await refresh();
-
-      toast(
-        "ok",
-        locale === "ar"
-          ? "تم الحفظ"
-          : "Saved"
-      );
-    } catch (e) {
-      toast(
-        "error",
-        (e as ApiError).message
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
+  const aiProps = { data: ai.data, error: ai.error, loading: ai.loading, reload: ai.reload, setData: (d: AiSettings) => ai.setData(d) };
 
   return (
     <div>
-      <PageHeader title={t("set.title")} />
+      <PageHeader title={t("set.title")} sub={t("settings2.sub")} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Profile */}
-        <Card>
-          <CardTitle icon={<UserRound />}>
-            {t("set.profile")}
-          </CardTitle>
+      <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-12">
+        <nav aria-label={t("settings2.nav")} className="mb-8 lg:mb-0">
+          <ul className="-mx-1 flex gap-1 overflow-x-auto pb-1 lg:sticky lg:top-8 lg:mx-0 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:pb-0">
+            {SECTIONS.map((s) => (
+              <li key={s.id} className="shrink-0">
+                <a
+                  href={`#${s.id}`}
+                  onClick={() => setActive(s.id)}
+                  aria-current={active === s.id ? "location" : undefined}
+                  className={cn(
+                    "block rounded-md px-3 py-1.5 text-sm whitespace-nowrap transition-colors",
+                    active === s.id ? "bg-surface-2 font-medium text-fg" : "text-fg-3 hover:bg-surface-2 hover:text-fg",
+                  )}
+                >
+                  {t(s.key)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-          <div className="flex flex-col gap-4">
-            <Field label={t("auth.name")}>
-              <Input
-                value={name}
-                onChange={(e) =>
-                  setName(e.target.value)
-                }
-                maxLength={200}
-              />
-            </Field>
-
-            <Field label="Headline">
-              <Input
-                value={headline}
-                onChange={(e) =>
-                  setHeadline(e.target.value)
-                }
-                maxLength={300}
-                placeholder="AI Engineer · Riyadh"
-              />
-            </Field>
-
-            <Field label={t("auth.email")}>
-              <Input
-                value={user?.email ?? ""}
-                disabled
-              />
-            </Field>
-
-            <Field
-              group
-              label={t("set.language")}
-            >
-              <Segmented
-                ariaLabel={t("set.language")}
-                value={locale}
-                onChange={setLocale}
-                options={[
-                  {
-                    value: "en",
-                    label: "English",
-                  },
-                  {
-                    value: "ar",
-                    label: "العربية",
-                  },
-                ]}
-              />
-            </Field>
-
-            <Button
-              onClick={saveProfile}
-              loading={saving}
-              className="self-start"
-            >
-              <Save />
-              {t("common.save")}
-            </Button>
-          </div>
-        </Card>
-
-        {/* LinkedIn Connection Only */}
-        <Card>
-          <CardTitle icon={<Link2 />}>
-            {t("set.connections")}
-          </CardTitle>
-
-          <div className="flex flex-col gap-3">
-            <Connection
-              id="linkedin"
-              name="LinkedIn"
-              icon={<LinkedinIcon />}
-              status={integrations.data?.linkedin}
-              onChange={integrations.reload}
-            />
-          </div>
-        </Card>
+        <div className="min-w-0">
+          <ProfileSection />
+          <AccountSection />
+          <AppearanceSection />
+          <IntegrationsSection data={integrations.data} error={integrations.error} reload={integrations.reload} />
+          <AiProvidersSection {...aiProps} />
+          <ApiKeysSection {...aiProps} />
+          <PrivacySection ai={ai.data} />
+          <DataSection />
+        </div>
       </div>
     </div>
   );

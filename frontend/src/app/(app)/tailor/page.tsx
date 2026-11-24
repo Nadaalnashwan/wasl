@@ -1,80 +1,127 @@
-
 "use client";
 
-import { Briefcase, Download, History, Scissors } from "lucide-react";
+import { Briefcase, Check, FileText, ScanSearch, ShieldAlert, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { CVView } from "@/components/cv";
-import { AiWorking, EmptyState, ErrorNote } from "@/components/feedback";
+import * as React from "react";
+import { TailorHistory } from "@/components/career/history";
+import { EvidenceMatrix, RequirementsList } from "@/components/career/requirements";
+import { ScoreExplain, ScoreSummary } from "@/components/career/score";
+import { BlockedChanges, computeTailorDiff, type Enforcement, SideBySide, SupportedChanges } from "@/components/career/tailor-review";
+import { ExportButtons } from "@/components/cv/history";
+import { AiWorking, EmptyState, ErrorNote, Notice, SkeletonRows } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
-import { Badge, Card, CardTitle, PageHeader } from "@/components/ui/card";
-import { Field, Textarea } from "@/components/ui/form";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/overlay";
-import { api, ApiError, download } from "@/lib/api";
+import { Badge, PageHeader } from "@/components/ui/card";
+import { Field, Select, Textarea } from "@/components/ui/form";
+import { api, ApiError } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, type TKey } from "@/lib/i18n";
 import { useToast } from "@/lib/providers";
 import type { Analysis, CV, CVData, Job } from "@/lib/types";
-import { fmtDate } from "@/lib/utils";
+import { cn, fmtDate } from "@/lib/utils";
+
+type Result = {
+  analysis: Analysis;
+  original: CVData | null;
+  tailored: { id: string; title: string; data: CVData } | null;
+  reopened: boolean;
+};
+
+const STEPS: { n: number; label: TKey; desc: TKey }[] = [
+  { n: 1, label: "career2.step.1", desc: "career2.step.1.d" },
+  { n: 2, label: "career2.step.2", desc: "career2.step.2.d" },
+  { n: 3, label: "career2.step.3", desc: "career2.step.3.d" },
+  { n: 4, label: "career2.step.4", desc: "career2.step.4.d" },
+  { n: 5, label: "career2.step.5", desc: "career2.step.5.d" },
+  { n: 6, label: "career2.step.6", desc: "career2.step.6.d" },
+];
+
+function Step({ n, children, aside, className }: { n: number; children: React.ReactNode; aside?: React.ReactNode; className?: string }) {
+  const { t } = useI18n();
+  const s = STEPS[n - 1];
+  return (
+    <section id={`step-${n}`} aria-labelledby={`step-${n}-h`} className={cn("scroll-mt-24 border-t border-border pt-8", className)}>
+      <div className="flex flex-wrap items-start gap-x-4 gap-y-2">
+        <span aria-hidden className="num grid size-8 shrink-0 place-items-center rounded-full border border-border-strong text-sm font-semibold text-fg-2">
+          {n}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 id={`step-${n}-h`} className="text-heading font-semibold text-fg">
+            <span className="sr-only">
+              {t("career2.step")} {n}:{" "}
+            </span>
+            {t(s.label)}
+          </h2>
+          <p className="mt-0.5 max-w-2xl text-sm text-fg-3">{t(s.desc)}</p>
+        </div>
+        {aside}
+      </div>
+      <div className="mt-6 md:ps-12">{children}</div>
+    </section>
+  );
+}
 
 export default function TailorPage() {
   const { t, locale } = useI18n();
   const toast = useToast();
 
   const master = useApi<CV | null>("/api/cv/master");
-  const history = useApi<Analysis[]>(
-    "/api/career/analyses?kind=tailor"
+  const tailoredCVs = useApi<CV[]>("/api/cv/tailored");
+  const history = useApi<Analysis[]>("/api/career/analyses?kind=tailor");
+
+  const [jd, setJd] = React.useState("");
+  const [sourceId, setSourceId] = React.useState("");
+  const [fromJob, setFromJob] = React.useState<Pick<Job, "title" | "company"> | null>(null);
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<ApiError | null>(null);
+  const [res, setRes] = React.useState<Result | null>(null);
+  const [opening, setOpening] = React.useState(false);
+
+  const scrollTo = (id: string) => requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+
+  const openPast = React.useCallback(
+    async (id: string) => {
+      setOpening(true);
+      try {
+        const a = await api<Analysis>(`/api/career/analyses/${encodeURIComponent(id)}`);
+        setRes({ analysis: a, original: a.original ?? null, tailored: a.tailored ?? null, reopened: true });
+        scrollTo("step-2");
+      } catch (e) {
+        toast("error", (e as ApiError).message);
+      } finally {
+        setOpening(false);
+      }
+    },
+    [toast],
   );
 
-  const [jd, setJd] = useState("");
-  const [fromJob, setFromJob] = useState<Pick<Job, "title" | "company"> | null>(null);
-
-  // "Tailor CV" from Job Recommendations: /tailor?job=<listing id> prefills the description
-  useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("job");
-    if (!id) return;
-    api<Job & { description: string }>(`/api/jobs/listings/${encodeURIComponent(id)}`)
+  // /tailor?job=<listing id> prefills the description (from Job Recommendations); /tailor?analysis=<id> reopens a past run.
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const job = params.get("job");
+    const analysis = params.get("analysis");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reopen a past run named in the URL, once on mount
+    if (analysis) void openPast(analysis);
+    if (!job) return;
+    api<Job & { description: string }>(`/api/jobs/listings/${encodeURIComponent(job)}`)
       .then((j) => {
         setFromJob({ title: j.title, company: j.company });
-        setJd(
-          [`${j.title}${j.company ? ` — ${j.company}` : ""}`, j.location, "", j.description]
-            .join("\n")
-            .slice(0, 15000)
-        );
+        setJd([`${j.title}${j.company ? ` — ${j.company}` : ""}`, j.location, "", j.description].join("\n").slice(0, 15000));
       })
       .catch((e) => toast("error", (e as ApiError).message));
-  }, [toast]);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<ApiError | null>(null);
-
-  const [res, setRes] = useState<{
-    analysis: Analysis;
-    original: CVData;
-    tailored: {
-      id: string;
-      title: string;
-      data: CVData;
-    };
-  } | null>(null);
+  }, [toast, openPast]);
 
   async function run() {
     setBusy(true);
     setError(null);
-
     try {
-      setRes(
-        await api("/api/career/tailor", {
-          method: "POST",
-          json: { job_text: jd },
-        })
-      );
-
+      const r = await api<{ analysis: Analysis; original: CVData; tailored: { id: string; title: string; data: CVData } }>("/api/career/tailor", {
+        method: "POST",
+        json: { job_text: jd, ...(sourceId ? { cv_id: sourceId } : {}) },
+      });
+      setRes({ analysis: r.analysis, original: r.original, tailored: r.tailored, reopened: false });
       history.reload();
+      tailoredCVs.reload();
+      scrollTo("step-2");
     } catch (e) {
       setError(e as ApiError);
     } finally {
@@ -82,252 +129,280 @@ export default function TailorPage() {
     }
   }
 
-  async function openPast(id: string) {
-    try {
-      const a = await api<Analysis>(
-        `/api/career/analyses/${id}`
-      );
-
-      if (a.tailored && a.original) {
-        setRes({
-          analysis: a,
-          original: a.original,
-          tailored: a.tailored,
-        });
-      }
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    } catch (e) {
-      toast("error", (e as ApiError).message);
-    }
-  }
-
   const a = res?.analysis;
-
-  const hlIds = new Set(
-    a?.result.highlighted_item_ids ?? []
-  );
+  const enforcement = a?.result.enforcement as Enforcement | undefined;
+  const diff = res?.tailored && res.original ? computeTailorDiff(res.original, res.tailored.data) : null;
+  const sourceCV = sourceId ? tailoredCVs.data?.find((c) => c.id === sourceId) : null;
+  const jdTooShort = jd.trim().length < 80;
 
   return (
     <div>
-      <PageHeader
-        title={t("tailor.title")}
-        sub={t("tailor.sub")}
-      />
+      <PageHeader title={t("tailor.title")} sub={t("career2.tailor.sub")} />
 
-      {!master.loading && !master.data && (
+      {master.loading && !master.data && <SkeletonRows rows={3} />}
+      {master.error && <ErrorNote error={master.error} onRetry={master.reload} />}
+
+      {!master.loading && !master.error && !master.data && (
         <EmptyState
+          icon={<FileText />}
           title={t("cv.empty")}
+          text={t("career2.needCv")}
           action={
             <Button asChild>
-              <Link href="/cv">
-                {t("nav.cv")}
-              </Link>
+              <Link href="/cv">{t("nav.cv")}</Link>
             </Button>
           }
         />
       )}
 
       {master.data && (
-        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-          <Card>
-            {fromJob && (
-              <p className="mb-3 flex items-center gap-2 rounded-xl bg-sky p-2 text-sm">
-                <Briefcase className="size-4 shrink-0" />
-                <span>
-                  {t("tailor.fromjob")} <b>{fromJob.title}</b>
-                  {fromJob.company && ` · ${fromJob.company}`}
-                </span>
-              </p>
-            )}
-            <Field
-              label={t("tailor.jd")}
-              hint={`${jd.length} / 15000`}
-            >
-              <Textarea
-                value={jd}
-                onChange={(e) => setJd(e.target.value)}
-                className="min-h-48"
-                maxLength={15000}
-                dir="auto"
-              />
-            </Field>
+        <>
+          <p className="mb-8 flex max-w-3xl items-start gap-2.5 text-sm leading-relaxed text-fg-2">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-ok" aria-hidden />
+            <span>{t("career2.tailor.promise")}</span>
+          </p>
 
-            <div className="mt-4 flex flex-col gap-4">
-              <ErrorNote error={error} />
-
-              {busy && (
-                <AiWorking
-                  steps={
-                    locale === "ar"
-                      ? [
-                          "استخراج المتطلبات",
-                          "المطابقة",
-                          "إعادة الصياغة",
-                          "حارس المصداقية",
-                        ]
-                      : [
-                          "extract requirements",
-                          "match evidence",
-                          "rewrite",
-                          "honesty guard",
-                        ]
-                  }
-                />
-              )}
-
-              <Button
-                size="lg"
-                onClick={run}
-                loading={busy}
-                disabled={jd.trim().length < 80}
-              >
-                <Scissors />
-                {t("tailor.run")}
-              </Button>
-            </div>
-          </Card>
-
-          <Card tone="tint">
-            <CardTitle icon={<History />}>
-              {t("tailor.history")}
-            </CardTitle>
-
-            {!history.data?.length ? (
-              <p className="text-sm text-ink-soft">
-                {t("common.none")}
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {history.data.map((h) => (
-                  <li key={h.id}>
-                    <button
-                      onClick={() => openPast(h.id)}
-                      className="sketch-soft flex w-full items-center gap-3 bg-paper p-3 text-start text-sm hover:bg-sky"
+          {/* stepper */}
+          <nav aria-label={t("career2.steps")} className="mb-10">
+            <ol className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3 lg:grid-cols-6">
+              {STEPS.map((s) => {
+                const reachable = s.n === 1 || !!res;
+                const inner = (
+                  <>
+                    <span
+                      className={cn(
+                        "num grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-semibold",
+                        reachable && res ? "bg-primary text-on-primary" : s.n === 1 ? "bg-primary-soft text-primary-text" : "bg-surface-2 text-fg-3",
+                      )}
+                      aria-hidden
                     >
-                      <span className="flex-1">
-                        <b>{h.job_title || "—"}</b>
-
-                        {h.company && (
-                          <span className="text-ink-soft">
-                            {" "}· {h.company}
-                          </span>
-                        )}
-
-                        <span className="block text-xs text-ink-faint">
-                          {fmtDate(
-                            h.created_at,
-                            locale
-                          )}
-                        </span>
+                      {reachable && res ? <Check className="size-3" /> : s.n}
+                    </span>
+                    <span className={cn("min-w-0 text-xs font-medium leading-tight", reachable ? "text-fg" : "text-fg-3")}>{t(s.label)}</span>
+                  </>
+                );
+                return (
+                  <li key={s.n} className="bg-surface">
+                    {reachable ? (
+                      <a href={`#step-${s.n}`} className="flex h-full items-center gap-2 px-3 py-2.5 hover:bg-surface-2">
+                        {inner}
+                      </a>
+                    ) : (
+                      <span className="flex h-full items-center gap-2 px-3 py-2.5" aria-disabled="true">
+                        {inner}
                       </span>
-
-                      <span className="font-hand text-2xl">
-                        {h.match_score}%
-                      </span>
-                    </button>
+                    )}
                   </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-        </div>
-      )}
+                );
+              })}
+            </ol>
+          </nav>
 
-      {a && res && (
-        <div className="pop-in mt-10 flex flex-col gap-6">
-          <Card>
-            <CardTitle
-              action={
-                <div className="flex gap-2">
-                  {(["pdf", "docx"] as const).map(
-                    (f) => (
-                      <Button
-                        key={f}
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          download(
-                            `/api/cv/${res.tailored.id}/export?format=${f}`,
-                            `wasl_cv_tailored.${f}`
-                          ).catch((e) =>
-                            toast("error", e.message)
-                          )
-                        }
-                      >
-                        <Download />
-                        {f.toUpperCase()}
-                      </Button>
-                    )
-                  )}
-                </div>
-              }
-            >
-              {res.tailored.title}
-            </CardTitle>
-
-            <Tabs defaultValue="side">
-              <TabsList>
-                <TabsTrigger value="side">
-                  {t("tailor.original")}
-                  {" ↔ "}
-                  {t("tailor.tailored")}
-                </TabsTrigger>
-
-                <TabsTrigger value="tailored">
-                  {t("tailor.tailored")}
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent
-                value="side"
-                className="grid gap-4 lg:grid-cols-2"
-              >
-                <div>
-                  <Badge className="mb-2">
-                    {t("tailor.original")}
-                  </Badge>
-
-                  <CVView
-                    data={res.original}
+          {/* step 1 + previous runs */}
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <Step n={1} className="border-t-0 pt-0">
+              <div className="flex flex-col gap-5">
+                {fromJob && (
+                  <Notice tone="info" icon={<Briefcase />}>
+                    {t("tailor.fromjob")} <b className="text-fg">{fromJob.title}</b>
+                    {fromJob.company && ` · ${fromJob.company}`}
+                  </Notice>
+                )}
+                <Field
+                  label={t("career2.tailor.source")}
+                  hint={sourceCV ? t("career2.tailor.sourceTailoredHint") : fill(t("career2.tailor.sourceMasterHint"), { v: master.data.version })}
+                >
+                  <Select value={sourceId} onChange={(e) => setSourceId(e.target.value)}>
+                    <option value="">{fill(t("career2.tailor.masterOption"), { v: master.data.version })}</option>
+                    {(tailoredCVs.data ?? []).map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {t("career2.tailor.tailoredOption")} {c.title}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field
+                  label={t("tailor.jd")}
+                  hint={
+                    <span className="num">
+                      {jd.length.toLocaleString()} / 15,000 {jdTooShort && jd.length > 0 ? `· ${t("career2.jd.min")}` : ""}
+                    </span>
+                  }
+                >
+                  <Textarea
+                    value={jd}
+                    onChange={(e) => setJd(e.target.value)}
+                    className="min-h-56"
+                    maxLength={15000}
+                    dir="auto"
+                    placeholder={t("career2.jd.ph")}
                   />
+                </Field>
+                <div aria-live="polite" className="flex flex-col gap-3 empty:hidden">
+                  {error && <ErrorNote error={error} />}
+                  {busy && <AiWorking steps={[t("career2.tailor.s1"), t("career2.tailor.s2"), t("career2.tailor.s3"), t("career2.tailor.s4")]} />}
                 </div>
-
-                <div>
-                  <Badge
-                    tone="brand"
-                    className="mb-2"
-                  >
-                    {t("tailor.tailored")}
-                  </Badge>
-
-                  <CVView
-                    data={res.tailored.data}
-                    highlight={{
-                      ids: hlIds,
-                      summary:
-                        res.tailored.data.summary !==
-                        res.original.summary,
-                    }}
-                  />
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button size="lg" onClick={run} loading={busy} disabled={jdTooShort}>
+                    {!busy && <ScanSearch />} {t("tailor.run")}
+                  </Button>
+                  <span className="text-xs text-fg-3">{t("career2.tailor.runHint")}</span>
                 </div>
-              </TabsContent>
+              </div>
+            </Step>
 
-              <TabsContent value="tailored">
-                <CVView
-                  data={res.tailored.data}
-                  highlight={{
-                    ids: hlIds,
+            <aside aria-labelledby="tailor-history-h" className="min-w-0 lg:border-s lg:border-border lg:ps-8">
+              <h2 id="tailor-history-h" className="text-heading font-semibold text-fg">
+                {t("tailor.history")}
+              </h2>
+              <p className="mt-0.5 mb-4 text-sm text-fg-3">{t("career2.hist.tailorText")}</p>
+              {(history.error || tailoredCVs.error) && (
+                <ErrorNote
+                  error={history.error ?? tailoredCVs.error}
+                  onRetry={() => {
+                    history.reload();
+                    tailoredCVs.reload();
                   }}
                 />
-              </TabsContent>
-            </Tabs>
-          </Card>
-        </div>
+              )}
+              {(history.loading && !history.data) || (tailoredCVs.loading && !tailoredCVs.data) ? (
+                <SkeletonRows rows={2} />
+              ) : (
+                <TailorHistory
+                  analyses={history.data ?? []}
+                  tailored={tailoredCVs.data ?? []}
+                  activeId={a?.id}
+                  onOpen={openPast}
+                  onDeleted={() => {
+                    tailoredCVs.reload();
+                    history.reload();
+                    if (res?.tailored) {
+                      // the open result may reference the deleted copy
+                      api<CV[]>("/api/cv/tailored")
+                        .then((list) => {
+                          if (!list.some((c) => c.id === res.tailored?.id)) setRes((r) => (r ? { ...r, tailored: null } : r));
+                        })
+                        .catch(() => undefined);
+                    }
+                  }}
+                />
+              )}
+            </aside>
+          </div>
+
+          {opening && <SkeletonRows rows={2} />}
+
+          {/* steps 2–6 */}
+          {a && res && (
+            <div className="fade-in mt-12 flex flex-col gap-12" aria-live="polite">
+              <header className="flex flex-wrap items-end gap-x-6 gap-y-3 rounded-xl border border-border bg-surface px-5 py-4">
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs text-fg-3">
+                    {res.reopened ? t("career2.result.reopened") : t("career2.result.new")} · <span className="num">{fmtDate(a.created_at, locale)}</span>
+                  </div>
+                  <div className="mt-0.5 text-heading font-semibold text-fg" dir="auto">
+                    {[a.job_title || "—", a.company].filter(Boolean).join(" · ")}
+                  </div>
+                </div>
+                <Badge tone="warn">{t("career2.result.draft")}</Badge>
+              </header>
+
+              {!!a.result.injection_flags?.length && (
+                <Notice tone="warn" icon={<ShieldAlert />} title={t("career2.flags.title")}>
+                  {t("career2.flags.text")}
+                </Notice>
+              )}
+
+              <Step n={2}>
+                <RequirementsList req={a.requirements} />
+              </Step>
+
+              <Step n={3}>
+                <div className="flex flex-col gap-8">
+                  <div className="grid gap-6 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)] md:items-start">
+                    <ScoreSummary score={a.match_score} label={t("tailor.score")} must={a.result.must} nice={a.result.nice} />
+                    <ScoreExplain score={a.result.score} />
+                  </div>
+                  <EvidenceMatrix must={a.result.must} nice={a.result.nice} />
+                  <p className="text-xs text-fg-3">
+                    {t("career2.match.improve")}{" "}
+                    <Link href="/gap" className="font-medium text-primary-text hover:underline">
+                      {t("career2.match.toGap")}
+                    </Link>
+                  </p>
+                </div>
+              </Step>
+
+              <Step n={4}>
+                {diff && res.tailored ? (
+                  <div className="flex flex-col gap-10">
+                    <SupportedChanges diff={diff} original={res.original} tailored={res.tailored.data} enforcement={enforcement} notes={a.result.notes} highlightedIds={a.result.highlighted_item_ids} />
+                    <section aria-labelledby="blocked-h">
+                      <h3 id="blocked-h" className="mb-1 text-sm font-semibold text-fg">
+                        {t("career2.blk.title")}
+                      </h3>
+                      <p className="mb-3 text-xs text-fg-3">{t("career2.blk.text")}</p>
+                      <BlockedChanges enforcement={enforcement} original={res.original} />
+                    </section>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-6">
+                    <Notice tone="warn">{res.tailored ? t("career2.cmp.noOriginal") : t("career2.result.cvDeleted")}</Notice>
+                    <BlockedChanges enforcement={enforcement} original={res.original} />
+                  </div>
+                )}
+              </Step>
+
+              <Step n={5}>
+                {res.tailored && diff ? (
+                  <SideBySide original={res.original} tailored={res.tailored.data} diff={diff} reopened={res.reopened} />
+                ) : res.tailored ? (
+                  <SideBySide original={null} tailored={res.tailored.data} diff={computeTailorDiff(res.tailored.data, res.tailored.data)} />
+                ) : (
+                  <p className="text-sm text-fg-3">{t("career2.result.cvDeleted")}</p>
+                )}
+              </Step>
+
+              <Step n={6}>
+                {res.tailored ? (
+                  <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 sm:flex-row sm:items-center">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold text-fg" dir="auto">
+                        {res.tailored.title}
+                      </div>
+                      <p className="mt-0.5 text-sm text-fg-3">{t("career2.export.text")}</p>
+                    </div>
+                    <ExportButtons cv={{ id: res.tailored.id }} size="sm" label={`${t("cv2.export.label")}: ${res.tailored.title}`} />
+                  </div>
+                ) : (
+                  <p className="text-sm text-fg-3">{t("career2.result.cvDeleted")}</p>
+                )}
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                  <Link href="/cv" className="font-medium text-primary-text hover:underline">
+                    {t("career2.export.toCv")}
+                  </Link>
+                  <button
+                    type="button"
+                    className="font-medium text-primary-text hover:underline"
+                    onClick={() => {
+                      setRes(null);
+                      setJd("");
+                      setFromJob(null);
+                      scrollTo("step-1");
+                    }}
+                  >
+                    {t("career2.export.another")}
+                  </button>
+                </div>
+              </Step>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
+}
+
+function fill(s: string, vars: Record<string, string | number>) {
+  return Object.entries(vars).reduce((acc, [k, v]) => acc.replaceAll(`{${k}}`, String(v)), s);
 }

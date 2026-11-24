@@ -1,70 +1,211 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export function Card({ className, tone = "paper", ...props }: React.HTMLAttributes<HTMLDivElement> & { tone?: "paper" | "sky" | "tint" }) {
+/**
+ * Surface container. Use sparingly — only when grouping genuinely helps.
+ * Prefer <Section> + plain lists/dividers for most page content.
+ */
+export function Card({
+  className,
+  tone = "surface",
+  padded = true,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & { tone?: "surface" | "muted" | "brand"; padded?: boolean }) {
   return (
     <div
-      className={cn("sketch p-5", tone === "sky" && "!bg-sky", tone === "tint" && "!bg-paper-2", className)}
+      className={cn(
+        "rounded-xl border border-border",
+        tone === "surface" && "bg-surface",
+        tone === "muted" && "bg-surface-2",
+        tone === "brand" && "border-primary/20 bg-primary-soft",
+        padded && "p-5",
+        className,
+      )}
       {...props}
     />
   );
 }
 
-export function CardTitle({ className, icon, children, action }: { className?: string; icon?: React.ReactNode; children: React.ReactNode; action?: React.ReactNode }) {
+export function CardTitle({
+  className,
+  icon,
+  children,
+  action,
+  description,
+}: {
+  className?: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+  description?: React.ReactNode;
+}) {
   return (
-    <div className={cn("mb-4 flex items-center gap-3", className)}>
-      {icon && <span className="grid size-9 shrink-0 place-items-center rounded-lg border-2 border-ink bg-sky [&_svg]:size-5">{icon}</span>}
-      <h2 className="font-hand text-2xl leading-tight">{children}</h2>
-      {action && <div className="ms-auto">{action}</div>}
+    <div className={cn("mb-4 flex items-start gap-3", className)}>
+      {icon && <span className="mt-0.5 text-fg-3 [&_svg]:size-4">{icon}</span>}
+      <div className="min-w-0 flex-1">
+        <h2 className="text-heading font-semibold text-fg">{children}</h2>
+        {description && <p className="mt-0.5 text-sm text-fg-3">{description}</p>}
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }
 
-export function Badge({
-  className,
-  tone = "neutral",
-  ...props
-}: React.HTMLAttributes<HTMLSpanElement> & { tone?: "neutral" | "brand" | "ok" | "warn" | "bad" | "sky" }) {
-  const tones = {
-    neutral: "bg-paper-2 text-ink-soft",
-    brand: "bg-brand text-brand-ink",
-    ok: "bg-ok-fill text-ink",
-    warn: "bg-warn-fill text-ink",
-    bad: "bg-bad-fill text-ink",
-    sky: "bg-sky text-ink",
-  } as const;
+export type BadgeTone = "neutral" | "brand" | "ok" | "warn" | "bad" | "outline";
+
+export function Badge({ className, tone = "neutral", ...props }: React.HTMLAttributes<HTMLSpanElement> & { tone?: BadgeTone }) {
+  const tones: Record<BadgeTone, string> = {
+    neutral: "bg-surface-2 text-fg-2",
+    brand: "bg-primary-soft text-primary-text",
+    ok: "bg-ok-soft text-ok",
+    warn: "bg-warn-soft text-warn",
+    bad: "bg-bad-soft text-bad",
+    outline: "border border-border text-fg-2",
+  };
   return (
     <span
-      className={cn("sketch-pill inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap [&_svg]:size-3.5", tones[tone], className)}
+      className={cn(
+        "inline-flex h-5 items-center gap-1 rounded-md px-1.5 text-xs font-medium whitespace-nowrap [&_svg]:size-3",
+        tones[tone],
+        className,
+      )}
       {...props}
     />
   );
 }
 
-export function Stat({ label, value, hint, icon, tone = "paper" }: { label: string; value: React.ReactNode; hint?: React.ReactNode; icon?: React.ReactNode; tone?: "paper" | "sky" }) {
+/** A status dot + label, for inline states (verified, pending, failed…). */
+export function Status({ tone = "neutral", children, className }: { tone?: BadgeTone; children: React.ReactNode; className?: string }) {
+  const dot: Record<BadgeTone, string> = {
+    neutral: "bg-fg-3",
+    brand: "bg-primary",
+    ok: "bg-ok",
+    warn: "bg-warn",
+    bad: "bg-bad",
+    outline: "bg-border-strong",
+  };
   return (
-    <Card tone={tone} className="flex flex-col gap-1 p-4">
-      <div className="flex items-center gap-2 text-sm text-ink-soft">
-        {icon && <span className="[&_svg]:size-4">{icon}</span>}
-        {label}
-      </div>
-      <div className="font-hand text-4xl leading-none">{value}</div>
-      {hint && <div className="text-xs text-ink-faint">{hint}</div>}
-    </Card>
+    <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium text-fg-2", className)}>
+      <span className={cn("size-1.5 shrink-0 rounded-full", dot[tone])} aria-hidden />
+      {children}
+    </span>
   );
 }
 
-export function PageHeader({ title, sub, actions, art }: { title: string; sub?: string; actions?: React.ReactNode; art?: React.ReactNode }) {
+/** A single metric. Renders inline (no box) — compose several in a <MetricRow>. */
+export function Stat({ label, value, hint, className }: { label: string; value: React.ReactNode; hint?: React.ReactNode; className?: string }) {
   return (
-    <div className="mb-8 flex flex-wrap items-end gap-4">
-      <div className="min-w-0 flex-1">
-        <h1 className="font-hand text-4xl md:text-5xl">
-          <span className="scribble">{title}</span>
-        </h1>
-        {sub && <p className="mt-4 max-w-2xl text-ink-soft">{sub}</p>}
-      </div>
-      {art && <div className="hidden shrink-0 md:block">{art}</div>}
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+    <div className={cn("min-w-0", className)}>
+      <div className="text-xs font-medium text-fg-3">{label}</div>
+      <div className="num mt-1 text-2xl font-semibold tracking-tight text-fg">{value}</div>
+      {hint && <div className="mt-0.5 text-xs text-fg-3">{hint}</div>}
     </div>
   );
+}
+
+/** Metrics separated by hairlines instead of boxed cards. */
+export function MetricRow({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4 [&>*]:bg-surface [&>*]:p-4",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function PageHeader({
+  title,
+  sub,
+  actions,
+  eyebrow,
+  className,
+}: {
+  title: string;
+  sub?: React.ReactNode;
+  actions?: React.ReactNode;
+  eyebrow?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <header className={cn("mb-8 flex flex-wrap items-end gap-x-6 gap-y-4 border-b border-border pb-6", className)}>
+      <div className="min-w-0 flex-1">
+        {eyebrow && <div className="eyebrow mb-2">{eyebrow}</div>}
+        <h1 className="text-title font-semibold text-fg">{title}</h1>
+        {sub && <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-fg-2">{sub}</p>}
+      </div>
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+    </header>
+  );
+}
+
+/** Editorial section: heading on top, content below, no container. */
+export function Section({
+  title,
+  description,
+  action,
+  children,
+  className,
+  id,
+}: {
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+  id?: string;
+}) {
+  const hid = React.useId();
+  return (
+    <section className={cn("min-w-0", className)} aria-labelledby={title ? hid : undefined} id={id}>
+      {(title || action) && (
+        <div className="mb-3 flex items-end gap-4">
+          <div className="min-w-0 flex-1">
+            {title && (
+              <h2 id={hid} className="text-heading font-semibold text-fg">
+                {title}
+              </h2>
+            )}
+            {description && <p className="mt-0.5 text-sm text-fg-3">{description}</p>}
+          </div>
+          {action && <div className="shrink-0">{action}</div>}
+        </div>
+      )}
+      {children}
+    </section>
+  );
+}
+
+/** Divided list container (rows separated by hairlines). */
+export function List({ className, ...props }: React.HTMLAttributes<HTMLUListElement>) {
+  return <ul className={cn("divide-y divide-border rounded-xl border border-border bg-surface", className)} {...props} />;
+}
+
+export function ListItem({ className, ...props }: React.LiHTMLAttributes<HTMLLIElement>) {
+  return <li className={cn("px-4 py-3.5", className)} {...props} />;
+}
+
+/** Key/value pairs (metadata). */
+export function DescriptionList({ items, className }: { items: { label: React.ReactNode; value: React.ReactNode }[]; className?: string }) {
+  return (
+    <dl className={cn("grid grid-cols-[minmax(7rem,auto)_1fr] gap-x-6 gap-y-2 text-sm", className)}>
+      {items.map((it, i) => (
+        <React.Fragment key={i}>
+          <dt className="text-fg-3">{it.label}</dt>
+          <dd className="min-w-0 text-fg">{it.value}</dd>
+        </React.Fragment>
+      ))}
+    </dl>
+  );
+}
+
+export function Kbd({ children }: { children: React.ReactNode }) {
+  return <kbd className="rounded border border-border bg-surface-2 px-1.5 font-mono text-[11px] text-fg-2">{children}</kbd>;
+}
+
+export function Separator({ className }: { className?: string }) {
+  return <hr className={cn("border-0 border-t border-border", className)} />;
 }

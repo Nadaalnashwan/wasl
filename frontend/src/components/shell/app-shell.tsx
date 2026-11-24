@@ -1,18 +1,19 @@
-
 "use client";
 
 import {
-  Activity,
+  Award,
   Briefcase,
   FileText,
   Languages,
-  LayoutDashboard,
+  LayoutGrid,
+  Loader2,
   LogOut,
   Menu,
   Moon,
   PenLine,
-  Scissors,
+  ScanSearch,
   Settings,
+  ShieldCheck,
   Sun,
   Target,
   X,
@@ -23,150 +24,111 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import logoDark from "../../../public/brand/Wasl-logo-dark.png";
 import logoLight from "../../../public/brand/Wasl-logo-light.png";
-import { Gear } from "@/components/sketch/illustrations";
 import { useI18n, type TKey } from "@/lib/i18n";
 import { useAuth, useTheme } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 
-const NAV: {
-  group: TKey;
-  items: { href: string; key: TKey; icon: React.ElementType }[];
-}[] = [
+type NavItem = { href: string; key: TKey; icon: React.ElementType };
+
+const NAV: { group: TKey; items: NavItem[] }[] = [
   {
     group: "nav.group.workspace",
     items: [
-      { href: "/dashboard", key: "nav.dashboard", icon: LayoutDashboard },
-      { href: "/studio", key: "nav.studio", icon: PenLine },
+      { href: "/dashboard", key: "nav.dashboard", icon: LayoutGrid },
+      { href: "/achievements", key: "nav.achievements", icon: Award },
       { href: "/cv", key: "nav.cv", icon: FileText },
+      { href: "/studio", key: "nav.studio", icon: PenLine },
     ],
   },
   {
     group: "nav.group.career",
     items: [
       { href: "/jobs", key: "nav.jobs", icon: Briefcase },
-      { href: "/tailor", key: "nav.tailor", icon: Scissors },
+      { href: "/tailor", key: "nav.tailor", icon: ScanSearch },
       { href: "/gap", key: "nav.gap", icon: Target },
-    ],
-  },
-  {
-    group: "nav.group.system",
-    items: [
-      { href: "/monitoring", key: "nav.monitoring", icon: Activity },
-      { href: "/settings", key: "nav.settings", icon: Settings },
     ],
   },
 ];
 
-export function Logo({
-  className,
-  imageClassName,
-}: {
-  className?: string;
-  imageClassName?: string;
-}) {
+export function Logo({ className, imageClassName, href = "/" }: { className?: string; imageClassName?: string; href?: string }) {
   return (
-    <Link
-      href="/"
-      className={cn("flex items-center gap-2", className)}
-      aria-label="Wasl home"
-    >
-      <>
-        <Image
-          src={logoLight}
-          alt=""
-          width={1410}
-          height={442}
-          className={cn("h-8 w-auto dark:hidden", imageClassName)}
-          priority
-        />
-        <Image
-          src={logoDark}
-          alt=""
-          width={1410}
-          height={442}
-          className={cn("hidden h-8 w-auto dark:block", imageClassName)}
-          priority
-        />
-      </>
+    <Link href={href} className={cn("flex items-center", className)} aria-label="Wasl">
+      <Image src={logoLight} alt="" width={1410} height={442} className={cn("h-7 w-auto dark:hidden", imageClassName)} priority />
+      <Image src={logoDark} alt="" width={1410} height={442} className={cn("hidden h-7 w-auto dark:block", imageClassName)} priority />
     </Link>
   );
 }
 
+/** Theme + language toggles (icon buttons). */
 export function Toggles({ className }: { className?: string }) {
   const { theme, toggle } = useTheme();
   const { locale, setLocale, t } = useI18n();
-
+  const btn = "inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-sm text-fg-2 transition-colors hover:bg-surface-2 hover:text-fg";
   return (
-    <div className={cn("flex gap-2", className)}>
-      <button
-        onClick={toggle}
-        className="sketch-btn flex h-9 items-center gap-1.5 bg-paper px-3 font-hand text-base"
-        aria-label={
-          theme === "dark" ? t("theme.light") : t("theme.dark")
-        }
-      >
-        {theme === "dark" ? (
-          <Sun className="size-4" />
-        ) : (
-          <Moon className="size-4" />
-        )}
-        <span className="hidden sm:inline">
-          {theme === "dark" ? t("theme.light") : t("theme.dark")}
-        </span>
+    <div className={cn("flex items-center gap-1", className)}>
+      <button type="button" onClick={toggle} className={btn} aria-label={theme === "dark" ? t("theme.light") : t("theme.dark")}>
+        {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
       </button>
-
-      <button
-        onClick={() => setLocale(locale === "ar" ? "en" : "ar")}
-        className="sketch-btn flex h-9 items-center gap-1.5 bg-paper px-3 font-hand text-base"
-        aria-label="Switch language"
-      >
+      <button type="button" onClick={() => setLocale(locale === "ar" ? "en" : "ar")} className={btn} aria-label="Switch language">
         <Languages className="size-4" />
-        {locale === "ar" ? "English" : "العربية"}
+        <span>{locale === "ar" ? "EN" : "عربي"}</span>
       </button>
     </div>
   );
 }
 
-function NavList({ onNavigate }: { onNavigate?: () => void }) {
+function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
   const pathname = usePathname();
   const { t } = useI18n();
-
+  const active = pathname === item.href || pathname.startsWith(item.href + "/");
+  const Icon = item.icon;
   return (
-    <nav className="flex flex-col gap-5" aria-label="Main">
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex h-8 items-center gap-2.5 rounded-md px-2.5 text-sm transition-colors",
+        active ? "bg-surface-2 font-medium text-fg" : "text-fg-2 hover:bg-surface-2/70 hover:text-fg",
+      )}
+    >
+      <Icon className={cn("size-4 shrink-0", active ? "text-primary" : "text-fg-3")} />
+      {t(item.key)}
+    </Link>
+  );
+}
+
+function NavList({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useI18n();
+  const { user } = useAuth();
+  return (
+    <nav className="flex flex-col gap-6" aria-label="Main">
       {NAV.map((g) => (
         <div key={g.group}>
-          <div className="mb-2 px-3 text-[11px] font-bold tracking-[0.18em] text-ink-faint uppercase">
-            {t(g.group)}
-          </div>
-
-          <ul className="flex flex-col gap-1">
-            {g.items.map(({ href, key, icon: Icon }) => {
-              const active =
-                pathname === href ||
-                pathname.startsWith(href + "/");
-
-              return (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    onClick={onNavigate}
-                    aria-current={active ? "page" : undefined}
-                    className={cn(
-                      "flex items-center gap-3 rounded-xl border-2 px-3 py-2 font-hand text-lg transition-colors",
-                      active
-                        ? "border-ink bg-sky shadow-[3px_3px_0_var(--shadow)]"
-                        : "border-transparent hover:border-ink/30 hover:bg-paper-3"
-                    )}
-                  >
-                    <Icon className="size-5 shrink-0" />
-                    {t(key)}
-                  </Link>
-                </li>
-              );
-            })}
+          <div className="mb-1.5 px-2.5 text-xs font-medium text-fg-3">{t(g.group)}</div>
+          <ul className="flex flex-col gap-0.5">
+            {g.items.map((item) => (
+              <li key={item.href}>
+                <NavLink item={item} onNavigate={onNavigate} />
+              </li>
+            ))}
           </ul>
         </div>
       ))}
+      <div>
+        <div className="mb-1.5 px-2.5 text-xs font-medium text-fg-3">{t("nav.group.system")}</div>
+        <ul className="flex flex-col gap-0.5">
+          <li>
+            <NavLink item={{ href: "/settings", key: "nav.settings", icon: Settings }} onNavigate={onNavigate} />
+          </li>
+          {/* Visibility only — the admin console is enforced server-side (proxy + backend role check). */}
+          {user?.role === "admin" && (
+            <li>
+              <NavLink item={{ href: "/admin/monitoring", key: "nav.admin", icon: ShieldCheck }} onNavigate={onNavigate} />
+            </li>
+          )}
+        </ul>
+      </div>
     </nav>
   );
 }
@@ -175,37 +137,28 @@ function UserBox() {
   const { user, logout } = useAuth();
   const { t } = useI18n();
   const router = useRouter();
-
   if (!user) return null;
-
-  const initials = (user.full_name || user.email)
+  const name = user.full_name || user.email.split("@")[0];
+  const initials = name
     .split(/\s+/)
     .map((s) => s[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();
-
   return (
-    <div className="sketch-soft flex items-center gap-3 p-3">
-      <div className="grid size-10 shrink-0 place-items-center rounded-full border-2 border-ink bg-sky font-hand text-lg">
-        {initials}
-      </div>
-
+    <div className="flex items-center gap-2.5 rounded-lg px-1.5 py-1.5">
+      <div className="grid size-8 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-semibold text-primary-text">{initials}</div>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-bold">
-          {user.full_name || user.email.split("@")[0]}
-        </div>
-        <div className="truncate text-xs text-ink-faint">
-          {user.email}
-        </div>
+        <div className="truncate text-sm font-medium text-fg">{name}</div>
+        <div className="truncate text-xs text-fg-3">{user.email}</div>
       </div>
-
       <button
+        type="button"
         onClick={async () => {
           await logout();
           router.replace("/login");
         }}
-        className="rounded-lg p-2 hover:bg-paper-3"
+        className="grid size-8 place-items-center rounded-md text-fg-3 hover:bg-surface-2 hover:text-fg"
         aria-label={t("nav.signout")}
         title={t("nav.signout")}
       >
@@ -215,105 +168,83 @@ function UserBox() {
   );
 }
 
-export function AppShell({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function FullPageSpinner() {
+  return (
+    <div className="grid min-h-screen place-items-center" role="status" aria-label="Loading">
+      <Loader2 className="size-5 animate-spin text-fg-3" />
+    </div>
+  );
+}
+
+export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace(
-        `/login?next=${encodeURIComponent(pathname)}`
-      );
-    }
+    if (!loading && !user) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
   }, [loading, user, router, pathname]);
 
-  if (loading || !user) {
-    return (
-      <div className="grid min-h-screen place-items-center">
-        <div className="flex flex-col items-center gap-3 text-ink-soft">
-          <Gear className="gear-spin size-14 text-ink" />
-          <span className="font-hand text-xl">Wasl</span>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  if (loading || !user) return <FullPageSpinner />;
 
   return (
-    <div className="min-h-screen md:grid md:grid-cols-[240px_1fr] lg:grid-cols-[272px_1fr]">
-      {/* desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen flex-col gap-6 overflow-y-auto border-e-[2.5px] border-ink bg-paper p-5 md:flex">
-        <Logo />
+    <div className="min-h-screen md:grid md:grid-cols-[232px_minmax(0,1fr)]">
+      <aside className="sticky top-0 hidden h-screen flex-col gap-7 overflow-y-auto border-e border-border bg-surface px-3 py-5 md:flex">
+        <Logo className="px-2.5" href="/dashboard" />
         <NavList />
-
-        <div className="mt-auto flex flex-col gap-3">
-          <Toggles />
+        <div className="mt-auto flex flex-col gap-2 border-t border-border pt-3">
+          <Toggles className="px-1" />
           <UserBox />
         </div>
       </aside>
 
-      {/* mobile top bar */}
-      <header className="sticky top-0 z-40 flex items-center gap-3 border-b-[2.5px] border-ink bg-paper px-4 py-3 md:hidden">
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b border-border bg-surface/95 px-4 backdrop-blur md:hidden">
         <button
+          type="button"
           onClick={() => setOpen(true)}
-          className="sketch-btn grid size-10 place-items-center bg-paper"
+          className="-ms-1.5 grid size-9 place-items-center rounded-md text-fg-2 hover:bg-surface-2"
           aria-label="Open menu"
+          aria-expanded={open}
         >
           <Menu className="size-5" />
         </button>
-
-        <Logo />
-
-        <div className="ms-auto">
-          <Toggles />
-        </div>
+        <Logo href="/dashboard" />
+        <Toggles className="ms-auto" />
       </header>
 
       {open && (
-        <div
-          className="fixed inset-0 z-50 md:hidden"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            className="absolute inset-0 bg-ink/30"
-            onClick={() => setOpen(false)}
-          />
-
-          <div className="pop-in absolute inset-y-0 start-0 flex w-[82vw] max-w-[300px] flex-col gap-6 overflow-y-auto border-e-[2.5px] border-ink bg-paper p-5">
-            <div className="flex items-center">
-              <Logo />
-
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+          <div className="absolute inset-0 bg-[#0f172a]/40" onClick={() => setOpen(false)} />
+          <div className="fade-in absolute inset-y-0 start-0 flex w-[82vw] max-w-[288px] flex-col gap-6 overflow-y-auto border-e border-border bg-surface px-3 py-4">
+            <div className="flex items-center px-2.5">
+              <Logo href="/dashboard" />
               <button
+                type="button"
                 onClick={() => setOpen(false)}
-                className="ms-auto rounded-lg p-2 hover:bg-paper-3"
+                className="ms-auto grid size-8 place-items-center rounded-md text-fg-3 hover:bg-surface-2"
                 aria-label="Close menu"
               >
-                <X className="size-5" />
+                <X className="size-4" />
               </button>
             </div>
-
             <NavList onNavigate={() => setOpen(false)} />
-
-            <div className="mt-auto">
+            <div className="mt-auto border-t border-border pt-3">
               <UserBox />
             </div>
           </div>
         </div>
       )}
 
-      <main
-        id="main"
-        className="min-w-0 px-4 py-8 md:px-8 lg:px-12"
-      >
-        <div className="mx-auto max-w-6xl">
-          {children}
-        </div>
+      <main id="main" className="min-w-0 px-4 py-6 sm:px-6 md:px-10 md:py-10">
+        <div className="mx-auto max-w-[1120px]">{children}</div>
       </main>
     </div>
   );

@@ -1,29 +1,32 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans_Arabic, Marhey, Nunito, Patrick_Hand } from "next/font/google";
-import { RoughFilterDefs } from "@/components/sketch/illustrations";
+import { IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
 import { Providers } from "@/lib/providers";
 import "./globals.css";
 
-const handEn = Patrick_Hand({ weight: "400", subsets: ["latin"], variable: "--font-hand-en", display: "swap" });
-const handAr = Marhey({ subsets: ["arabic"], variable: "--font-hand-ar", display: "swap" });
-const bodyEn = Nunito({ subsets: ["latin"], variable: "--font-body-en", display: "swap" });
-const bodyAr = IBM_Plex_Sans_Arabic({ weight: ["400", "500", "600", "700"], subsets: ["arabic"], variable: "--font-body-ar", display: "swap" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const plexAr = IBM_Plex_Sans_Arabic({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["arabic"],
+  variable: "--font-plex-ar",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: { default: "Wasl — AI career platform", template: "%s · Wasl" },
-  description: "Document an achievement once. Wasl turns it into LinkedIn posts, CV updates, tailored CVs and a learning roadmap — nothing invented.",
+  title: { default: "Wasl — evidence-grounded career workspace", template: "%s · Wasl" },
+  description:
+    "Document an achievement once. Use it everywhere. Wasl keeps a verified Master CV and turns confirmed achievements into LinkedIn posts, tailored CVs and skill-gap plans — every claim checked against your evidence.",
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d1b2e" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f8fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1120" },
   ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning className={`${handEn.variable} ${handAr.variable} ${bodyEn.variable} ${bodyAr.variable} h-full antialiased`}>
+    <html lang="en" dir="ltr" suppressHydrationWarning className={`${inter.variable} ${plexAr.variable} h-full antialiased`}>
       <head>
         {/* set theme + direction before first paint (no light→dark flash) */}
         <script
@@ -33,7 +36,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-full">
-        <RoughFilterDefs />
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-[100] focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:shadow-md"
+        >
+          Skip to content
+        </a>
         <Providers>{children}</Providers>
       </body>
     </html>

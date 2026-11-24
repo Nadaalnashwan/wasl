@@ -248,3 +248,12 @@ def test_monitoring_reflects_real_events(client, auth, admin_auth):
     assert m["models"] and all(x["model"] for x in m["models"])
     legacy = client.get("/api/monitoring/metrics?days=1", headers=admin_auth)
     assert legacy.status_code == 200
+
+
+def test_master_save_rejects_stale_base_version(client, auth):
+    m = _master(client, auth)
+    data = copy.deepcopy(SAMPLE_CV)
+    ok = client.put("/api/cv/master", json={"data": data, "change_summary": "edit", "base_version": m["version"]}, headers=auth)
+    assert ok.status_code == 200 and ok.json()["version"] == m["version"] + 1
+    stale = client.put("/api/cv/master", json={"data": data, "change_summary": "stale tab", "base_version": m["version"]}, headers=auth)
+    assert stale.status_code == 409 and stale.json()["detail"]["code"] == "version_conflict"

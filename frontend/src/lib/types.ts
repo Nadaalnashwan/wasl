@@ -1,4 +1,4 @@
-export type User = { id: string; email: string; full_name: string; headline: string; locale: "en" | "ar"; created_at: string };
+export type User = { id: string; email: string; full_name: string; headline: string; locale: "en" | "ar"; role?: "user" | "admin"; created_at: string };
 
 export type Evidence = { quote?: string; source?: string; verified?: boolean; repo?: string; url?: string };
 
@@ -88,7 +88,7 @@ export type Suggestion = {
   created_at: string;
 };
 
-export type CVUpdateResult = { status: "created" | "duplicate" | "no_cv" | "no_changes" | "exists" | "ai_unavailable"; suggestion?: Suggestion; reason?: string; rationale?: string };
+export type CVUpdateResult = { status: "created" | "duplicate" | "no_cv" | "no_changes" | "exists" | "stale" | "conflict" | "ai_unavailable"; suggestion?: Suggestion; reason?: string; rationale?: string };
 
 export type SkillMatch = { skill: string; status: "verified" | "unverified" | "missing"; sources: string[]; explanation: string };
 
