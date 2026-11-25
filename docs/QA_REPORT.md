@@ -4,6 +4,10 @@ Date: 2026-11-24 · Branch `feature/wasl-v2` · macOS, Python 3.12 (uv venv), No
 PostgreSQL 17 (local, throwaway). Local QA database (`AUTH_MODE=local`), **no AI provider keys** and **no OAuth
 client credentials** in this environment. Every result below was produced by a command run in this session.
 
+**Handoff re-run (2026-11-25, `47efe63` on `handoff/wasl-v2-ivory`):** `ruff` pass · `pytest -q` 128 passed (SQLite) ·
+dev set 205/205 · held-out 2 unchanged (precision 1.0, recall 0.75) · frontend lint, `tsc`, build pass · `npm audit
+--omit=dev` 0 vulnerabilities. The Postgres, browser and alert results below are from 2026-11-24 and were not re-run.
+
 ## Automated checks
 
 | Check | Command | Result |

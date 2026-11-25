@@ -6,7 +6,7 @@
 |---|---|---|
 | Authentication | `app/security/auth.py` (`get_current_user`) | Local HS256 JWTs or Supabase access tokens (JWKS / legacy HS256). |
 | Authorization | **backend code**: `app/security/authz.py` (`require_admin`) and `app/deps.py` (`owned()`) | The backend's direct SQLAlchemy connection can bypass Supabase RLS, so every rule that matters is enforced in Python. |
-| Row Level Security | `supabase/migrations/0001–0003` | Defence in depth for the public `anon` / `authenticated` keys only. |
+| Row Level Security | `supabase/migrations/0001–0004` | Defence in depth for the public `anon` / `authenticated` keys only. |
 | Admin console shell | `frontend/src/proxy.ts` + `/api/admin-session` | Server-side gate before `/admin/*` renders; the data itself is still authorised by the backend. |
 
 ### Roles

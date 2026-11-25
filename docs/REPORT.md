@@ -1,3 +1,6 @@
+> **Historical (v1 project report, 22 Oct 2026).** Kept for the record; numbers, models and design choices
+> described here were superseded by V2. Current state: [`HANDOFF.md`](../HANDOFF.md).
+
 # Wasl — Project Report
 
 *AI Product Development and Monitoring — Tuwaiq Academy × Meta × Startupbootcamp — 22 Oct 2026*

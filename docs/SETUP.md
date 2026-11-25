@@ -1,5 +1,7 @@
 # Setup & configuration
 
+For the complete, current handoff (status, remaining tasks, production runbook) see [`HANDOFF.md`](../HANDOFF.md).
+
 Every variable is listed (with comments) in `backend/.env.example` and `frontend/.env.example`.
 **Never commit `.env` / `.env.local` and never paste keys into chats or issues.**
 
@@ -103,7 +105,7 @@ cd backend  && pytest -q && ruff check app tests scripts
 cd backend  && python -m app.eval_v2                          # deterministic AI regression suite (no LLM)
 cd frontend && npm run lint && npm run build && npx tsc --noEmit
 cd frontend && QA_EMAIL=… QA_PASSWORD=… node scripts/qa-visual.mjs --shots qa-shots   # local stack only: axe + responsive + pure-white scan
-cd backend  && python -m app.eval_v2 --dataset heldout    # frozen held-out sets (report only)
+cd backend  && python -m app.eval_v2 --dataset heldout    # frozen held-out sets (report only; also --dataset heldout2)
 PGURL=postgresql://postgres@localhost:54329 supabase/tests/run_local.sh               # Supabase migrations on a throwaway local Postgres
 cd backend  && python -m app.evaluation --max-calls 60        # LIVE providers, needs keys, bounded
 cd backend  && python -m app.evaluation --benchmark --max-calls 90
