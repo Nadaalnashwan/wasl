@@ -3,7 +3,8 @@
 **Branch:** `handoff/wasl-v2-ivory`, cut from `feature/wasl-v2` at `47efe63`. `feature/wasl-v2` and its draft
 PR ([Nadaalnashwan/wasl#1](https://github.com/Nadaalnashwan/wasl/pull/1)) are unchanged.
 **Base:** `main` at `1704ae8` (v1). Nothing has been merged into `main`.
-**Date:** 2026-11-26.
+**Date:** 2026-11-26. **Updated 2026-11-25** (R-07, R-08 and held-out 3; see [§2a](#2a-update-r-07-r-08-and-held-out-3)).
+These commits are local to `handoff/wasl-v2-ivory` until the owner approves a push.
 
 This document is self-contained. A developer or coding agent should be able to continue from here without the
 conversation history. Each claim in it is backed by a command that was run, a test in the repository, or a
@@ -82,7 +83,7 @@ Browser ── Next.js (Vercel) ────────────────
            ├─ ai/: router.py (tiers, retries, fallback, deadline, privacy filter)
            │       model_registry.py, pricing.py, providers/ (groq/openrouter via openai_compat, gemini, fake)
            │       workflows/ content.py, discovery.py, career.py (LangGraph)
-           │       claims.py (verifier claims-v2.2), skills.py (lexicon + tool families)
+           │       claims.py (verifier claims-v2.3), skills.py (lexicon + tool families)
            ├─ security/: auth.py, authz.py, crypto.py, guard.py (prompt injection), pii.py (redaction)
            ├─ monitoring/: recorder.py, metrics.py, alerts.py (scheduler + lease, incidents, Slack/webhook)
            └─ services/: documents, export, cv_updates, github, linkedin, job_sources
@@ -110,14 +111,15 @@ wasl/
 │  │  ├─ eval_v2.py              deterministic evaluation runner (no LLM)
 │  │  └─ evaluation.py           live evaluation / provider benchmark (real LLM calls, budgeted)
 │  ├─ eval/
-│  │  ├─ v2/*.json               dev set wasl-eval-v2.1 (205 cases, CI-gated)
+│  │  ├─ v2/*.json               dev set wasl-eval-v2.2 (240 cases, CI-gated)
 │  │  ├─ heldout/                wasl-heldout-1.0 (79 cases) + builder
 │  │  ├─ heldout2/               wasl-heldout-2.0 (28 cases) + builder
+│  │  ├─ heldout3/               wasl-heldout-3.0 (62 cases) + builder (frozen 66f847b, report-only)
 │  │  ├─ dataset.json            v1 live-eval dataset
 │  │  ├─ baseline_deterministic.json  CI regression baseline
 │  │  └─ results/*.md            committed result reports (*.json is git-ignored)
 │  ├─ scripts/                   admin.py (role grant/revoke/list), run_alerts.py (cron), seed_demo.py
-│  ├─ tests/                     test_units, test_journeys, test_security, test_supabase_auth, test_jobs
+│  ├─ tests/                     test_units, test_journeys, test_security, test_supabase_auth, test_jobs, test_sensitive_data
 │  ├─ .env.example               every backend variable, documented
 │  └─ requirements.txt / requirements-dev.txt / pyproject.toml
 ├─ frontend/
@@ -380,6 +382,80 @@ The `ci.yml` workflow has three jobs:
 `live-eval.yml` never runs on pull requests. It uses the protected `live-eval` environment and repository
 secrets, and is budget-capped.
 
+### 2a. Update: R-07, R-08 and held-out 3
+
+Done on 2026-11-25, in commits `e018f21` → `66f847b` → `e6d2504` → `ccad9fd` plus the docs commit. These were
+`a5e29a6` → `6e142f2` → `6770763` → `135ea6c` before a pre-push rewrite that re-encoded the synthetic credentials
+for GitHub push protection. Values and the held-out-3 content are unchanged (SHA-256 `b38f3339…4319b`); see
+`docs/EVALUATION.md` §1b, "History rewrite".
+
+**1. Evaluation integrity first.** Commit order is the evidence.
+
+- `e018f21`: reporting only. Adds injection precision/recall with tp/fp/fn/tn, and per-string PII false
+  negatives and false positives, to every report.
+- `66f847b`: froze `wasl-heldout-3.0` (62 cases: 24 claims, 24 PII/secret, 14 injection) before any detection
+  change and before its first run.
+- `e6d2504`: the first-run result (44/62). `python eval/heldout3/build_heldout3.py --check` verifies the
+  content hash.
+- Rules for the set are in `eval/heldout3/build_heldout3.py` and `docs/EVALUATION.md` §1b.
+
+**2. R-08 (`app/security/pii.py`).** New `SECRET` detection covers:
+
+- webhook URLs: Slack services, workflows and triggers; Discord; Teams/Office 365; any `/webhook(s)/` or
+  `/hook(s)/` path that carries a token;
+- the password in `scheme://user:password@host`;
+- PEM private-key blocks;
+- more provider prefixes (AWS temporary keys, Slack app tokens, GitLab, npm, Hugging Face, SendGrid, Stripe
+  `whsec_`, Google OAuth, DigitalOcean, Shopify, Telegram);
+- labelled `secret=` / `password:` / `api_key:` values that look generated;
+- unlabelled high-entropy tokens (≥ 32 chars, both letter cases, ≥ 3 digits, entropy ≥ 3.8 bits/char).
+
+False-positive guards keep hex digests, UUIDs, git SHAs, paths, camelCase or CONSTANT identifiers, placeholders
+(`<your-key>`, `${VAR}`) and prose after a label. CV header names now split on ` - `, `–` and `—` as well.
+
+`scrub()` in the monitoring recorder already runs `redact_for_logs`, so logs get the same coverage; a test
+asserts this.
+
+**3. R-07, injection guard (`app/security/guard.py`).** `scan()` now also checks these variants of the text:
+
+- NFKC-normalised;
+- Arabic diacritics and tatweel stripped;
+- Cyrillic and Greek confusables folded to Latin;
+- digit-for-letter substitutions folded ("1gn0re").
+
+These variants are used for scanning only. Kept text is never rewritten, so genuine Russian or Greek survives.
+A new `arabic_score_control` rule catches imperative "give/grant/put this candidate the full mark" and "rate this
+CV as …". Past-tense CV language does not match.
+
+**4. R-07, claim verifier `claims-v2.3` (`app/ai/claims.py`).**
+
+- `award_not_won`: shortlisted, nominated, finalist or runner-up does not support "won".
+- Authorship checks cover about 40 action verbs (migrated, automated, deployed, trained, …) and Arabic
+  past-tense forms.
+- A verb's object ends at the next verb, which fixes Arabic clauses joined by a prefixed و.
+- Arabic diacritics are normalised.
+- Month names and CV-voice verbs ("Nominated in March and won …") are no longer read as another person. This
+  bug was found by a new dev case.
+
+**5. Tests.**
+
+- Dev set `wasl-eval-v2.2`: 35 new regression cases written from the general causes, never copied from a
+  held-out set. New baseline: 240 cases, all rates 1.0.
+- `tests/test_sensitive_data.py`: 83 new tests, including a payload-capture test proving that pasted secrets
+  never reach the provider.
+
+| Run | Before (8ded55e) | After (ccad9fd) |
+|---|---|---|
+| `pytest -q` (SQLite) | 128 passed | **211 passed** |
+| `ruff check app scripts tests` | pass | pass |
+| Dev set | 205/205 (v2.1) | **240/240** (v2.2); claims tp 49 / fp 0 / fn 0; injection tp 23 / fp 0 / fn 0; PII 0 FN of 78, 0 FP of 160 |
+| Held-out 1 (79) | 79/79 | 79/79 |
+| Held-out 2 (28) | 21/28: claim recall 0.75, injection recall 0.50, PII recall 0.667 | **28/28**. Now **not independent** |
+| Held-out 3 (62) | first run 44/62: claim P/R 1.0/0.632, injection P/R 1.0/0.444, PII recall 0.737, preservation 1.0 | 54/62: claim P/R 1.0/0.737, injection P/R 1.0/0.889, PII recall 1.0, preservation 1.0 (weakly independent) |
+| Frontend lint / build / `tsc` / `npm audit --omit=dev` | pass / pass / pass / 0 | pass / pass / pass / 0 (no frontend change) |
+| `supabase/tests/run_local.sh` | — | ALL ASSERTIONS PASSED (local PostgreSQL **16**; CI uses 17) |
+| `pytest` on PostgreSQL | 128 passed (CI) | **Not verified locally.** In this container, SQLAlchemy 2.1.5 + psycopg 3.3.6 fail to connect to the local PostgreSQL 16 server, even for `select version()`, before any Wasl code runs. CI (PostgreSQL 17) will show the real result. No schema or DB code changed. |
+
 ---
 
 ## 3. Remaining tasks
@@ -465,6 +541,12 @@ Priorities:
 
 ### R-07 Remaining seven independent evaluation failures (held-out 2)
 
+> **Status 2026-11-25: done locally (not pushed).** Held-out 3 was frozen first (`66f847b`), then all 7 general
+> causes were fixed (`ccad9fd`). Held-out 2 is 28/28 and relabelled "not independent" in `docs/EVALUATION.md`.
+> CI-equivalent checks pass locally; CI itself has not run on these commits. **Follow-up R-07b:** held-out 3 still
+> has 8 open failures (listed in `docs/EVALUATION.md` §1b), which were deliberately not investigated. Before fixing
+> them, freeze a held-out 4, ideally written by someone outside the project.
+
 | | |
 |---|---|
 | Priority | **Medium** |
@@ -477,6 +559,11 @@ Priorities:
 | Acceptance | Held-out 3 has a frozen first-run result. Held-out 2 is 28/28 and is relabelled "not independent" in `docs/EVALUATION.md`. CI stays green. |
 
 ### R-08 PII and secret-detection weaknesses
+
+> **Status 2026-11-25: steps 1, 2 and 4 done locally (not pushed).** These cover the generic secret detector,
+> header-separator handling and dev-set regression cases; held-out-3 PII recall went from 0.737 to 1.0 with
+> preservation still 1.0. **Still open: step 3**, optional local NER for free-text names. Also open: short
+> unlabelled passwords in prose, and lowercase-only random tokens (see `docs/PRIVACY.md`).
 
 | | |
 |---|---|
@@ -735,9 +822,10 @@ pg_ctl -D /tmp/wasl-pg stop
 
 ```bash
 cd backend && source .venv/bin/activate
-python -m app.eval_v2                         # dev set, 205 cases, fails on regression vs baseline (CI gate)
+python -m app.eval_v2                         # dev set, 240 cases, fails on regression vs baseline (CI gate)
 python -m app.eval_v2 --dataset heldout       # held-out 1 (79) — report only; no longer independent
-python -m app.eval_v2 --dataset heldout2      # held-out 2 (28) — report only; independent; 7 known failures
+python -m app.eval_v2 --dataset heldout2      # held-out 2 (28) — report only; no longer independent (28/28 after R-07)
+python -m app.eval_v2 --dataset heldout3      # held-out 3 (62) — report only; first run 44/62 is the independent figure
 python -m app.evaluation --max-calls 60       # LIVE providers; needs keys; bounded budget
 python -m app.evaluation --benchmark --max-calls 90
 ```
@@ -788,6 +876,9 @@ and registers a throwaway `@example.com` user to check admin isolation.
 All numbers below were produced by commands run on this codebase. Re-run them after any change.
 
 ### Deterministic regression (dev set `wasl-eval-v2.1`, verifier `claims-v2.2`)
+
+> Superseded on 2026-11-25 by dev set `wasl-eval-v2.2` / verifier `claims-v2.3`: 240/240, all rates 1.0
+> (see [§2a](#2a-update-r-07-r-08-and-held-out-3) and `docs/EVALUATION.md`). The table below is the 47efe63 record.
 
 Re-run for this handoff on 2026-11-25 at `47efe63` (`backend/eval/results/deterministic-latest.md`).
 
@@ -886,9 +977,10 @@ Slack delivery to a real channel has **not** been verified.
 ### Known limitations
 
 - **Claim verifier:** cue- and lexicon-based. It does not understand paraphrase beyond its rules. Unseen
-  phrasings can slip through, as the held-out 2 recall of 0.75 shows.
+  phrasings can slip through, as the held-out 3 first-run claim recall of 0.632 (0.737 after v2.3) shows.
 - **PII redaction:** pattern-based, with no NER. Free-text names outside a CV header can survive.
-- **Injection guard:** pattern-based. Homoglyphs and some Arabic imperatives are missed.
+- **Injection guard:** pattern-based. Cyrillic/Greek look-alikes, digit substitution and Arabic score imperatives are covered since v2.3; role-play phrasings ("pretend you are …") and unlisted scripts or paraphrases are still missed, and a flagged line can lose legitimate text next to the instruction.
+- **Secret detection:** pattern- and entropy-based; short unlabelled passwords and lowercase-only random tokens are missed.
 - **Costs:** estimates from list prices, not bills.
 - **Supabase:** live behaviour is unverified: sign-up, email confirmation, refresh, logout, storage policies,
   advisors.
@@ -955,7 +1047,7 @@ auth users, change user IDs, drop tables or disable RLS. Full details are in `do
 Start at the top. Each item links to its task in §3.
 
 1. [ ] Read this file, then `docs/WASL_V2_IMPLEMENTATION.md` and `docs/SUPABASE_MIGRATION.md`.
-2. [ ] Run §5 locally and confirm 128 tests pass, the dev set is 205/205 and the frontend builds, before changing
+2. [ ] Run §5 locally and confirm 211 tests pass, the dev set is 240/240 and the frontend builds, before changing
    anything.
 3. [ ] **R-15**: get the owner's confirmation that v1 keys were rotated.
 4. [ ] **R-01**: free a Supabase slot and restore `wasl project` (owner).
@@ -967,7 +1059,9 @@ Start at the top. Each item links to its task in §3.
 10. [ ] **R-14**: deploy the backend, then the frontend; run the §7 post-deployment checks.
 11. [ ] **R-04**: grant the owner admin (owner approval). **R-09**: Slack test alert.
 12. [ ] **R-10 / R-11**: GitHub and LinkedIn OAuth with test accounts. Publish nothing without approval.
-13. [ ] **R-07**: write and freeze held-out 3, then fix the 7 held-out 2 gaps. **R-08**: PII and secret detection.
+13. [x] **R-07**: write and freeze held-out 3, then fix the 7 held-out 2 gaps (done locally 2026-11-25). **R-08**:
+    PII and secret detection (steps 1, 2 and 4 done; NER open). Next: push after owner approval and check CI,
+    including the PostgreSQL job. **R-07b**: freeze held-out 4 before touching the 8 open held-out-3 failures.
 14. [ ] **R-12**: manual accessibility pass.
 
 **Ground rules for whoever continues:**

@@ -24,8 +24,8 @@ can forget it. For every AI request:
 | `IBAN`, `CARD` | IBANs; Luhn-valid 13–19 digit card numbers |
 | `PROFILE_URL` | LinkedIn, GitHub, GitLab, X/Twitter, Facebook, Instagram, Telegram, WhatsApp, Behance, Medium |
 | `ADDRESS` | labelled addresses (Address/العنوان), P.O. boxes (ص.ب), street lines |
-| `SECRET` | API keys (`sk-`, `gsk_`, `AIza…`, `ghp_`…), bearer tokens, JWTs |
-| `NAME` | the account holder's name, labelled `Name:`/`الاسم:` values, and the first line of an uploaded CV |
+| `SECRET` | API keys and provider tokens by prefix (`sk-`/`sk_live_`, `gsk_`, `AIza…`, `ghp_`/`github_pat_`, `glpat-`, `xox[bpa]-`, `xapp-`, `AKIA`/`ASIA…`, `hf_`, `npm_`, `SG.`, `whsec_`, `ya29.`, `dop_v1_`, `shpat_`, Telegram `id:AA…`), bearer tokens, JWTs; webhook URLs (Slack `hooks.slack.com/services|workflows|triggers`, Discord, Teams/Office 365, and any `/webhook(s)/` or `/hook(s)/` path carrying a ≥ 20-char token); passwords in `scheme://user:password@host` (host kept); PEM private-key blocks; labelled `secret=`/`password:`/`api_key:` values that look generated (placeholders such as `<your-key>`, `${VAR}` and prose such as "rotated every 90 days" are kept); unlabelled high-entropy tokens ≥ 32 chars with upper, lower and ≥ 3 digits (hex digests, UUIDs, git SHAs, paths and camelCase identifiers are kept) |
+| `NAME` | the account holder's name, labelled `Name:`/`الاسم:` values, and the first line of an uploaded CV (the first field when separated by `\|`, `,`, `·`, `•`, ` - `, `–` or `—`) |
 
 Kept on purpose: employers, schools, titles, skills, project names, dates and metrics — the tasks need them
 and claim verification checks against them.
@@ -33,7 +33,12 @@ and claim verification checks against them.
 Verification: `tests/test_security.py` captures the exact payload sent to the provider during a CV upload and
 asserts that none of the name, email, phone (Latin and Arabic digits), ID, passport, profile or address strings
 appear, while employer and skills do; 14 format tests and 6 must-keep tests cover the detector; the deterministic
-evaluation reports `pii_recall` and `pii_preservation`. Known limits: names of *other* people (references,
+evaluation reports `pii_recall` and `pii_preservation`. `tests/test_sensitive_data.py` (R-08) adds 28 secret
+formats, 13 must-keep false-positive guards, header-separator cases, a log-scrub test and a payload-capture test that
+pastes a webhook URL, a URL password and a labelled secret into a post request and asserts none reaches the
+provider. Known limits: secret detection is pattern- and entropy-based, so a short or low-entropy password with no
+label (e.g. "hunter2" in prose) is not detected, and a 32+ character random token made only of lowercase letters and
+digits is kept; names of *other* people (references,
 colleagues) are not detected unless labelled; free-form addresses without a label or street keyword can be missed.
 
 ## 2. Logs, monitoring and alerts
