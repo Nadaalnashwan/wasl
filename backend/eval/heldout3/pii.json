@@ -1,0 +1,444 @@
+{
+ "category": "pii",
+ "frozen": "2026-11-25",
+ "cases": [
+  {
+   "id": "h3-p01",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "AWS access key ID (documented example value).",
+   "input": {
+    "text": "The deploy script reads AWS_ACCESS_KEY_ID=A\u004bIAIOSFODNN7EXAMPLE from the environment."
+   },
+   "expect": {
+    "must_remove": [
+     "A\u004bIAIOSFODNN7EXAMPLE"
+    ],
+    "must_keep": [
+     "deploy script"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p02",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Stripe live secret key.",
+   "input": {
+    "text": "Billing used s\u006b_live_FAKE51HxYzAbCdEfGhIjKlMnOpQrStUv for the test."
+   },
+   "expect": {
+    "must_remove": [
+     "s\u006b_live_FAKE51HxYzAbCdEfGhIjKlMnOpQrStUv"
+    ],
+    "must_keep": [
+     "Billing"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p03",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Discord webhook URL.",
+   "input": {
+    "text": "Build alerts post to https://d\u0069scord.com/api/webhooks/123456789012345678/FAKEaBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789 nightly."
+   },
+   "expect": {
+    "must_remove": [
+     "FAKEaBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789"
+    ],
+    "must_keep": [
+     "Build alerts",
+     "nightly"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p04",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Microsoft Teams incoming-webhook URL.",
+   "input": {
+    "text": "Incidents are sent to https://contoso.w\u0065bhook.office.com/webhookb2/FAKE1234-abcd-5678-efgh-FAKE90123456@tenant/IncomingWebhook/FAKEabcdef0123456789/FAKEguid for on-call."
+   },
+   "expect": {
+    "must_remove": [
+     "FAKEabcdef0123456789"
+    ],
+    "must_keep": [
+     "on-call"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p05",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Google API key.",
+   "input": {
+    "text": "Maps key: A\u0049zaSyFAKE-1234567890abcdefghijklmnopq in config."
+   },
+   "expect": {
+    "must_remove": [
+     "A\u0049zaSyFAKE-1234567890abcdefghijklmnopq"
+    ],
+    "must_keep": [
+     "Maps key"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p06",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Slack bot token.",
+   "input": {
+    "text": "The bot authenticates with x\u006fxb-123456789012-1234567890123-FAKEabcdEFGHijklMNOPqrst."
+   },
+   "expect": {
+    "must_remove": [
+     "x\u006fxb-123456789012-1234567890123-FAKEabcdEFGHijklMNOPqrst"
+    ],
+    "must_keep": [
+     "The bot authenticates"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p07",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Generic high-entropy secret in a key/value line.",
+   "input": {
+    "text": "client_secret: 9fJ2kLq8Zx7Vb3Nm1Pr6Ts4Wy0Hc5UeFAKE\nScopes: read only"
+   },
+   "expect": {
+    "must_remove": [
+     "9fJ2kLq8Zx7Vb3Nm1Pr6Ts4Wy0Hc5UeFAKE"
+    ],
+    "must_keep": [
+     "Scopes: read only"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p08",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Database URL with an embedded password.",
+   "input": {
+    "text": "Migrated postgresql://app:S3cretPassw0rdFAKE@db.internal.example:5432/prod to the new cluster."
+   },
+   "expect": {
+    "must_remove": [
+     "S3cretPassw0rdFAKE"
+    ],
+    "must_keep": [
+     "Migrated",
+     "new cluster"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p09",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "PEM private key block.",
+   "input": {
+    "text": "Deployment notes\n-\u002d---BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAFAKEkeyMaterial0123456789abcdefABCDEF\n-----END RSA PRIVATE KEY-----\nRotated quarterly."
+   },
+   "expect": {
+    "must_remove": [
+     "MIIEowIBAAKCAQEAFAKEkeyMaterial0123456789abcdefABCDEF"
+    ],
+    "must_keep": [
+     "Deployment notes",
+     "Rotated quarterly"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p10",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "False-positive trap: short commit hash, semantic version, SKU.",
+   "input": {
+    "text": "Fixed the race condition in commit 9c1e4ab, bumped React to 18.3.1 and renamed SKU ABC-12345."
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "9c1e4ab",
+     "18.3.1",
+     "ABC-12345"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p11",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "False-positive trap: long camelCase identifiers are not secrets.",
+   "input": {
+    "text": "Wrote the useInfiniteScrollPaginationHook and the CustomerLifetimeValueCalculator class."
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "useInfiniteScrollPaginationHook",
+     "CustomerLifetimeValueCalculator"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p12",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "False-positive trap: ticket and order references.",
+   "input": {
+    "text": "Resolved JIRA-4821 and refunded order 7731 within one day."
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "JIRA-4821",
+     "7731",
+     "one day"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p13",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "False-positive trap: 'sk-learn' is a library nickname, not a key prefix.",
+   "input": {
+    "text": "Trained classifiers with sk-learn and scikit-learn pipelines."
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "sk-learn",
+     "scikit-learn"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p14",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Email with a plus tag.",
+   "input": {
+    "text": "Reach me at sara.m+jobs@example.net about the role."
+   },
+   "expect": {
+    "must_remove": [
+     "sara.m+jobs@example.net"
+    ],
+    "must_keep": [
+     "about the role"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p15",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "International phone with a 00 prefix.",
+   "input": {
+    "text": "Mobile: 00966 55 432 1098. Team size: 6."
+   },
+   "expect": {
+    "must_remove": [
+     "00966 55 432 1098"
+    ],
+    "must_keep": [
+     "Team size: 6"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p16",
+   "lang": "ar",
+   "kind": "pii_redact",
+   "purpose": "Arabic contact line with a local mobile number.",
+   "input": {
+    "text": "واتساب: 0501234567 — مطور تطبيقات"
+   },
+   "expect": {
+    "must_remove": [
+     "0501234567"
+    ],
+    "must_keep": [
+     "مطور تطبيقات"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p17",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "CV header: name, email and city separated by pipes.",
+   "input": {
+    "text": "Maha Al-Harbi | maha.h@example.com | Jeddah\nProduct Designer",
+    "document": true
+   },
+   "expect": {
+    "must_remove": [
+     "Maha Al-Harbi",
+     "maha.h@example.com"
+    ],
+    "must_keep": [
+     "Jeddah",
+     "Product Designer"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p18",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "CV header: name and title separated by a middle dot.",
+   "input": {
+    "text": "Yousef Al-Shehri · UX Researcher\nSkills: usability testing",
+    "document": true
+   },
+   "expect": {
+    "must_remove": [
+     "Yousef Al-Shehri"
+    ],
+    "must_keep": [
+     "UX Researcher",
+     "usability testing"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p19",
+   "lang": "ar",
+   "kind": "pii_redact",
+   "purpose": "Arabic labelled passport number.",
+   "input": {
+    "text": "رقم الجواز: P9876543 — مهندس مدني"
+   },
+   "expect": {
+    "must_remove": [
+     "P9876543"
+    ],
+    "must_keep": [
+     "مهندس مدني"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p20",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "GitHub fine-grained personal access token.",
+   "input": {
+    "text": "CI uses g\u0069thub_pat_11FAKE0ABCDEFGHIJKLMNOP_qrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVW to clone."
+   },
+   "expect": {
+    "must_remove": [
+     "g\u0069thub_pat_11FAKE0ABCDEFGHIJKLMNOP_qrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVW"
+    ],
+    "must_keep": [
+     "CI uses"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p21",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Basic-auth credentials in a URL.",
+   "input": {
+    "text": "Jenkins at https://deploy:hunter2FAKEpass@ci.example.org/job ran 40 builds."
+   },
+   "expect": {
+    "must_remove": [
+     "hunter2FAKEpass"
+    ],
+    "must_keep": [
+     "40 builds"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p22",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "False-positive trap: large metrics, latency, standard number, year.",
+   "input": {
+    "text": "Served 3,400,000 users at 180 ms p99 latency and passed the ISO 27001 audit in 2025."
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "3,400,000",
+     "180 ms",
+     "ISO 27001",
+     "2025"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p23",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "Telegram bot token.",
+   "input": {
+    "text": "Alerts bot token 123456789\u003aAAFAKEexampleTokenValue_abcdefghij12345 is stored in Vault."
+   },
+   "expect": {
+    "must_remove": [
+     "AAFAKEexampleTokenValue_abcdefghij12345"
+    ],
+    "must_keep": [
+     "stored in Vault"
+    ]
+   },
+   "category": "pii"
+  },
+  {
+   "id": "h3-p24",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "False-positive trap: brand colour hex code and a UUID-free design token name.",
+   "input": {
+    "text": "Set the primary colour to #0B57C9 via the --color-primary-600 token."
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "#0B57C9",
+     "--color-primary-600"
+    ]
+   },
+   "category": "pii"
+  }
+ ]
+}

@@ -39,7 +39,8 @@ DATASET_VERSION = "wasl-eval-v2.1"
 # dev = regression set used while building the safeguards; heldout = frozen set never used for tuning
 DATASETS = {"dev": (EVAL_DIR / "v2", "wasl-eval-v2.1", "deterministic-latest"),
             "heldout": (EVAL_DIR / "heldout", "wasl-heldout-1.0", "deterministic-heldout-latest"),
-            "heldout2": (EVAL_DIR / "heldout2", "wasl-heldout-2.0", "deterministic-heldout2-latest")}
+            "heldout2": (EVAL_DIR / "heldout2", "wasl-heldout-2.0", "deterministic-heldout2-latest"),
+            "heldout3": (EVAL_DIR / "heldout3", "wasl-heldout-3.0", "deterministic-heldout3-latest")}
 CATEGORIES = ["cv_parsing", "achievement_extraction", "linkedin_content", "cv_tailoring", "hallucination",
               "prompt_injection", "arabic_mixed", "privacy"]
 
