@@ -45,6 +45,14 @@ INJECTION_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("new_task", re.compile(r"(?:^|(?<=[.!?;]\s))\s*(new task|new instructions?|updated instructions?)\s*:", re.I | re.M)),
     ("arabic_override", re.compile(r"(تجاهل|انس|لا تتبع|لا تلتزم ب)\s*.{0,30}(التعليمات|الأوامر|القواعد)|أنت الآن|"
                                    r"(أضف|اكتب|أدرج)\s.{0,40}(السيرة|الملف)|أعط(ي)?\s.{0,20}(أعلى تقييم|الدرجة الكاملة)")),
+    # Arabic imperatives that try to set the score: "give/grant/put this candidate the top rating",
+    # "rate/classify this CV as …". Imperative forms only (أعط/امنح/ضع/قيم/صنف/اعتبر + a demonstrative or a score noun)
+    # so past-tense CV language ("منحت الشركة الموظفين تقييماً", "قيّمت أداء الفريق") is not flagged.
+    ("arabic_score_control", re.compile(r"(?<![\u0600-\u06FF])(?:(?:أعط|اعط|أعطي|امنح|إمنح|ضع)\s+(?:ل)?(?:(?:هذا|هذه)\s+)?(?:ال)?"
+                                        r"(?:مرشح|مرشحة|متقدم|متقدمة|سيرة|ملف|طلب)|(?:أعط|اعط|امنح)(?:ه|ها))"
+                                        r"(?![\u0600-\u06FF]).{0,40}"
+                                        r"(?:أعلى|الأعلى|كامل|الكاملة|درجة|الدرجة|تقييم|التقييم|علامة|العلامة|نقاط|توصية)"
+                                        r"|(?<![\u0600-\u06FF])(?:قيم|صنف|اعتبر|رشح)\s+(?:هذا|هذه)\s+(?:المرشح|المرشحة|المتقدم|المتقدمة|السيرة|الملف|الطلب)")),
 ]
 
 MAX_UNTRUSTED_CHARS = 24_000
@@ -60,6 +68,31 @@ def normalize(text: str) -> str:
 
 _SPACED = re.compile(r"\b(?:[A-Za-z][-._ ]){3,}[A-Za-z]\b")
 
+# Unicode confusables: Cyrillic and Greek letters that render like Latin ones ("Ιgnore" with a Greek capital iota,
+# "disregаrd" with a Cyrillic а). NFKC does not fold these. Used ONLY for scanning; the text the model sees and the
+# text kept for the user are never rewritten, so genuine Russian or Greek content survives untouched.
+_CONFUSABLES = str.maketrans({
+    "А": "A", "В": "B", "Е": "E", "К": "K", "М": "M", "Н": "H", "О": "O", "Р": "P", "С": "C", "Т": "T", "Х": "X", "У": "Y",
+    "І": "I", "Ј": "J", "Ѕ": "S", "Ԛ": "Q", "Ԝ": "W",
+    "а": "a", "е": "e", "о": "o", "р": "p", "с": "c", "у": "y", "х": "x", "і": "i", "ј": "j", "ѕ": "s", "һ": "h", "ԁ": "d",
+    "ԛ": "q", "ԝ": "w", "ӏ": "l", "ɡ": "g", "ɑ": "a", "ı": "i",
+    "Α": "A", "Β": "B", "Ε": "E", "Ζ": "Z", "Η": "H", "Ι": "I", "Κ": "K", "Μ": "M", "Ν": "N", "Ο": "O", "Ρ": "P", "Τ": "T",
+    "Υ": "Y", "Χ": "X", "ο": "o", "ν": "v", "ι": "i", "κ": "k", "ρ": "p", "τ": "t", "υ": "u", "χ": "x",
+})
+# digit/symbol-for-letter substitution inside a word that also has letters ("1gn0re", "instructi0ns", "pr3vious")
+_LEET = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s", "!": "i"})
+_LEET_WORD = re.compile(r"(?<![\w@$!])(?=[\w@$!]*[A-Za-z])(?=[\w@$!]*[0-9@$!])[\w@$!]{3,}")
+# Arabic diacritics (tashkeel) and tatweel: "أعطِ" / "قيّم" / "ـتجاهل" must match the undecorated patterns
+_AR_MARKS = re.compile(r"[\u064B-\u065F\u0670\u0640]")
+
+
+def _fold(text: str) -> str:
+    return text.translate(_CONFUSABLES)
+
+
+def _deleet(text: str) -> str:
+    return _LEET_WORD.sub(lambda m: m.group(0).translate(_LEET), text)
+
 
 def _despace(text: str) -> str:
     """'I-g-n-o-r-e previous instructions' -> 'Ignore previous instructions' (letter-spacing obfuscation)."""
@@ -67,7 +100,9 @@ def _despace(text: str) -> str:
 
 
 def scan(text: str) -> list[str]:
-    variants = {text, _despace(text)}
+    base = _AR_MARKS.sub("", unicodedata.normalize("NFKC", text))  # fullwidth "Ｉｇｎｏｒｅ" even when called directly
+    folded = _fold(base)
+    variants = {text, base, _despace(base), folded, _despace(folded), _deleet(folded)}
     return sorted({name for name, pat in INJECTION_PATTERNS for v in variants if pat.search(v)})
 
 

@@ -30,7 +30,7 @@ from dataclasses import asdict, dataclass, field
 
 from app.ai.skills import find_skills
 
-VERIFIER_VERSION = "claims-v2.2"
+VERIFIER_VERSION = "claims-v2.3"
 
 
 def _aw(*words: str) -> str:
@@ -140,8 +140,11 @@ class Claim:
     method: str = "deterministic"
 
 
+_AR_MARKS = re.compile(r"[\u064B-\u065F\u0670\u0640]")  # tashkeel + tatweel: "طوّر" and "طور" are the same word
+
+
 def _norm(text: str) -> str:
-    return (text or "").translate(_ARABIC_DIGITS)
+    return _AR_MARKS.sub("", (text or "").translate(_ARABIC_DIGITS))
 
 
 def sentences(text: str) -> list[str]:
@@ -296,10 +299,39 @@ _TEAM_ACTOR = re.compile(r"\b(we|we've|we have|our team|my team|the team|our gro
 _SELF_ACTOR = re.compile(r"\b(i|i've|i'd|i have|i had|me|myself)\b|" + _aw("أنا"), re.I)
 _NOT_A_NAME = {"I", "We", "Our", "My", "The", "This", "That", "Then", "Later", "Also", "Recently", "Previously", "In", "At",
                "During", "After", "Before", "Together", "As", "When", "While", "For", "On", "With", "And", "Built", "Created",
-               "Designed", "Developed", "Led", "Managed", "Wrote", "Implemented", "Launched", "Received", "Won", "Its", "A", "An"}
+               "Designed", "Developed", "Led", "Managed", "Wrote", "Implemented", "Launched", "Received", "Won", "Its", "A", "An",
+               # dates are not people ("Nominated in March and won …")
+               "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November",
+               "December", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "Ramadan", "Q1", "Q2",
+               "Q3", "Q4", "Spring", "Summer", "Autumn", "Fall", "Winter"}
+_CV_VERB = re.compile(r"(?i)(nominated|shortlisted|longlisted|selected|awarded|completed|joined|started|worked|graduated|"
+                      r"finished|earned|presented|published|promoted|hired|ranked|qualified|reached|competed|entered|applied|"
+                      r"volunteered|participated|contributed|assisted|helped|supported|collaborated|partnered|attended|studied|"
+                      r"migrated|rebuilt|rewrote|redesigned|refactored|deployed|automated|trained|integrated|delivered|introduced|"
+                      r"configured|authored|prototyped|released|ported|upgraded|translated|organi[sz]ed|produced|engineered|tested|"
+                      r"coded|programmed|architected|shipped|analy[sz]ed|drafted|mentored|taught|coached)")
 _PASSIVE_BY = re.compile(r"\b(?:led|headed|managed|directed|supervised|overseen|owned|run|built|created|designed|developed|written|"
                          r"implemented|launched|made|won|received|awarded|given)\s+by\s+(?!me\b|myself\b|us\b|my team\b|our team\b)", re.I)
 _CREATE_VERB = re.compile(r"\b(built|created|developed|designed|wrote|implemented|launched|shipped|made|architected|coded|programmed)\b", re.I)
+# Authorship applies to any concrete piece of work, not only to creation: "We migrated 40 services" does not support
+# "I migrated 40 services". Common CV action verbs (past tense) in English, and Arabic past-tense forms for
+# I/he/she (…ت / bare) and we (…نا). Leadership verbs are judged separately as roles.
+_ACTION_VERB = re.compile(
+    r"\b(built|created|developed|designed|wrote|implemented|launched|shipped|made|architected|coded|programmed|"
+    r"migrated|rebuilt|rewrote|redesigned|refactored|deployed|automated|trained|integrated|delivered|introduced|proposed|"
+    r"invented|founded|established|configured|authored|prototyped|released|ported|upgraded|translated|organi[sz]ed|"
+    r"produced|engineered|devised|conceived|drafted|modelled|modeled|analy[sz]ed|tested)\b|"
+    + _aw("بنيت", "بنى", "بنت", "بنينا", "طورت", "طور", "طورنا", "صممت", "صمم", "صممنا", "كتبت", "كتب", "كتبنا",
+          "أنشأت", "أنشأ", "أنشأنا", "برمجت", "برمج", "برمجنا", "نفذت", "نفذ", "نفذنا", "أطلقت", "أطلق", "أطلقنا",
+          "نقلت", "نقل", "نقلنا", "أعدت", "أعاد", "أعدنا"), re.I)
+# being shortlisted / nominated / a finalist is not winning
+_NOT_WON = re.compile(r"\b(shortlist(?:ed)?|short-listed|longlist(?:ed)?|nominat(?:ed|ion)|nominee|finalists?|semi-?finalists?|"
+                      r"runner-?up|honou?rable mention|applied for|application for|candidate for|in the running|"
+                      r"qualified for the final|reached the final)\b|" + _aw("تأهل", "تأهلت", "تأهلنا", "رشح", "رشحت", "ترشح", "ترشحت",
+                                                                           "مرشح", "مرشحة", "ترشيح", "النهائيات", "التصفيات")
+                      + "|القائمة القصيرة", re.I)
+_WON = re.compile(r"\b(won|wins|winner|winning|received|awarded|earned|secured|took home|was given|first place|1st place)\b|"
+                  + _aw("فاز", "فازت", "فزت", "فزنا", "حصل", "حصلت", "نال", "نالت", "حصد", "حصدت"), re.I)
 _AWARD_VERB = re.compile(r"\b(won|received|earned|was awarded|were awarded|got|secured|was given|took home)\b|"
                          + _aw("فاز", "فازت", "حصل", "حصلت", "نال", "نالت"), re.I)
 
@@ -315,28 +347,44 @@ def _actor(sentence: str, start: int) -> str:
         return "self"
     if _OTHER_PERSON.search(tail_s):
         return "other"
-    if any(re.fullmatch(r"[A-Z][a-z]{1,20}", t.strip("'\"()")) and t.strip("'\"()") not in _NOT_A_NAME for t in tail):
+    # a capitalised word is a person's name unless it is a CV-voice verb ("Nominated in March and won …")
+    if any(re.fullmatch(r"[A-Z][a-z]{1,20}", w) and w not in _NOT_A_NAME and not _CV_VERB.fullmatch(w)
+           for w in (t.strip("'\"()") for t in tail)):
         return "other"
     return "unknown"
 
 
+def _actor_of(sentence: str, m: re.Match) -> str:
+    """Actor of one verb occurrence; passives ('led by Fahad') count as 'other'."""
+    if re.match(r"\s+by\s+(?!me\b|myself\b|us\b|my team\b|our team\b)", sentence[m.end():], re.I):
+        return "other"
+    who = _actor(sentence, m.start())
+    # Arabic is verb-subject order ("فاز زميلي", "صممت زميلتي"): look right after the verb when nothing precedes it
+    if who == "unknown" and re.search(rf"[{AR}]", m.group(0)):
+        after = " ".join(sentence[m.end():].split()[:2])
+        if _OTHER_PERSON.search(after):
+            who = "other"
+        elif _TEAM_ACTOR.search(after) or m.group(0).endswith("نا"):
+            who = "team"
+    return who
+
+
 def _verb_actors(sentence: str, verb: re.Pattern) -> set[str]:
-    """Actors of every `verb` occurrence in the sentence; passives ('led by Fahad') count as 'other'."""
-    out = set()
-    for m in verb.finditer(sentence):
-        if re.match(r"\s+by\s+(?!me\b|myself\b|us\b|my team\b|our team\b)", sentence[m.end():], re.I):
-            out.add("other")
-        else:
-            who = _actor(sentence, m.start())
-            # Arabic is verb-subject order ("فاز زميلي"): look right after the verb when nothing precedes it
-            if who == "unknown" and re.search(rf"[{AR}]", m.group(0)):
-                after = " ".join(sentence[m.end():].split()[:2])
-                if _OTHER_PERSON.search(after):
-                    who = "other"
-                elif _TEAM_ACTOR.search(after):
-                    who = "team"
-            out.add(who)
-    return out
+    """Actors of every `verb` occurrence in the sentence."""
+    return {_actor_of(sentence, m) for m in verb.finditer(sentence)}
+
+
+_OBJ_END = re.compile(r"[,;.،؛]|\band\b", re.I)
+
+
+def _object_after(sentence: str, m: re.Match) -> set[str]:
+    """Object words of a verb: up to punctuation, "and", or the next action verb (Arabic joins clauses with a
+    prefixed و — "صممت واجهة التطبيق وكتبت الاختبارات" — so the next verb is the reliable boundary)."""
+    rest = sentence[m.end():]
+    nxt = _ACTION_VERB.search(rest)
+    if nxt:
+        rest = rest[:nxt.start()]
+    return _object_words(_OBJ_END.split(rest)[0])
 
 
 def _object_words(text: str) -> set[str]:
@@ -348,23 +396,23 @@ def _authorship_conflicts(output: str, ev: _Evidence, contribution_confirmed: bo
     (contradicted) or only to a team (needs confirmation). Silent when the evidence never mentions the object."""
     out = []
     for s in sentences(output):
-        for m in _CREATE_VERB.finditer(s):
-            who_out = _actor(s, m.start())
+        for m in _ACTION_VERB.finditer(s):
+            who_out = _actor_of(s, m)
             if who_out in ("other", "team"):
                 continue
-            obj = _object_words(re.split(r"[,;.]|\band\b", s[m.end():])[0])
+            obj = _object_after(s, m)
             if not obj:
                 continue
             credited: list[tuple[str, str]] = []
             for es in ev.sents:
-                for em in _CREATE_VERB.finditer(es):
+                for em in _ACTION_VERB.finditer(es):
                     by = re.match(r"\s+by\s+(\w+)", es[em.end():], re.I)
                     if by:  # passive: "The dashboard was built by Sara" — the object precedes the verb
-                        eobj = _object_words(re.split(r"[,;.]", es[:em.start()])[-1])
+                        eobj = _object_words(re.split(r"[,;.،]", es[:em.start()])[-1])
                         who = "self" if by.group(1).lower() in ("me", "myself") else ("team" if by.group(1).lower() == "us" else "other")
                     else:
-                        eobj = _object_words(re.split(r"[,;.]|\band\b", es[em.end():])[0])
-                        who = _actor(es, em.start())
+                        eobj = _object_after(es, em)
+                        who = _actor_of(es, em)
                     if obj & eobj:
                         credited.append((who, es))
             actors = {w for w, _ in credited}
@@ -434,6 +482,9 @@ def _judge(a: Atom, ev: _Evidence, contribution_confirmed: bool | None) -> tuple
         if term in _AWARD_TERMS:
             award_sents = hits or [s for s in ev.sents if any(_has_term(s, t) for t in _AWARD_TERMS)]
             if not award_sents:
+                near = [s for s in ev.sents if _NOT_WON.search(s)]  # "semi-finalist in the Hult Prize"
+                if near:
+                    return "unsupported", ["award_not_won"], [_q(near[0])]
                 return "unsupported", ["credential_not_in_evidence"], []
             def _awarded_to_other(s: str) -> bool:
                 acts = _verb_actors(s, _AWARD_VERB)
@@ -441,6 +492,10 @@ def _judge(a: Atom, ev: _Evidence, contribution_confirmed: bool | None) -> tuple
                     return acts == {"other"}
                 return bool(_OTHER_PERSON.search(s)) and not re.search(r"\b(i|we|our)\b|فزت|فزنا|فريقنا", s, re.I)
 
+            # "shortlisted for / nominated for / finalist in the X Award" does not support "won the X Award"
+            claims_win = term in ("won", "winner", "first place", "1st place", "فزت", "فاز", "المركز الأول") or bool(_WON.search(a.sentence))
+            if claims_win and not _NOT_WON.search(a.sentence) and all(_NOT_WON.search(s) and not _WON.search(s) for s in award_sents):
+                return "unsupported", ["award_not_won"], [_q(award_sents[0])]
             if all(_awarded_to_other(s) for s in award_sents):
                 if _OTHER_PERSON.search(a.sentence) and not _I_WON.search(a.sentence):
                     return "supported", [], [_q(award_sents[0])]  # the text credits the colleague, too
