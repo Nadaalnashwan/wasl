@@ -39,9 +39,14 @@ and deletes go through the backend with the service-role key. Secrets tables (`i
   grants revoked on monitoring, secrets and shared job tables. No table or column is dropped; no row is updated
   except that the new `role` column is filled with its default `'user'` for every existing user.
 * **0004_v2_performance.sql** — `create index if not exists` × 10; owner policies dropped and re-created with the
-  same predicate inside one transaction.
+  same predicate. The swap is a single `DO` block, so it is atomic without an explicit `BEGIN`/`COMMIT` (see §6b).
+* **0005_v2_client_privileges.sql** — revokes `TRUNCATE`, `TRIGGER` and `REFERENCES` from `anon` and
+  `authenticated` on the 26 Wasl tables, listed by name. Supabase grants these by default, and `TRUNCATE` ignores
+  RLS. Nothing in Wasl uses them: the frontend uses Supabase only for Auth, and the backend connects as a privileged
+  role. Other applications' tables are deliberately not listed. Permissions only; no row, column, policy or trigger
+  changes.
 
-Both are idempotent (the test applies each twice).
+All three are idempotent (the test applies each twice) and are applied in the order 0003 → 0004 → 0005.
 
 ## 4. Pre-migration checks (read-only, run in the SQL editor)
 
@@ -89,8 +94,9 @@ commit;
 
 ## 6. Deployment order (requires the owner's approval)
 
-1. Pre-checks (§4) + backup (§5).
-2. Apply `0003_v2_security.sql`, then `0004_v2_performance.sql` (SQL editor or `supabase db push`).
+1. Pre-checks (§4) + backup (§5). On 2026-11-26 the owner stated that all existing Wasl data on the project is
+   dummy data and waived the manual backup; 0003–0005 delete nothing in any case (§6a).
+2. Mark `0001` and `0002` as applied (§6b), then apply `0003`, `0004`, `0005` in that order with `supabase db push`.
 3. Post-checks: re-run §4; `select role, count(*) from public.users group by 1` (all `user`); Advisors again.
 4. Deploy the v2 backend (it also runs the additive startup migrator — a no-op after step 2), then the frontend.
 5. Grant the owner's account admin (below), configure `ALERT_SLACK_WEBHOOK_URL`, open `/admin/monitoring`.
@@ -98,6 +104,55 @@ commit;
 Expected impact: a short `ACCESS EXCLUSIVE` lock per `ALTER TABLE … ADD COLUMN` with a constant default (no
 table rewrite on Postgres ≥ 11) and per `CREATE INDEX` (tables are small); clients cannot edit `users.email`
 or `role` any more — the frontend never did; profile edits go through the backend.
+
+### 6a. Live project state (read-only inspection, 2026-11-26)
+
+* Project `wasl project` (`wgqppuadvbkfzobwmhoa`) is `ACTIVE_HEALTHY`, Postgres 17.11, free plan.
+* `supabase_migrations.schema_migrations` lists **no** migrations: `0001` and `0002` were applied by hand. Their
+  schema is present: no column is missing and no type differs from a database built from `0001` + `0002`.
+* Manual drift: `posts.images` already exists as `jsonb` (0003 adds it as `json` only `if not exists`, so the step
+  does nothing).
+* The project also hosts **another application**: tables `profiles`, `resumes`, `resume_versions`,
+  `job_applications` and `workflow_logs`, buckets `resumes` and `resume-files` with their storage policy, the
+  `handle_new_user` trigger on `auth.users` and `set_updated_at`. 0003–0005 do not reference any of them. A local
+  replica of these objects was fingerprinted before and after applying 0003 → 0004 → 0005 twice: identical.
+* None of the 25 objects 0003/0004 create exists yet (no name collisions).
+* Destructive statements: none. The only `drop … if exists` statements target Wasl's own two new triggers (absent)
+  and Wasl's 13 policies, which are re-created in the same statement.
+
+### 6b. Migration history and transaction handling
+
+**History.** `supabase db push` compares the local `supabase/migrations` files with
+`supabase_migrations.schema_migrations` and runs the ones it does not find. With an empty history it would try to
+run `0001` and `0002` again. They must first be recorded as applied **without running them**, with
+`supabase migration repair --status applied`, which inserts history rows only. From a trusted machine with the
+Supabase CLI and the database password, never from CI:
+
+```bash
+supabase link --project-ref wgqppuadvbkfzobwmhoa
+supabase migration list                                  # expect LOCAL 0001..0005, REMOTE empty
+supabase migration repair --status applied 0001 0002     # records history only; runs no SQL from the files
+supabase migration list                                  # expect REMOTE 0001, 0002
+supabase db push --dry-run                               # must list exactly 0003, 0004, 0005
+supabase db push                                         # owner approval required
+supabase migration list                                  # expect REMOTE 0001..0005
+```
+
+Stop at the first deviation. In particular, stop if `migration list` does not show all five local files (the CLI
+expects `<timestamp>_name.sql`; these files use 4-digit versions, which was not verified against the CLI in this
+session), or if the dry run lists anything other than 0003, 0004 and 0005.
+
+Do **not** apply these files through a tool that assigns its own version numbers (for example the dashboard or MCP
+"apply migration", which use a new timestamp). Their history rows would not match `0003`–`0005`, and a later
+`db push` would run them again.
+
+**Transactions.** 0004 used to contain an explicit `BEGIN; … COMMIT;`. When a runner wraps a file in its own
+transaction, which was reproduced with `psql --single-transaction`, the inner `BEGIN` only warns and the inner
+`COMMIT` ends the runner's transaction early. A later error could then no longer roll the file back, and anything
+the runner does afterwards, such as its history insert, runs outside it. On 2026-11-26 the policy swap was
+rewritten as one `DO` block. It is atomic on its own and leaves transaction control to the runner. The resulting
+policies and indexes are byte-identical to the previous version (compared on two local databases), and a wrapped
+run with a forced late failure now rolls back completely. 0003 and 0005 contain no transaction statements.
 
 ### Granting your own account admin (after step 2)
 

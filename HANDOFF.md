@@ -131,7 +131,7 @@ wasl/
 │  ├─ scripts/qa-visual.mjs      responsive + axe + pure-white + console QA (local stack only)
 │  └─ .env.example
 ├─ supabase/
-│  ├─ migrations/                0001_init, 0002_jobs, 0003_v2_security, 0004_v2_performance
+│  ├─ migrations/                0001_init, 0002_jobs, 0003_v2_security, 0004_v2_performance, 0005_v2_client_privileges
 │  └─ tests/                     run_local.sh, 00_supabase_stub.sql, 10_seed_pre_v2.sql, 20_assert_v2.sql, schema_drift.py
 └─ docs/                         see §9; screenshots/before (v2.0) and screenshots/v2-ivory (v2.1)
 ```
@@ -492,6 +492,12 @@ Priorities:
 | Acceptance | A written comparison of production against `0001`+`0002`, with advisor output attached. No surprises remain that would make `0003`/`0004` fail or change existing data. |
 
 ### R-03 Apply migrations `0003` and `0004` after backup and approval
+
+> **Status 2026-11-26: prepared, not applied.** The live project is active and was inspected read-only
+> (`docs/SUPABASE_MIGRATION.md` §6a). The owner confirmed the existing Wasl data is dummy data and waived the
+> manual backup. `0005_v2_client_privileges.sql` was added, and 0004's explicit `BEGIN`/`COMMIT` was replaced by one
+> atomic `DO` block with identical policies (§6b). Next: record 0001/0002 as applied with
+> `supabase migration repair`, check `db push --dry-run`, then push 0003 → 0004 → 0005 with owner approval.
 
 | | |
 |---|---|

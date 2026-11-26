@@ -50,8 +50,10 @@ Users can also add their own keys in **Settings → AI provider & your own keys*
 1. Create a project at https://supabase.com/dashboard.
 2. SQL editor → run `supabase/migrations/0001_init.sql`, `0002_jobs.sql`, then **`0003_v2_security.sql`** (admin role +
    role-escalation protection, audit log, alert incidents, scheduler lease, traceability columns) and
-   **`0004_v2_performance.sql`** (foreign-key indexes, `auth.uid()` init-plan policies). All are idempotent and
-   additive. For an **existing** project follow `docs/SUPABASE_MIGRATION.md` (pre-checks, backup, rollback).
+   **`0004_v2_performance.sql`** (foreign-key indexes, `auth.uid()` init-plan policies) and
+   **`0005_v2_client_privileges.sql`** (no `TRUNCATE`/`TRIGGER`/`REFERENCES` for client roles). All are idempotent and
+   additive. For an **existing** project follow `docs/SUPABASE_MIGRATION.md` (pre-checks, migration history, backup,
+   rollback).
    Local SQLite databases are upgraded automatically on startup (`app/migrate.py`).
 3. Backend `.env`:
    * `DATABASE_URL=postgresql+psycopg://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres` (Project → Connect → Session pooler)
