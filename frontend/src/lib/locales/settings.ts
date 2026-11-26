@@ -29,7 +29,7 @@ export default defineMessages(
     "settings2.appearance.language.hint": "Changes the interface language. Post and CV language are chosen where you write them.",
     "settings2.appearance.saved": "Language saved",
 
-    "settings2.sec.integrations": "Integrations",
+    "settings2.sec.integrations": "Connections",
     "settings2.sec.integrations.d":
       "Accounts Wasl can act on for you. Access tokens are stored encrypted on the server and never sent to your browser.",
     "settings2.int.linkedin.d": "Publish posts you approve in the Content Studio.",
@@ -157,7 +157,7 @@ export default defineMessages(
     "settings2.appearance.language.hint": "يغيّر لغة الواجهة. تُختار لغة المنشور والسيرة الذاتية عند كتابتهما.",
     "settings2.appearance.saved": "تم حفظ اللغة",
 
-    "settings2.sec.integrations": "التكاملات",
+    "settings2.sec.integrations": "الحسابات المرتبطة",
     "settings2.sec.integrations.d": "حسابات يمكن لوصل العمل عليها نيابةً عنك. تُخزَّن رموز الوصول مشفّرة على الخادم ولا تُرسل إلى متصفحك أبدًا.",
     "settings2.int.linkedin.d": "نشر المنشورات التي توافق عليها في استوديو المحتوى.",
     "settings2.int.github.d": "استيراد المستودعات كأدلة على إنجازاتك.",

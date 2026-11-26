@@ -1,3 +1,6 @@
+> **Historical (v1, 2026-10-20).** Test counts, models and status below describe v1 and are superseded.
+> Current status: [`HANDOFF.md`](../HANDOFF.md), [`docs/QA_REPORT.md`](QA_REPORT.md), [`docs/WASL_V2_IMPLEMENTATION.md`](WASL_V2_IMPLEMENTATION.md).
+
 # Implementation status — updated 2026-10-20 (evening)
 
 Legend: ✅ done & verified · 🟡 implemented, verification blocked on credentials · ⏳ not done

@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Check, FileText, ScanSearch, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Briefcase, FileText, History, ScanSearch, Scissors, ShieldAlert, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { TailorHistory } from "@/components/career/history";
@@ -10,7 +10,7 @@ import { BlockedChanges, computeTailorDiff, type Enforcement, SideBySide, Suppor
 import { ExportButtons } from "@/components/cv/history";
 import { AiWorking, EmptyState, ErrorNote, Notice, SkeletonRows } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
-import { Badge, PageHeader } from "@/components/ui/card";
+import { Badge, Card, CardTitle, PageHeader } from "@/components/ui/card";
 import { Field, Select, Textarea } from "@/components/ui/form";
 import { api, ApiError } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
@@ -137,7 +137,7 @@ export default function TailorPage() {
 
   return (
     <div>
-      <PageHeader title={t("tailor.title")} sub={t("career2.tailor.sub")} />
+      <PageHeader title={t("tailor.title")} sub={t("tailor.sub")} />
 
       {master.loading && !master.data && <SkeletonRows rows={3} />}
       {master.error && <ErrorNote error={master.error} onRetry={master.reload} />}
@@ -162,45 +162,13 @@ export default function TailorPage() {
             <span>{t("career2.tailor.promise")}</span>
           </p>
 
-          {/* stepper */}
-          <nav aria-label={t("career2.steps")} className="mb-10">
-            <ol className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3 lg:grid-cols-6">
-              {STEPS.map((s) => {
-                const reachable = s.n === 1 || !!res;
-                const inner = (
-                  <>
-                    <span
-                      className={cn(
-                        "num grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-semibold",
-                        reachable && res ? "bg-primary text-on-primary" : s.n === 1 ? "bg-primary-soft text-primary-text" : "bg-surface-2 text-fg-3",
-                      )}
-                      aria-hidden
-                    >
-                      {reachable && res ? <Check className="size-3" /> : s.n}
-                    </span>
-                    <span className={cn("min-w-0 text-xs font-medium leading-tight", reachable ? "text-fg" : "text-fg-3")}>{t(s.label)}</span>
-                  </>
-                );
-                return (
-                  <li key={s.n} className="bg-surface">
-                    {reachable ? (
-                      <a href={`#step-${s.n}`} className="flex h-full items-center gap-2 px-3 py-2.5 hover:bg-surface-2">
-                        {inner}
-                      </a>
-                    ) : (
-                      <span className="flex h-full items-center gap-2 px-3 py-2.5" aria-disabled="true">
-                        {inner}
-                      </span>
-                    )}
-                  </li>
-                );
-              })}
-            </ol>
-          </nav>
 
           {/* step 1 + previous runs */}
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <Step n={1} className="border-t-0 pt-0">
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+            <Card className="min-w-0">
+              <CardTitle icon={<Scissors />} description={t("career2.step.1.d")}>
+                {t("career2.step.1")}
+              </CardTitle>
               <div className="flex flex-col gap-5">
                 {fromJob && (
                   <Notice tone="info" icon={<Briefcase />}>
@@ -249,13 +217,20 @@ export default function TailorPage() {
                   <span className="text-xs text-fg-3">{t("career2.tailor.runHint")}</span>
                 </div>
               </div>
-            </Step>
+            </Card>
 
-            <aside aria-labelledby="tailor-history-h" className="min-w-0 lg:border-s lg:border-border lg:ps-8">
-              <h2 id="tailor-history-h" className="text-heading font-semibold text-fg">
-                {t("tailor.history")}
-              </h2>
-              <p className="mt-0.5 mb-4 text-sm text-fg-3">{t("career2.hist.tailorText")}</p>
+            <aside aria-labelledby="tailor-history-h" className="ink-card min-w-0 !bg-primary-soft p-5 sm:p-6">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-[10px] border-[1.5px] border-ink bg-surface text-fg" aria-hidden>
+                  <History className="size-[18px]" />
+                </span>
+                <div className="min-w-0">
+                  <h2 id="tailor-history-h" className="font-display text-xl leading-tight text-fg">
+                    {t("tailor.history")}
+                  </h2>
+                  <p className="mt-0.5 text-sm text-fg-2">{t("career2.hist.tailorText")}</p>
+                </div>
+              </div>
               {(history.error || tailoredCVs.error) && (
                 <ErrorNote
                   error={history.error ?? tailoredCVs.error}
@@ -295,7 +270,7 @@ export default function TailorPage() {
           {/* steps 2–6 */}
           {a && res && (
             <div className="fade-in mt-12 flex flex-col gap-12" aria-live="polite">
-              <header className="flex flex-wrap items-end gap-x-6 gap-y-3 rounded-lg border border-border-soft bg-surface px-5 py-4">
+              <header className="ink-card flex flex-wrap items-end gap-x-6 gap-y-3 px-5 py-4">
                 <div className="min-w-0 flex-1">
                   <div className="text-xs text-fg-3">
                     {res.reopened ? t("career2.result.reopened") : t("career2.result.new")} · <span className="num">{fmtDate(a.created_at, locale)}</span>
@@ -365,7 +340,7 @@ export default function TailorPage() {
 
               <Step n={6}>
                 {res.tailored ? (
-                  <div className="flex flex-col gap-4 rounded-lg border border-border-soft bg-surface p-5 sm:flex-row sm:items-center">
+                  <div className="flex flex-col gap-4 ink-soft p-5 sm:flex-row sm:items-center">
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold text-fg" dir="auto">
                         {res.tailored.title}

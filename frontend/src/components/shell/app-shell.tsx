@@ -1,19 +1,19 @@
 "use client";
 
 import {
+  Activity,
   Award,
   Briefcase,
   FileText,
   Languages,
-  LayoutGrid,
+  LayoutDashboard,
   Loader2,
   LogOut,
   Menu,
   Moon,
   PenLine,
-  ScanSearch,
+  Scissors,
   Settings,
-  ShieldCheck,
   Sun,
   Target,
   X,
@@ -30,21 +30,25 @@ import { cn } from "@/lib/utils";
 
 type NavItem = { href: string; key: TKey; icon: React.ElementType };
 
+/**
+ * v1's navigation, in v1's order. Achievements (v2) lives in the Workspace group, after the three v1 items, so
+ * everything a v1 user knows is still where they left it.
+ */
 const NAV: { group: TKey; items: NavItem[] }[] = [
   {
     group: "nav.group.workspace",
     items: [
-      { href: "/dashboard", key: "nav.dashboard", icon: LayoutGrid },
-      { href: "/achievements", key: "nav.achievements", icon: Award },
-      { href: "/cv", key: "nav.cv", icon: FileText },
+      { href: "/dashboard", key: "nav.dashboard", icon: LayoutDashboard },
       { href: "/studio", key: "nav.studio", icon: PenLine },
+      { href: "/cv", key: "nav.cv", icon: FileText },
+      { href: "/achievements", key: "nav.achievements", icon: Award },
     ],
   },
   {
     group: "nav.group.career",
     items: [
       { href: "/jobs", key: "nav.jobs", icon: Briefcase },
-      { href: "/tailor", key: "nav.tailor", icon: ScanSearch },
+      { href: "/tailor", key: "nav.tailor", icon: Scissors },
       { href: "/gap", key: "nav.gap", icon: Target },
     ],
   },
@@ -59,19 +63,20 @@ export function Logo({ className, imageClassName, href = "/" }: { className?: st
   );
 }
 
-/** Theme + language toggles (icon buttons). */
-export function Toggles({ className }: { className?: string }) {
+/** v1's theme and language pills ("Blueprint" / "Paper", "العربية" / "English"). */
+export function Toggles({ className, compact = false }: { className?: string; compact?: boolean }) {
   const { theme, toggle } = useTheme();
   const { locale, setLocale, t } = useI18n();
-  const btn = "inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-sm text-fg-2 transition-colors hover:bg-surface-2 hover:text-fg";
+  const pill = "ink-btn inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-surface px-3 text-sm font-semibold text-fg";
   return (
-    <div className={cn("flex items-center gap-1", className)}>
-      <button type="button" onClick={toggle} className={btn} aria-label={theme === "dark" ? t("theme.light") : t("theme.dark")}>
-        {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+    <div className={cn("flex items-center gap-2", className)}>
+      <button type="button" onClick={toggle} className={pill} aria-label={theme === "dark" ? t("theme.light") : t("theme.dark")}>
+        {theme === "dark" ? <Sun className="size-4" aria-hidden /> : <Moon className="size-4" aria-hidden />}
+        <span className={compact ? "sr-only" : "hidden sm:inline"}>{theme === "dark" ? t("theme.light") : t("theme.dark")}</span>
       </button>
-      <button type="button" onClick={() => setLocale(locale === "ar" ? "en" : "ar")} className={btn} aria-label="Switch language">
-        <Languages className="size-4" />
-        <span>{locale === "ar" ? "EN" : "عربي"}</span>
+      <button type="button" onClick={() => setLocale(locale === "ar" ? "en" : "ar")} className={pill} lang={locale === "ar" ? "en" : "ar"}>
+        <Languages className="size-4" aria-hidden />
+        {locale === "ar" ? "English" : "العربية"}
       </button>
     </div>
   );
@@ -88,16 +93,20 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative flex h-8 items-center gap-2.5 rounded-md px-2.5 text-sm transition-colors",
+        "flex h-11 items-center gap-3 rounded-[12px] border-[1.5px] px-3 text-[15px] font-semibold transition-colors",
         active
-          ? "bg-surface font-medium text-fg shadow-sm before:absolute before:inset-y-1.5 before:start-0 before:w-0.5 before:rounded-full before:bg-primary"
-          : "text-fg-2 hover:bg-surface/60 hover:text-fg",
+          ? "border-ink bg-primary-soft text-fg shadow-[3px_3px_0_var(--ink-shadow)] rtl:shadow-[-3px_3px_0_var(--ink-shadow)]"
+          : "border-transparent text-fg-2 hover:border-ink/25 hover:bg-surface-2 hover:text-fg",
       )}
     >
-      <Icon className={cn("size-4 shrink-0", active ? "text-primary" : "text-fg-3")} />
+      <Icon className="size-[18px] shrink-0" aria-hidden />
       {t(item.key)}
     </Link>
   );
+}
+
+function GroupLabel({ children }: { children: React.ReactNode }) {
+  return <div className="mb-2 px-3 text-[11px] font-bold tracking-[0.16em] text-fg-3 uppercase rtl:tracking-normal">{children}</div>;
 }
 
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
@@ -107,8 +116,8 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
     <nav className="flex flex-col gap-6" aria-label="Main">
       {NAV.map((g) => (
         <div key={g.group}>
-          <div className="mb-1.5 px-2.5 text-xs font-medium text-fg-3">{t(g.group)}</div>
-          <ul className="flex flex-col gap-0.5">
+          <GroupLabel>{t(g.group)}</GroupLabel>
+          <ul className="flex flex-col gap-1">
             {g.items.map((item) => (
               <li key={item.href}>
                 <NavLink item={item} onNavigate={onNavigate} />
@@ -118,17 +127,17 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       ))}
       <div>
-        <div className="mb-1.5 px-2.5 text-xs font-medium text-fg-3">{t("nav.group.system")}</div>
-        <ul className="flex flex-col gap-0.5">
+        <GroupLabel>{t("nav.group.system")}</GroupLabel>
+        <ul className="flex flex-col gap-1">
+          {/* v1 "Monitoring". Visibility only: the admin console is enforced server-side (proxy + backend role check). */}
+          {user?.role === "admin" && (
+            <li>
+              <NavLink item={{ href: "/admin/monitoring", key: "nav.admin", icon: Activity }} onNavigate={onNavigate} />
+            </li>
+          )}
           <li>
             <NavLink item={{ href: "/settings", key: "nav.settings", icon: Settings }} onNavigate={onNavigate} />
           </li>
-          {/* Visibility only — the admin console is enforced server-side (proxy + backend role check). */}
-          {user?.role === "admin" && (
-            <li>
-              <NavLink item={{ href: "/admin/monitoring", key: "nav.admin", icon: ShieldCheck }} onNavigate={onNavigate} />
-            </li>
-          )}
         </ul>
       </div>
     </nav>
@@ -148,10 +157,12 @@ function UserBox() {
     .join("")
     .toUpperCase();
   return (
-    <div className="flex items-center gap-2.5 rounded-lg px-1.5 py-1.5">
-      <div className="grid size-8 shrink-0 place-items-center rounded-full bg-surface-3 text-xs font-semibold text-fg-2">{initials}</div>
+    <div className="ink-soft flex items-center gap-3 p-3">
+      <div className="grid size-10 shrink-0 place-items-center rounded-full border-[1.5px] border-ink bg-primary-soft text-sm font-extrabold text-fg" aria-hidden>
+        {initials}
+      </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-fg">{name}</div>
+        <div className="truncate text-sm font-bold text-fg">{name}</div>
         <div className="truncate text-xs text-fg-3">{user.email}</div>
       </div>
       <button
@@ -198,35 +209,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (loading || !user) return <FullPageSpinner />;
 
   return (
-    <div className="min-h-screen md:grid md:grid-cols-[232px_minmax(0,1fr)]">
-      <aside className="sticky top-0 hidden h-screen flex-col gap-7 overflow-y-auto border-e border-border-soft bg-sidebar px-3 py-5 md:flex">
-        <Logo className="px-2.5" href="/dashboard" />
+    <div className="min-h-screen md:grid md:grid-cols-[248px_minmax(0,1fr)] lg:grid-cols-[264px_minmax(0,1fr)]">
+      <aside className="sticky top-0 hidden h-screen flex-col gap-7 overflow-y-auto border-e-[1.5px] border-ink bg-surface px-4 py-5 md:flex">
+        <Logo className="px-2" href="/dashboard" imageClassName="h-8" />
         <NavList />
-        <div className="mt-auto flex flex-col gap-2 border-t border-border-soft pt-3">
-          <Toggles className="px-1" />
+        <div className="mt-auto flex flex-col gap-3 pt-2">
+          <Toggles />
           <UserBox />
         </div>
       </aside>
 
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b border-border-soft bg-sidebar/95 px-4 backdrop-blur md:hidden">
+      <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b-[1.5px] border-ink bg-surface px-4 md:hidden">
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="-ms-1.5 grid size-9 place-items-center rounded-md text-fg-2 hover:bg-surface-2"
+          className="ink-btn grid size-10 place-items-center rounded-[10px] bg-surface text-fg"
           aria-label="Open menu"
           aria-expanded={open}
         >
           <Menu className="size-5" />
         </button>
         <Logo href="/dashboard" />
-        <Toggles className="ms-auto" />
+        <Toggles className="ms-auto" compact />
       </header>
 
       {open && (
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <div className="absolute inset-0 bg-scrim" onClick={() => setOpen(false)} />
-          <div className="fade-in absolute inset-y-0 start-0 flex w-[82vw] max-w-[288px] flex-col gap-6 overflow-y-auto border-e border-border-soft bg-sidebar px-3 py-4">
-            <div className="flex items-center px-2.5">
+          <div className="fade-in absolute inset-y-0 start-0 flex w-[82vw] max-w-[296px] flex-col gap-6 overflow-y-auto border-e-[1.5px] border-ink bg-surface px-4 py-5">
+            <div className="flex items-center px-2">
               <Logo href="/dashboard" />
               <button
                 type="button"
@@ -238,15 +249,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
             <NavList onNavigate={() => setOpen(false)} />
-            <div className="mt-auto border-t border-border pt-3">
+            <div className="mt-auto">
               <UserBox />
             </div>
           </div>
         </div>
       )}
 
-      <main id="main" className="min-w-0 px-4 py-7 sm:px-6 md:px-12 md:py-12">
-        <div className="mx-auto max-w-[1120px]">{children}</div>
+      <main id="main" className="min-w-0 px-4 py-8 sm:px-6 md:px-10 md:py-10 lg:px-12">
+        <div className="mx-auto max-w-6xl">{children}</div>
       </main>
     </div>
   );

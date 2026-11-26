@@ -421,7 +421,7 @@ export function CVEditor({
   ];
 
   return (
-    <div className="divide-y divide-border rounded-lg border border-border-soft bg-surface">
+    <div className="divide-y divide-border ink-soft">
       <EditorSection
         id={`${idPrefix}-contact`}
         title={t("cv2.sec.contact")}

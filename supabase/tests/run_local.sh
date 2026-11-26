@@ -13,7 +13,7 @@ P=(psql "$PGURL/$DB" -qX -v ON_ERROR_STOP=1)
 "${P[@]}" -f migrations/0001_init.sql
 "${P[@]}" -f migrations/0002_jobs.sql
 "${P[@]}" -f tests/10_seed_pre_v2.sql
-for m in migrations/0003_*.sql migrations/0004_*.sql; do
+for m in migrations/0003_*.sql migrations/0004_*.sql migrations/0005_*.sql; do
   [ -f "$m" ] || continue
   echo "applying $m (twice, to check idempotency)"
   "${P[@]}" -f "$m"; "${P[@]}" -f "$m"

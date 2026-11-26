@@ -18,14 +18,16 @@ create index if not exists ix_uploads_user on public.uploads (user_id);
 create index if not exists ix_user_job_feed_listing on public.user_job_feed (listing_id);
 create index if not exists ix_saved_jobs_listing on public.saved_jobs (listing_id);
 
-begin;
-drop policy if exists users_self on public.users;
-create policy users_self on public.users for all to authenticated
-  using (id = (select auth.uid())::text) with check (id = (select auth.uid())::text);
-
+-- The policy swap is ONE statement (a DO block), so it is atomic on its own: no moment without a policy, and no
+-- explicit BEGIN/COMMIT. An explicit COMMIT inside a file would end the transaction that a migration runner
+-- (supabase db push, psql --single-transaction) wraps around the file, so a later failure could no longer roll the
+-- file back and the runner's history insert would run outside it. Same policies and predicates as before.
 do $$
 declare t text;
 begin
+  execute 'drop policy if exists users_self on public.users';
+  execute 'create policy users_self on public.users for all to authenticated '
+          'using (id = (select auth.uid())::text) with check (id = (select auth.uid())::text)';
   foreach t in array array['achievements','posts','cvs','cv_versions','cv_suggestions','job_analyses','uploads',
                            'repo_snapshots','job_profiles','user_job_feed','saved_jobs']
   loop
@@ -33,9 +35,7 @@ begin
     execute format('create policy %I on public.%I for all to authenticated using (user_id = (select auth.uid())::text) '
                    'with check (user_id = (select auth.uid())::text)', t || '_owner', t);
   end loop;
+  execute 'drop policy if exists "own folder read" on storage.objects';
+  execute 'create policy "own folder read" on storage.objects for select to authenticated '
+          'using (bucket_id = ''wasl-uploads'' and (storage.foldername(name))[1] = (select auth.uid())::text)';
 end $$;
-
-drop policy if exists "own folder read" on storage.objects;
-create policy "own folder read" on storage.objects for select to authenticated
-  using (bucket_id = 'wasl-uploads' and (storage.foldername(name))[1] = (select auth.uid())::text);
-commit;

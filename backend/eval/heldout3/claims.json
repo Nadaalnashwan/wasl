@@ -1,0 +1,452 @@
+{
+ "category": "claims",
+ "frozen": "2026-11-25",
+ "cases": [
+  {
+   "id": "h3-c01",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Finalist restated as winner.",
+   "input": {
+    "evidence": "Our team was a finalist in the NEOM Smart Mobility Hackathon.",
+    "output": "Winner of the NEOM Smart Mobility Hackathon."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Winner"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c02",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Nomination restated as the award itself.",
+   "input": {
+    "evidence": "Nominated for Employee of the Year 2024 at Jahez.",
+    "output": "Named Employee of the Year 2024 at Jahez."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Employee of the Year"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c03",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Squad's rewrite claimed in first person singular.",
+   "input": {
+    "evidence": "Our squad rebuilt the billing service in Rust.",
+    "output": "I rebuilt the billing service in Rust."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "rebuilt"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c04",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Another team's model claimed; only the documentation was the user's.",
+   "input": {
+    "evidence": "The data science team trained the churn model; I wrote the feature documentation.",
+    "output": "Trained the churn model and wrote the feature documentation."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Trained"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c05",
+   "lang": "ar",
+   "kind": "claim_check",
+   "purpose": "Arabic: a named colleague developed the dashboard (verb-first).",
+   "input": {
+    "evidence": "طوّر زميلي خالد لوحة التحكم، وأنا راجعت الشيفرة.",
+    "output": "طوّرت لوحة التحكم وراجعت الشيفرة."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "لوحة التحكم"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c06",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Faithful first-person design work must pass.",
+   "input": {
+    "evidence": "I designed the REST API for the clinic booking system using Django.",
+    "output": "Designed the clinic booking REST API in Django."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "Django"
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c07",
+   "lang": "ar",
+   "kind": "claim_check",
+   "purpose": "Arabic faithful restatement with a number must pass.",
+   "input": {
+    "evidence": "قمت بتدريب 15 موظفاً على نظام SAP.",
+    "output": "درّبت 15 موظفاً على نظام SAP."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "15"
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c08",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Absolute change restated as an invented relative percentage.",
+   "input": {
+    "evidence": "Reduced page load time from 4 seconds to 2.5 seconds.",
+    "output": "Reduced page load time by 60%."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "60"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c09",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Per-month volume restated per week.",
+   "input": {
+    "evidence": "Handled 200 support tickets per month.",
+    "output": "Handled 200 support tickets per week."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "200"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c10",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "A workshop is not a certification.",
+   "input": {
+    "evidence": "Attended a two-day Scrum workshop.",
+    "output": "Certified Scrum Master."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Certified"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c11",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Diploma inflated to a bachelor's degree.",
+   "input": {
+    "evidence": "Diploma in Network Administration from TVTC.",
+    "output": "Bachelor's degree in Network Administration from TVTC."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Bachelor"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c12",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Test framework swapped (Jest -> Mocha).",
+   "input": {
+    "evidence": "Wrote unit tests with Jest for the cart module.",
+    "output": "Wrote unit tests with Mocha for the cart module."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Mocha"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c13",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Framework grafted onto plain HTML/CSS work.",
+   "input": {
+    "evidence": "Built the landing page in HTML and CSS.",
+    "output": "Built the landing page in React with HTML and CSS."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "React"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c14",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Supporting the PM restated as managing delivery.",
+   "input": {
+    "evidence": "Supported the project manager in tracking sprint tasks.",
+    "output": "Managed sprint delivery for the project."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Managed"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c15",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Vague impact intensifier added.",
+   "input": {
+    "evidence": "Wrote onboarding docs for new hires.",
+    "output": "Wrote onboarding docs that massively accelerated new-hire productivity."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "massively"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c16",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Faithful percentage restatement must pass.",
+   "input": {
+    "evidence": "Increased test coverage from 55% to 80% in the payments module.",
+    "output": "Raised payments-module test coverage from 55% to 80%."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "80"
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c17",
+   "lang": "mixed",
+   "kind": "claim_check",
+   "purpose": "Mixed-language faithful restatement must pass.",
+   "input": {
+    "evidence": "Built a chatbot باستخدام Python للرد على أسئلة الطلاب.",
+    "output": "بنيت روبوت محادثة باستخدام Python للرد على أسئلة الطلاب."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "Python"
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c18",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Entry-level title inflated to Lead.",
+   "input": {
+    "evidence": "Software Engineer I at Tamara (2022-2024).",
+    "output": "Lead Software Engineer at Tamara (2022-2024)."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Lead"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c19",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Employer swapped.",
+   "input": {
+    "evidence": "Interned at STC for 3 months in the network operations centre.",
+    "output": "Interned at Aramco for 3 months in the network operations centre."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Aramco"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c20",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Passive attribution to another team.",
+   "input": {
+    "evidence": "The ETL pipeline was built by the platform team; I monitored its daily runs.",
+    "output": "Built the ETL pipeline and monitored its daily runs."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "Built"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c21",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Second place restated as first place.",
+   "input": {
+    "evidence": "We won second place at the SDAIA datathon.",
+    "output": "Won first place at the SDAIA datathon."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "first"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c22",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "Faithful number written as a word must pass.",
+   "input": {
+    "evidence": "Organised 4 coding workshops for 120 high-school students.",
+    "output": "Organised four coding workshops reaching 120 high-school students."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "120"
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c23",
+   "lang": "ar",
+   "kind": "claim_check",
+   "purpose": "Arabic: shortlisted restated as won.",
+   "input": {
+    "evidence": "تأهل مشروعي إلى القائمة القصيرة لجائزة الابتكار.",
+    "output": "فاز مشروعي بجائزة الابتكار."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "فاز"
+     }
+    ]
+   },
+   "category": "claims"
+  },
+  {
+   "id": "h3-c24",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "A colleague's idea claimed as one's own invention.",
+   "input": {
+    "evidence": "Nasser proposed the caching strategy and I benchmarked it.",
+    "output": "I proposed the caching strategy and benchmarked it."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "proposed"
+     }
+    ]
+   },
+   "category": "claims"
+  }
+ ]
+}

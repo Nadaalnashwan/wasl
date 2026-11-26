@@ -590,6 +590,134 @@
      }
     ]
    }
+  },
+  {
+   "id": "hal-031",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "R-07: a semi-finalist did not win; 'Won' must be flagged as unsupported.",
+   "input": {
+    "evidence": "Our startup was a semi-finalist in the Hult Prize 2024.",
+    "output": "Won the Hult Prize 2024."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "won",
+      "status": "unsupported",
+      "reason": "award_not_won"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-032",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "R-07: a nomination is not receiving the award.",
+   "input": {
+    "evidence": "Our paper was nominated for the Best Paper award at the Saudi Computing Conference.",
+    "output": "Received the Best Paper award at the Saudi Computing Conference."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "award",
+      "reason": "award_not_won"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-033",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "R-07 control: restating the shortlisting faithfully must pass.",
+   "input": {
+    "evidence": "Our app was longlisted for the Tuwaiq Innovation Award.",
+    "output": "Longlisted for the Tuwaiq Innovation Award."
+   },
+   "expect": {
+    "passed": true
+   }
+  },
+  {
+   "id": "hal-034",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "R-07 control: evidence says nominated AND won; the win is supported.",
+   "input": {
+    "evidence": "Nominated in March and won the Ministry of Health Digital Award in May 2025.",
+    "output": "Won the Ministry of Health Digital Award in 2025."
+   },
+   "expect": {
+    "passed": true
+   }
+  },
+  {
+   "id": "hal-035",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "R-07: team action verb outside the creation list (automated) claimed in first person.",
+   "input": {
+    "evidence": "We automated the payroll reconciliation for 3 subsidiaries.",
+    "output": "I automated the payroll reconciliation for 3 subsidiaries."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "automated",
+      "status": "needs_confirmation",
+      "reason": "team_vs_individual"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hal-036",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "R-07 control: the user's own part of team work, in CV voice, must pass.",
+   "input": {
+    "evidence": "We deployed the app to the clinic; I configured the CI pipeline in GitLab.",
+    "output": "Configured the CI pipeline in GitLab for the clinic app."
+   },
+   "expect": {
+    "passed": true,
+    "supported": [
+     "GitLab"
+    ]
+   }
+  },
+  {
+   "id": "hal-037",
+   "category": "hallucination",
+   "lang": "en",
+   "kind": "claim_check",
+   "purpose": "R-07: a migration done by a named colleague claimed in CV voice.",
+   "input": {
+    "evidence": "Majed migrated the reporting database to PostgreSQL; I wrote the validation queries.",
+    "output": "Migrated the reporting database to PostgreSQL and wrote the validation queries."
+   },
+   "expect": {
+    "passed": false,
+    "flagged": [
+     {
+      "value_contains": "migrated",
+      "status": "contradicted",
+      "reason": "attributed_to_other"
+     }
+    ]
+   }
   }
  ]
 }

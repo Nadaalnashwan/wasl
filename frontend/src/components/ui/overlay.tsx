@@ -6,6 +6,7 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { X } from "lucide-react";
 import * as React from "react";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 
@@ -34,7 +35,7 @@ export function DialogContent({
       <DialogPrimitive.Overlay className="fade-in fixed inset-0 z-50 bg-scrim" />
       <DialogPrimitive.Content
         className={cn(
-          "fade-in fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[min(94vw,520px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-border-soft bg-surface-elevated shadow-lg",
+          "fade-in fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[min(94vw,520px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-[14px] border-[1.5px] border-ink bg-surface-elevated shadow-[5px_5px_0_var(--ink-shadow)] rtl:shadow-[-5px_5px_0_var(--ink-shadow)]",
           wide && "w-[min(96vw,1080px)]",
           className,
         )}
@@ -130,7 +131,7 @@ export function DrawerContent({
       <DialogPrimitive.Overlay className="fade-in fixed inset-0 z-50 bg-scrim" />
       <DialogPrimitive.Content
         className={cn(
-          "fixed inset-y-0 end-0 z-50 flex w-[min(100vw,560px)] flex-col border-s border-border-soft bg-surface-elevated shadow-lg",
+          "fixed inset-y-0 end-0 z-50 flex w-[min(100vw,560px)] flex-col border-s-[1.5px] border-ink bg-surface-elevated shadow-lg",
           className,
         )}
       >
@@ -155,15 +156,21 @@ export function DrawerContent({
 }
 
 /* ----------------------------------------------------------- Tabs (underline style) */
-export const Tabs = TabsPrimitive.Root;
+/** Radix Tabs default to dir="ltr" (it sets the attribute on its root), which flipped tabbed pages to LTR in Arabic.
+ *  Follow the interface language unless a caller sets dir explicitly. */
+export function Tabs({ dir, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
+  const { dir: uiDir } = useI18n();
+  return <TabsPrimitive.Root dir={dir ?? uiDir} {...props} />;
+}
+/** v1 pill tabs: the active tab is filled with ink, the others are outlined. */
 export function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
-  return <TabsPrimitive.List className={cn("mb-6 flex gap-5 overflow-x-auto border-b border-border", className)} {...props} />;
+  return <TabsPrimitive.List className={cn("mb-6 flex flex-wrap gap-2.5 p-0.5", className)} {...props} />;
 }
 export function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "-mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 border-transparent pb-2.5 text-sm font-medium text-fg-3 transition-colors hover:text-fg data-[state=active]:border-primary data-[state=active]:text-fg [&_svg]:size-4",
+        "inline-flex h-10 shrink-0 items-center gap-2 rounded-full border-[1.5px] border-ink bg-surface px-4 text-sm font-semibold text-fg transition-colors hover:bg-primary-soft data-[state=active]:bg-ink data-[state=active]:text-bg [&_svg]:size-4",
         className,
       )}
       {...props}

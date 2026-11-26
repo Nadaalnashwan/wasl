@@ -93,7 +93,7 @@ export function EvaluationView() {
         ) : (
           <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             <Block title="Runs" description="Latest 30, newest first.">
-              <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border-soft bg-surface" aria-label="Evaluation runs">
+              <ul className="divide-y divide-border overflow-hidden ink-soft" aria-label="Evaluation runs">
                 {runs.map((r) => {
                   const active = r.id === activeId;
                   return (
@@ -157,7 +157,7 @@ function RunDetail({ run, failuresOnly, setFailuresOnly }: { run: EvalRunDetail;
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="rounded-lg border border-border-soft bg-surface p-5" aria-label="Run details">
+      <section className="ink-soft p-5" aria-label="Run details">
         <div className="flex flex-wrap items-center gap-2">
           <EvalKindBadge kind={run.kind} />
           <span className="text-sm text-fg-2">{fmtDateTime(run.at, locale)}</span>

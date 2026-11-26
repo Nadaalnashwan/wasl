@@ -1,5 +1,7 @@
 # Setup & configuration
 
+For the complete, current handoff (status, remaining tasks, production runbook) see [`HANDOFF.md`](../HANDOFF.md).
+
 Every variable is listed (with comments) in `backend/.env.example` and `frontend/.env.example`.
 **Never commit `.env` / `.env.local` and never paste keys into chats or issues.**
 
@@ -48,8 +50,10 @@ Users can also add their own keys in **Settings → AI provider & your own keys*
 1. Create a project at https://supabase.com/dashboard.
 2. SQL editor → run `supabase/migrations/0001_init.sql`, `0002_jobs.sql`, then **`0003_v2_security.sql`** (admin role +
    role-escalation protection, audit log, alert incidents, scheduler lease, traceability columns) and
-   **`0004_v2_performance.sql`** (foreign-key indexes, `auth.uid()` init-plan policies). All are idempotent and
-   additive. For an **existing** project follow `docs/SUPABASE_MIGRATION.md` (pre-checks, backup, rollback).
+   **`0004_v2_performance.sql`** (foreign-key indexes, `auth.uid()` init-plan policies) and
+   **`0005_v2_client_privileges.sql`** (no `TRUNCATE`/`TRIGGER`/`REFERENCES` for client roles). All are idempotent and
+   additive. For an **existing** project follow `docs/SUPABASE_MIGRATION.md` (pre-checks, migration history, backup,
+   rollback).
    Local SQLite databases are upgraded automatically on startup (`app/migrate.py`).
 3. Backend `.env`:
    * `DATABASE_URL=postgresql+psycopg://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres` (Project → Connect → Session pooler)
@@ -57,9 +61,40 @@ Users can also add their own keys in **Settings → AI provider & your own keys*
    * `SUPABASE_JWT_SECRET` only for legacy HS256 projects (new projects are verified via JWKS automatically)
    * `SUPABASE_SERVICE_ROLE_KEY` (server only — used for Storage uploads)
 4. Frontend `.env.local`: `NEXT_PUBLIC_AUTH_MODE=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (public by design; RLS protects data).
-5. Authentication → URL configuration: add your frontend URL as Site URL / redirect URL.
+5. Authentication → URL configuration: add `https://<frontend>/**` to **Redirect URLs** (the Site URL can stay as it
+   is). E-mail confirmation (`/auth/callback`), password reset (`/reset-password`) and LinkedIn sign-in return to these
+   pages; a URL missing from the list makes Supabase send users to the Site URL instead.
+6. Authentication → Emails: Supabase's built-in e-mail service only delivers to members of the project's team and is
+   heavily rate-limited. For real users, configure **SMTP** (Authentication → Emails → SMTP settings). Without it,
+   sign-up confirmation and password-reset e-mails to other addresses fail with `email_address_not_authorized`, which
+   the app explains to the user.
 
-## 4. LinkedIn publishing
+### Authentication flows (frontend)
+
+| Page | What it does |
+| --- | --- |
+| `/login` | E-mail + password, show/hide password, *Forgot password?*, resend confirmation for unconfirmed accounts, *Continue with LinkedIn* |
+| `/register` | Name, e-mail, password + confirmation with live rules; "check your e-mail" screen with resend |
+| `/forgot-password` | Sends the reset link (never reveals whether the address has an account) |
+| `/reset-password` | Accepts only a real recovery link; new password + confirmation; expired / used / tampered links get a clear "request a new link" screen; signs out and returns to `/login?reset=1` |
+| `/auth/callback` | Finishes e-mail confirmation and OAuth sign-in, then opens `next` (open-redirect safe) |
+
+The LinkedIn button is enabled only when Supabase reports the `linkedin_oidc` provider as enabled
+(`GET <SUPABASE_URL>/auth/v1/settings`); otherwise it is disabled with an explanation, so sign-in is never faked.
+
+## 4. LinkedIn — sign-in and publishing (two separate features)
+
+**Sign in with LinkedIn** is handled by Supabase Auth, not by the backend:
+
+1. In the LinkedIn developer app (below), add the redirect URL `https://<project-ref>.supabase.co/auth/v1/callback`.
+2. Supabase → Authentication → Sign In / Providers → **LinkedIn (OIDC)** → enable, paste the app's Client ID and
+   Client Secret, save.
+3. Make sure the frontend URL is in Authentication → URL configuration → Redirect URLs (section 3).
+
+The same LinkedIn app can serve both features. **Publishing** (below) is a per-user connection made after sign-in,
+from Settings; it needs the `w_member_social` scope and the backend credentials.
+
+### LinkedIn publishing
 
 1. https://www.linkedin.com/developers/apps → *Create app* (needs a LinkedIn Page; any page you admin works).
 2. *Products*: add **Sign In with LinkedIn using OpenID Connect** and **Share on LinkedIn**.
@@ -103,7 +138,7 @@ cd backend  && pytest -q && ruff check app tests scripts
 cd backend  && python -m app.eval_v2                          # deterministic AI regression suite (no LLM)
 cd frontend && npm run lint && npm run build && npx tsc --noEmit
 cd frontend && QA_EMAIL=… QA_PASSWORD=… node scripts/qa-visual.mjs --shots qa-shots   # local stack only: axe + responsive + pure-white scan
-cd backend  && python -m app.eval_v2 --dataset heldout    # frozen held-out sets (report only)
+cd backend  && python -m app.eval_v2 --dataset heldout    # frozen held-out sets (report only; also --dataset heldout2)
 PGURL=postgresql://postgres@localhost:54329 supabase/tests/run_local.sh               # Supabase migrations on a throwaway local Postgres
 cd backend  && python -m app.evaluation --max-calls 60        # LIVE providers, needs keys, bounded
 cd backend  && python -m app.evaluation --benchmark --max-calls 90

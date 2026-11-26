@@ -44,6 +44,7 @@ independent review and the instructor's feedback to code and evidence.
 - [ ] Live provider evaluation and benchmark — **blocked**: no provider API keys in this environment (see §4)
 - [ ] Live Supabase inspection — **blocked**: project paused; restore refused by the free-plan project limit
 - [ ] Production rollout — needs the owner's approval (`docs/SUPABASE_MIGRATION.md` §6)
+- [x] Handoff (2026-11-26) — branch `handoff/wasl-v2-ivory`, [`HANDOFF.md`](../HANDOFF.md) with prioritised remaining tasks
 
 ## 3. Instructor feedback traceability
 

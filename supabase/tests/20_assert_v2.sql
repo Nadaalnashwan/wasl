@@ -102,5 +102,44 @@ select pg_temp.expect_fail($q$update public.users set role = 'admin' where id = 
                            'authenticated', 'forged role claim');
 reset role;
 
--- 10. Idempotency is checked by the runner (it applies every migration twice).
+-- 10. Client roles cannot TRUNCATE, add triggers to, or reference any Wasl table (0005). TRUNCATE ignores RLS, so a
+--     table grant is the only barrier. Every public table is checked EXCEPT the five tables of the other application
+--     that shares the live project (0005 deliberately leaves them alone), so a NEW Wasl table that 0005 forgets is
+--     still caught, and the check stays correct on a database that also holds those tables. (This file as a whole is
+--     for throwaway test databases only: it needs the seed in 10_seed_pre_v2.sql and edits test users.) Privilege-denied is
+--     required (SQLSTATE 42501); any other error, such as a foreign-key refusal, does not count as blocked.
+create or replace function pg_temp.expect_denied(stmt text, who text) returns void language plpgsql as $$
+begin
+  begin
+    execute stmt;
+  exception when insufficient_privilege then
+    return;
+  end;
+  raise exception 'NOT DENIED: % ran as %', stmt, who;
+end $$;
+do $$ declare t text; r text; begin
+  for t in select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+           where n.nspname = 'public' and c.relkind = 'r' and c.relname <> '_pre_counts'
+             and c.relname not in ('profiles', 'resumes', 'resume_versions', 'job_applications', 'workflow_logs')  -- other app
+           order by 1 loop
+    foreach r in array array['anon', 'authenticated'] loop
+      if has_table_privilege(r, format('public.%I', t), 'TRUNCATE')
+         or has_table_privilege(r, format('public.%I', t), 'TRIGGER')
+         or has_table_privilege(r, format('public.%I', t), 'REFERENCES') then
+        raise exception 'client role % still holds TRUNCATE/TRIGGER/REFERENCES on public.%', r, t;
+      end if;
+    end loop;
+  end loop;
+end $$;
+set role anon;
+select pg_temp.expect_denied('truncate public.posts', 'anon');
+select pg_temp.expect_denied('truncate public.users', 'anon');
+reset role;
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', false);
+select pg_temp.expect_denied('truncate public.posts', 'authenticated');
+select pg_temp.expect_denied('truncate public.achievements cascade', 'authenticated');
+reset role;
+
+-- 11. Idempotency is checked by the runner (it applies every migration twice).
 select 'ALL ASSERTIONS PASSED' as result;

@@ -35,11 +35,12 @@ from app.security.pii import Redactor
 EVAL_DIR = Path(__file__).resolve().parent.parent / "eval"
 DATA_DIR = EVAL_DIR / "v2"
 RESULTS = EVAL_DIR / "results"
-DATASET_VERSION = "wasl-eval-v2.1"
+DATASET_VERSION = "wasl-eval-v2.2"
 # dev = regression set used while building the safeguards; heldout = frozen set never used for tuning
-DATASETS = {"dev": (EVAL_DIR / "v2", "wasl-eval-v2.1", "deterministic-latest"),
+DATASETS = {"dev": (EVAL_DIR / "v2", "wasl-eval-v2.2", "deterministic-latest"),
             "heldout": (EVAL_DIR / "heldout", "wasl-heldout-1.0", "deterministic-heldout-latest"),
-            "heldout2": (EVAL_DIR / "heldout2", "wasl-heldout-2.0", "deterministic-heldout2-latest")}
+            "heldout2": (EVAL_DIR / "heldout2", "wasl-heldout-2.0", "deterministic-heldout2-latest"),
+            "heldout3": (EVAL_DIR / "heldout3", "wasl-heldout-3.0", "deterministic-heldout3-latest")}
 CATEGORIES = ["cv_parsing", "achievement_extraction", "linkedin_content", "cv_tailoring", "hallucination",
               "prompt_injection", "arabic_mixed", "privacy"]
 
@@ -226,6 +227,11 @@ def summarise(results: list[dict]) -> dict:
     inj = [r for r in results if r["kind"] == "injection" and not r["error"]]
     pii = [r for r in results if r["kind"] == "pii_redact" and not r["error"]]
     tail = [r for r in results if r["kind"] == "tailor_enforce" and not r["error"]]
+    # injection confusion matrix: positive class = "text contains an injection attempt" (should be flagged)
+    itp = sum(1 for r in inj if r["expected_flag"] and r["predicted_flag"])
+    ifn = sum(1 for r in inj if r["expected_flag"] and not r["predicted_flag"])
+    ifp = sum(1 for r in inj if not r["expected_flag"] and r["predicted_flag"])
+    itn = sum(1 for r in inj if not r["expected_flag"] and not r["predicted_flag"])
     precision = _rate(tp, tp + fp)
     recall = _rate(tp, tp + fn)
     ai_quality = [r for r in results if r["category"] != "privacy"]
@@ -253,11 +259,20 @@ def summarise(results: list[dict]) -> dict:
         "injection_detection_accuracy": _rate(sum(1 for r in inj if r["predicted_flag"] == r["expected_flag"]), len(inj)),
         "pii_recall": _rate(sum(r["removed_ok"] for r in pii), sum(r["removed_expected"] for r in pii)),
         "pii_preservation": _rate(sum(r["kept_ok"] for r in pii), sum(r["kept_expected"] for r in pii)),
+        "injection_confusion": {"tp": itp, "fn": ifn, "fp": ifp, "tn": itn, "n": len(inj)},
+        "injection_precision": _rate(itp, itp + ifp),
+        "injection_recall": _rate(itp, itp + ifn),
+        # PII counted per string: a false negative is a must_remove string that survived redaction, a false positive
+        # is a must_keep (non-sensitive) string that redaction destroyed
+        "pii_strings": {"must_remove": sum(r["removed_expected"] for r in pii), "false_negatives": sum(r["removed_expected"] - r["removed_ok"] for r in pii),
+                        "must_keep": sum(r["kept_expected"] for r in pii), "false_positives": sum(r["kept_expected"] - r["kept_ok"] for r in pii)},
         "denominators": {
             "claim_detection_precision": "cases flagged by the verifier (tp+fp)",
             "claim_detection_recall": "cases whose ground truth contains an unsupported claim (tp+fn)",
             "false_acceptance_rate": "cases with an unsupported claim (tp+fn)",
             "false_rejection_rate": "fully-supported cases (fp+tn)",
+            "injection_precision": "texts flagged by the guard (tp+fp)",
+            "injection_recall": "texts that contain an injection attempt (tp+fn)",
             "pii_recall": "PII strings that must be removed",
             "pii_preservation": "task-relevant strings that must be kept",
             "case_pass_rate": "all cases; a case passes only if every one of its checks passes",
@@ -282,6 +297,12 @@ def report_md(summary: dict, results: list[dict]) -> str:
               "claim_detection_f1", "false_acceptance_rate", "false_rejection_rate", "tailor_post_enforcement_unsupported",
               "tailor_raw_unsupported_claims", "tailor_claims_checked", "injection_detection_accuracy", "pii_recall", "pii_preservation"):
         lines.append(f"| {k} | {summary[k] if summary[k] is not None else 'n/a'} |")
+    for k in ("injection_precision", "injection_recall"):
+        if k in summary:
+            lines.append(f"| {k} | {summary[k] if summary[k] is not None else 'n/a'} |")
+    for k in ("claim_confusion", "injection_confusion", "pii_strings"):
+        if k in summary:
+            lines.append(f"| {k} | {', '.join(f'{a}={b}' for a, b in summary[k].items())} |")
     lines += ["", "## By category", "", "| Category | Passed | Cases | Pass rate |", "|---|---|---|---|"]
     for k, v in summary["by_category"].items():
         lines.append(f"| {k} | {v['passed']} | {v['cases']} | {v['pass_rate']} |")

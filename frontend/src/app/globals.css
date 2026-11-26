@@ -3,99 +3,179 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* =====================================================================
-   Wasl design system v2.1 "Ivory" — see docs/DESIGN_SYSTEM.md
-   Warm cream / ivory surfaces (never pure white), ink text, one brand blue used
-   sparingly, hairline separators instead of boxes, no decoration.
-   Every text token passes WCAG AA (>= 4.5:1) on every surface token;
-   --border-strong (form controls) passes 3:1 against the surfaces it sits on.
+   Wasl design system v2.3 "Evolved Original" — see docs/DESIGN_SYSTEM.md
+   Original Wasl's creativity, executed with maturity: ink text, brand blue and sky fills, v1's machine
+   illustrations redrawn with precise geometry, a brand band, and one colour per product area.
+   No background grid, no hand-drawn wobble. Never pure white (QA rule).
+   Every text token passes WCAG AA (>= 4.5:1) on every surface and tint token in both themes;
+   --border-strong (form controls) passes 3:1.
    ===================================================================== */
 
 :root {
-  /* surfaces — warm, neutral, layered by tone rather than by shadow */
-  --bg: #f5f1e8; /* page */
-  --bg-sidebar: #efeadf; /* navigation rail */
-  --surface: #faf7f0; /* primary surface: panels, rows, editors */
-  --surface-elevated: #fcfaf5; /* dialogs, drawers, menus, popovers */
-  --surface-2: #ede6d8; /* secondary: hover, table heads, segmented tracks */
-  --surface-3: #e8e0d2; /* subtle accent */
-  --field: #fcfaf4; /* text inputs */
-  --paper: #fdfbf6; /* in-app document preview (exports stay plain white) */
+  /* surfaces — cool paper with a hint of sky, layered by tone */
+  --bg: #f4f8fd; /* page */
+  --bg-sidebar: #e6effa; /* navigation rail */
+  --surface: #f8fbfe; /* primary surface: panels, rows, editors */
+  --surface-elevated: #fafcff; /* dialogs, drawers, menus, popovers */
+  --surface-2: #e3edf9; /* secondary: hover, table heads, segmented tracks */
+  --surface-3: #d3ebfc; /* sky fill: selection, active nav, highlights */
+  --field: #fbfdff; /* text inputs */
+  --paper: #fdfeff; /* in-app document preview (exports stay plain white) */
   /* lines */
-  --border: #d8cfc0;
-  --border-soft: #e4dccd;
-  --border-strong: #8f846f;
-  /* text */
-  --text: #202b3c;
-  --text-2: #4d5360;
-  --text-3: #646052;
+  --border: #c9daee;
+  --border-soft: #dbe7f5;
+  --border-strong: #6f86a6;
+  /* text — v1's ink */
+  --text: #15171c;
+  --text-2: #3f4859;
+  --text-3: #535d70;
   /* brand */
   --primary: #0b57c9;
   --primary-hover: #0848a8;
-  --primary-soft: #e5ebf4;
+  --primary-soft: #d3ebfc;
   --primary-text: #0a4fb8;
-  --on-primary: #fbf9f4;
+  --on-primary: #fbfdff;
+  --brand-2: #1e9bf0; /* sky blue: the signature underline and small accents (decorative, never text) */
+  --highlight: #a9d6f7; /* highlighter marker behind a key word */
+  /* warm secondary accent — attention, "new", featured; used sparingly */
+  --accent: #e08a1e;
+  --accent-soft: #fde9c8;
+  --accent-text: #9a4d00;
   /* status — reserved for verification, warnings, errors and operations */
   --ok: #0f6b4c;
-  --ok-soft: #e2ecdf;
+  --ok-soft: #dcf2e6;
   --warn: #8a4b08;
-  --warn-soft: #f4e6cc;
+  --warn-soft: #fdf0cf;
   --bad: #a61b12;
-  --bad-soft: #f5e0d8;
+  --bad-soft: #fde2e2;
   --focus: #0b57c9;
-  --scrim: rgb(32 43 60 / 0.38);
-  --shadow-sm: 0 1px 2px rgb(74 58 30 / 0.06);
-  --shadow-md: 0 6px 18px -8px rgb(74 58 30 / 0.18), 0 1px 3px rgb(74 58 30 / 0.06);
-  --shadow-lg: 0 28px 56px -18px rgb(46 38 24 / 0.32);
+  --scrim: rgb(13 27 46 / 0.4);
+  /* depth: soft blue shadows + v1's solid "stamp" offset, refined (primary actions only) */
+  --stamp: #15171c;
+  --shadow-sm: 0 1px 2px rgb(11 45 100 / 0.06);
+  --shadow-md: 0 8px 20px -10px rgb(11 45 100 / 0.22), 0 1px 3px rgb(11 45 100 / 0.06);
+  --shadow-lg: 0 28px 56px -18px rgb(11 35 80 / 0.32);
   /* charts */
   --chart-1: #0b57c9;
-  --chart-2: #b4590c;
-  --chart-3: #2f7a55;
+  --chart-2: #d0790f;
+  --chart-3: #2a9d6f;
   --chart-4: #6b4fa0;
-  --chart-grid: #e2d9ca;
+  --chart-grid: #d6e3f2;
+  /* illustrations (components/brand/art.tsx) */
+  --art-ink: #15171c;
+  --art-fill: #d3ebfc;
+  --art-paper: #fbfdff;
+  --art-brand: #0b57c9;
+  --art-sky: #a9d6f7;
+  --art-warm: #f0a23a;
+  --art-ok: #2a9d6f;
+  /* product areas: each has a soft fill and a text tone (both pass AA on the fill and on the page) */
+  --tone-brand-soft: #d3ebfc;
+  --tone-brand: #0a4fb8;
+  --tone-sky-soft: #d6eefc;
+  --tone-sky: #075985;
+  --tone-amber-soft: #fde9c8;
+  --tone-amber: #8a4400;
+  --tone-green-soft: #d7f2e3;
+  --tone-green: #0d6b45;
+  --tone-violet-soft: #e7e1fb;
+  --tone-violet: #5b3fa8;
+  --tone-teal-soft: #d3f1ef;
+  --tone-teal: #0b6461;
+  --tone-slate-soft: #e2e8f1;
+  --tone-slate: #3b4a62;
+  /* the brand band (landing "machine" section) */
+  --band: #0b57c9;
+  --band-2: #0a3d8f;
+  --on-band: #fbfdff;
+  --on-band-2: #d3ebfc;
+  /* v1 ink: drawn outlines and the solid offset shadow (blueprint lines in dark) */
+  --ink: #15171c;
+  --ink-shadow: #15171c;
+  --paper-ruled: #eaf3fd;
   color-scheme: light;
 }
 
-/* Dark: warm charcoal with a hint of navy — designed, not inverted. */
+/* Dark: v1's "Blueprint" — deep navy paper. */
 :root[data-theme="dark"] {
-  --bg: #14161b;
-  --bg-sidebar: #111317;
-  --surface: #1b1e24;
-  --surface-elevated: #22262d;
-  --surface-2: #23272f;
-  --surface-3: #2b3039;
-  --field: #181b20;
-  --paper: #1e2127;
-  --border: #30353f;
-  --border-soft: #272b33;
-  --border-strong: #6e7482;
-  --text: #ece7dd;
-  --text-2: #bfb8aa;
-  --text-3: #9c9587;
-  --primary: #7aa9f7;
-  --primary-hover: #9bbef9;
-  --primary-soft: #1c2a42;
-  --primary-text: #9bbef9;
-  --on-primary: #0e1626;
-  --ok: #5cc99a;
-  --ok-soft: #16291f;
-  --warn: #e8b363;
-  --warn-soft: #2e2414;
-  --bad: #f08c80;
-  --bad-soft: #33191a;
-  --focus: #9bbef9;
-  --scrim: rgb(4 6 10 / 0.6);
+  --bg: #0d1b2e;
+  --bg-sidebar: #0b1727;
+  --surface: #11233b;
+  --surface-elevated: #152a45;
+  --surface-2: #16304f;
+  --surface-3: #17406e;
+  --field: #0f2035;
+  --paper: #12253e;
+  --border: #24405f;
+  --border-soft: #1b3350;
+  --border-strong: #6f8fb3;
+  --text: #e8f1fb;
+  --text-2: #b4c6dc;
+  --text-3: #9db2cc;
+  --primary: #4fb0ff;
+  --primary-hover: #8fd0ff;
+  --primary-soft: #17406e;
+  --primary-text: #8fd0ff;
+  --on-primary: #071425;
+  --brand-2: #4fb0ff;
+  --highlight: #1f5591;
+  --accent: #f2b35b;
+  --accent-soft: #46370f;
+  --accent-text: #f2b35b;
+  --ok: #5fd68f;
+  --ok-soft: #12402a;
+  --warn: #f2c25b;
+  --warn-soft: #46370f;
+  --bad: #ff8a8a;
+  --bad-soft: #4a1c22;
+  --focus: #8fd0ff;
+  --scrim: rgb(2 7 14 / 0.62);
+  --stamp: #02070e;
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-md: 0 8px 22px -8px rgb(0 0 0 / 0.6);
   --shadow-lg: 0 28px 60px -16px rgb(0 0 0 / 0.7);
-  --chart-1: #7aa9f7;
-  --chart-2: #e39a55;
-  --chart-3: #5cc99a;
+  --chart-1: #3d9be9;
+  --chart-2: #c97a1c;
+  --chart-3: #2fa866;
   --chart-4: #b49bef;
-  --chart-grid: #2a2f38;
+  --chart-grid: #1f3a5a;
+  --art-ink: #e8f1fb;
+  --art-fill: #17406e;
+  --art-paper: #12253e;
+  --art-brand: #4fb0ff;
+  --art-sky: #1f5591;
+  --art-warm: #f2b35b;
+  --art-ok: #2fa866;
+  --tone-brand-soft: #17406e;
+  --tone-brand: #a9d6ff;
+  --tone-sky-soft: #123d5c;
+  --tone-sky: #9ad8ff;
+  --tone-amber-soft: #46370f;
+  --tone-amber: #f6c27a;
+  --tone-green-soft: #12402a;
+  --tone-green: #7fe0a8;
+  --tone-violet-soft: #2e2552;
+  --tone-violet: #c9b8ff;
+  --tone-teal-soft: #0f3f3d;
+  --tone-teal: #7fe3dc;
+  --tone-slate-soft: #1f2d42;
+  --tone-slate: #c3d0e2;
+  --band: #0f3a73;
+  --band-2: #0b2c58;
+  --on-band: #e8f1fb;
+  --on-band-2: #b4d4f5;
+  --ink: #8fb6e2;
+  --ink-shadow: #02070e;
+  --paper-ruled: #0f2440;
   color-scheme: dark;
 }
 
 @theme inline {
+  --color-tone: var(--tone);
+  --color-tone-soft: var(--tone-soft);
+  --color-band: var(--band);
+  --color-on-band: var(--on-band);
+  --color-on-band-2: var(--on-band-2);
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
@@ -122,9 +202,16 @@
   --color-warn-soft: var(--warn-soft);
   --color-bad: var(--bad);
   --color-bad-soft: var(--bad-soft);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-text: var(--accent-text);
+  --color-brand-2: var(--brand-2);
+  --color-highlight: var(--highlight);
+  --color-ink: var(--ink);
+  --color-paper-ruled: var(--paper-ruled);
 
-  --font-sans: var(--font-inter), var(--font-plex-ar), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: var(--font-newsreader), var(--font-plex-ar), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-nunito), var(--font-plex-ar), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-nunito), var(--font-plex-ar), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
 
   --shadow-sm: var(--shadow-sm);
@@ -150,16 +237,15 @@ html {
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
-  font-feature-settings: "cv11", "ss01";
   text-rendering: optimizeLegibility;
 }
 
 :lang(ar) body,
 [dir="rtl"] body {
-  font-family: var(--font-plex-ar), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-plex-ar), var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
   font-feature-settings: normal;
 }
 
@@ -173,7 +259,8 @@ body {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--primary) 22%, transparent);
+  background: var(--highlight);
+  color: var(--text);
 }
 
 :focus-visible {
@@ -190,17 +277,48 @@ body {
     font-weight: 500;
     color: var(--text-3);
   }
-  /* Editorial serif — marketing headlines and the workspace greeting only. */
+  /* Display headings: Nunito at a confident weight — warm and rounded, never handwritten. */
   .font-display {
     font-family: var(--font-display);
-    font-weight: 450;
-    font-optical-sizing: auto;
-    letter-spacing: -0.015em;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
   [dir="rtl"] .font-display {
-    font-family: var(--font-plex-ar), var(--font-newsreader), serif;
-    font-weight: 600;
+    font-family: var(--font-plex-ar), var(--font-nunito), sans-serif;
+    font-weight: 700;
     letter-spacing: 0;
+  }
+  /* Wasl's signature: a short hand-drawn sky stroke under a page title (from v1, used once per page). */
+  .brand-underline {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.32em;
+  }
+  .brand-underline::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    bottom: 0;
+    width: min(100%, 5.5em);
+    height: 0.3em;
+    background: var(--brand-2);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8.5C38 4 74 3.2 108 4.6c30 1.2 58 2.6 89-.6' fill='none' stroke='black' stroke-width='4.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8.5C38 4 74 3.2 108 4.6c30 1.2 58 2.6 89-.6' fill='none' stroke='black' stroke-width='4.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
+    pointer-events: none;
+  }
+  /* Highlighter marker behind one key word (landing and auth only). */
+  .highlight {
+    background: linear-gradient(transparent 58%, var(--highlight) 58%, var(--highlight) 92%, transparent 92%);
+    padding-inline: 0.08em;
+    border-radius: 2px;
+  }
+  /* v1's solid offset shadow, refined: primary actions and the active nav item only. */
+  .stamp {
+    box-shadow: 2px 2px 0 var(--stamp);
+  }
+  .stamp:active {
+    box-shadow: 0 0 0 var(--stamp);
+    transform: translate(2px, 2px);
   }
   /* Tabular numbers for metrics and tables. */
   .num {
@@ -213,6 +331,122 @@ body {
     box-shadow: var(--shadow-md);
   }
 }
+
+/* ---------------------------------------------------------------- brand bands & illustration motion */
+@layer components {
+  /* full-width brand band with sloped edges (landing "machine" section) */
+  .band {
+    background: linear-gradient(160deg, var(--band) 0%, var(--band-2) 100%);
+    color: var(--on-band);
+    clip-path: polygon(0 3.5rem, 100% 0, 100% calc(100% - 3.5rem), 0 100%);
+  }
+  /* product-area tone, set once on a container: <div class="tone-amber"> */
+  .tone-brand { --tone-soft: var(--tone-brand-soft); --tone: var(--tone-brand); }
+  .tone-sky { --tone-soft: var(--tone-sky-soft); --tone: var(--tone-sky); }
+  .tone-amber { --tone-soft: var(--tone-amber-soft); --tone: var(--tone-amber); }
+  .tone-green { --tone-soft: var(--tone-green-soft); --tone: var(--tone-green); }
+  .tone-violet { --tone-soft: var(--tone-violet-soft); --tone: var(--tone-violet); }
+  .tone-teal { --tone-soft: var(--tone-teal-soft); --tone: var(--tone-teal); }
+  .tone-slate { --tone-soft: var(--tone-slate-soft); --tone: var(--tone-slate); }
+  /* ink-outlined panel with the stamp: reserved for a few hero moments per page */
+  /* v1 signature, refined: an ink-outlined card with a solid offset shadow that follows reading direction */
+  .ink-card {
+    border: 1.5px solid var(--ink);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: 4px 4px 0 var(--ink-shadow);
+  }
+  [dir="rtl"] .ink-card {
+    box-shadow: -4px 4px 0 var(--ink-shadow);
+  }
+  /* v1 "sketch-soft": the inner item of an ink card (activity rows, list items, nested panels) */
+  .ink-soft {
+    border: 1px solid color-mix(in srgb, var(--ink) 55%, transparent);
+    border-radius: 11px;
+    background: var(--surface);
+  }
+  /* v1 "sketch-dashed": empty states and drop zones */
+  .ink-dashed {
+    border: 1.5px dashed color-mix(in srgb, var(--ink) 40%, transparent);
+    border-radius: 14px;
+  }
+  /* v1 "sketch-pill": badges and chips */
+  .ink-chip {
+    border: 1px solid color-mix(in srgb, var(--ink) 60%, transparent);
+    border-radius: 999px;
+  }
+  /* v1 "sketch-btn": outlined button with a small offset shadow */
+  .ink-btn {
+    border: 1.5px solid var(--ink);
+    box-shadow: 2px 2px 0 var(--ink-shadow);
+    transition: transform 120ms ease, box-shadow 120ms ease, background-color 150ms ease;
+  }
+  [dir="rtl"] .ink-btn {
+    box-shadow: -2px 2px 0 var(--ink-shadow);
+  }
+  .ink-btn:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--ink-shadow);
+  }
+  [dir="rtl"] .ink-btn:hover:not(:disabled) {
+    transform: translate(1px, -1px);
+    box-shadow: -3px 3px 0 var(--ink-shadow);
+  }
+  .ink-btn:active:not(:disabled) {
+    transform: translate(1px, 1px);
+    box-shadow: 0 0 0 var(--ink-shadow);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ink-btn,
+    .ink-pill {
+      transition: none;
+    }
+    .ink-btn:hover:not(:disabled),
+    .ink-pill:hover {
+      transform: none;
+    }
+  }
+  .ink-pill {
+    border: 1.5px solid var(--ink);
+    border-radius: 12px;
+    box-shadow: 2px 2px 0 var(--ink-shadow);
+    transition: transform 120ms ease, box-shadow 120ms ease;
+  }
+  [dir="rtl"] .ink-pill {
+    box-shadow: -2px 2px 0 var(--ink-shadow);
+  }
+  .ink-pill:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--ink-shadow);
+  }
+  [dir="rtl"] .ink-pill:hover {
+    transform: translate(1px, -1px);
+    box-shadow: -3px 3px 0 var(--ink-shadow);
+  }
+  .ink-pill:active {
+    transform: translate(1px, 1px);
+    box-shadow: 0 0 0 var(--ink-shadow);
+  }
+  /* full-bleed section ruled top and bottom with ink, on lightly tinted paper (v1's "machine" band) */
+  .ink-ruled {
+    background: var(--paper-ruled);
+    border-block: 1.5px solid var(--ink);
+  }
+  .panel-ink {
+    border: 1.5px solid var(--stamp);
+    border-radius: 16px;
+    box-shadow: 5px 5px 0 var(--stamp);
+  }
+}
+@keyframes art-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+@keyframes art-spin { to { transform: rotate(360deg); } }
+@keyframes art-scan { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(70px); } }
+@keyframes art-rise { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.art-float { animation: art-float 4s ease-in-out infinite; }
+.art-spin { animation: art-spin 14s linear infinite; }
+.art-spin-rev { animation: art-spin 10s linear infinite reverse; }
+.art-scan { animation: art-scan 5s ease-in-out infinite; }
+.art-rise { animation: art-rise 4.5s ease-in-out infinite; }
 
 /* ---------------------------------------------------------------- motion (functional only) */
 @keyframes fade-in {

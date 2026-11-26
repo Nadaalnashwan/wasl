@@ -98,7 +98,7 @@ export function CandidateItem({ a, onDecided }: { a: Achievement; onDecided?: ()
         <Icon className="mt-0.5 size-4 shrink-0 text-fg-3" aria-hidden />
         <div className="min-w-0 flex-1">
           <h4 id={hid} className="text-sm font-semibold text-fg" dir={isArabic(current.title) ? "rtl" : undefined}>
-            {current.title}
+            <bdi>{current.title}</bdi>
           </h4>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
             <DecisionStatus a={current} />
@@ -116,7 +116,7 @@ export function CandidateItem({ a, onDecided }: { a: Achievement; onDecided?: ()
         <>
           {current.description && (
             <p className="text-sm leading-relaxed text-fg-2" dir={isArabic(current.description) ? "rtl" : undefined}>
-              {current.description}
+              <bdi>{current.description}</bdi>
             </p>
           )}
           {current.impact && (

@@ -1,5 +1,6 @@
 "use client";
 
+import { Database, KeyRound, Languages, Link2, ShieldCheck, Sparkles, User } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +36,18 @@ export type AiSettings = {
   keys: AiKey[];
 };
 
-/** One settings section: heading + explanation, then its controls. Sections are separated by hairlines. */
+const SECTION_ICONS: Record<string, React.ElementType> = {
+  profile: User,
+  account: KeyRound,
+  appearance: Languages,
+  integrations: Link2,
+  ai: Sparkles,
+  keys: KeyRound,
+  privacy: ShieldCheck,
+  data: Database,
+};
+
+/** One settings area as a v1 card: an outlined sky icon square and the title, the explanation, then the controls. */
 export function SettingsSection({
   id,
   title,
@@ -50,20 +62,19 @@ export function SettingsSection({
   className?: string;
 }) {
   const hid = `${id}-title`;
+  const Icon = SECTION_ICONS[id] ?? Sparkles;
   return (
-    <section
-      id={id}
-      aria-labelledby={hid}
-      className={cn(
-        "scroll-mt-24 border-t border-border py-9 first:border-t-0 first:pt-0",
-        className,
-      )}
-    >
-      <div className="mb-5 max-w-2xl">
-        <h2 id={hid} className="text-heading font-semibold text-fg">
-          {title}
-        </h2>
-        {description && <p className="mt-1 text-sm leading-relaxed text-fg-3">{description}</p>}
+    <section id={id} aria-labelledby={hid} className={cn("ink-card min-w-0 scroll-mt-24 p-5 sm:p-6", className)}>
+      <div className="mb-5 flex items-start gap-3">
+        <span className="grid size-9 shrink-0 place-items-center rounded-[10px] border-[1.5px] border-ink bg-primary-soft text-fg" aria-hidden>
+          <Icon className="size-[18px]" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 id={hid} className="font-display text-xl leading-tight text-fg">
+            {title}
+          </h2>
+          {description && <p className="mt-1 text-sm leading-relaxed text-fg-3">{description}</p>}
+        </div>
       </div>
       <div className="min-w-0">{children}</div>
     </section>
@@ -102,5 +113,5 @@ export function SettingRow({
 
 /** Bordered group of rows separated by hairlines. */
 export function RowGroup({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("divide-y divide-border rounded-lg border border-border-soft bg-surface", className)}>{children}</div>;
+  return <div className={cn("ink-soft divide-y divide-border-soft", className)}>{children}</div>;
 }

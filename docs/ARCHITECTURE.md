@@ -54,9 +54,9 @@ wasl/
 │  ├─ app/
 │  │  ├─ main.py                 FastAPI app, middleware, error handlers
 │  │  ├─ config.py               all settings from env (.env.example lists every variable)
-│  │  ├─ db.py · models.py       SQLAlchemy engine + 17 tables (user data + monitoring)
+│  │  ├─ db.py · models.py       SQLAlchemy engine + 26 tables (user data, jobs, monitoring, admin audit, scheduler lease)
 │  │  ├─ deps.py                 auth dependency, ownership checks, task tracking
-│  │  ├─ security/               auth.py (local JWT / Supabase JWT), crypto.py (Fernet), guard.py (injection)
+│  │  ├─ security/               auth.py (local JWT / Supabase JWT), authz.py (require_admin), crypto.py (Fernet), guard.py (injection), pii.py (redaction)
 │  │  ├─ ai/
 │  │  │  ├─ providers/           base.py contract · openai_compat.py (Groq, OpenRouter) · gemini.py · fake.py (tests only) · registry.py
 │  │  │  ├─ router.py            AI Model Router
@@ -66,15 +66,19 @@ wasl/
 │  │  ├─ routers/                one file per product area
 │  │  ├─ services/               documents (validation/extraction/storage), export (PDF/DOCX), linkedin, github, cv_updates
 │  │  ├─ monitoring/             recorder.py (writes), metrics.py (aggregation), alerts.py (independent alerting)
-│  │  └─ evaluation.py           offline evaluation runner
-│  ├─ eval/dataset.json          reproducible evaluation dataset
-│  ├─ scripts/seed_demo.py       local demo account (sample data, labelled)
+│  │  ├─ eval_v2.py              deterministic evaluation (dev + held-out sets, no LLM)
+│  │  ├─ migrate.py              additive startup migrator (SQLite / Postgres)
+│  │  └─ evaluation.py           live evaluation / provider benchmark (real LLM calls, budgeted)
+│  ├─ eval/                      dataset.json (live), v2/ (dev set, 205), heldout/ (79), heldout2/ (28), results/
+│  ├─ scripts/                   seed_demo.py (local demo account), admin.py (role grant/revoke), run_alerts.py (cron)
 │  └─ tests/                     pytest: units + end-to-end API journeys
 ├─ frontend/src/
 │  ├─ app/                       routes (landing, auth, (app)/* pages)
-│  ├─ components/                ui/ (shadcn-style), sketch/ (illustrations), domain components
-│  └─ lib/                       api client, auth/theme/toast providers, i18n (en/ar), types
-├─ supabase/migrations/0001_init.sql   schema + RLS + storage bucket/policies (0002 jobs, 0003 v2 security)
+│  ├─ components/                ui/ (Radix-based primitives), shell/, admin/, domain components (v1 sketch/ illustrations were removed in v2)
+│  ├─ lib/                       api client, auth/theme/toast providers, i18n (en/ar), types, admin-session
+│  └─ proxy.ts                   server-side gate for /admin/*
+├─ supabase/migrations/        0001 schema + RLS + storage · 0002 jobs · 0003 v2 security · 0004 v2 performance
+├─ supabase/tests/             local Supabase-like harness, escalation/RLS assertions, schema drift (run in CI)
 └─ docs/
 ```
 
@@ -100,14 +104,14 @@ Three logical agents (LangGraph state machines). They share the router and tools
 5. **Telemetry**: one `ai_events` row per attempt (provider, model, tokens, latency, status, error class, fallback flag, key source). No prompt/completion text.
 6. **All failed** → `AIUnavailableError` with a user-safe explanation → HTTP 503 `{"code":"ai_unavailable"}` → UI shows an actionable state.
 
-Model choice (verified 2026-10-20 against the providers' live model lists): Groq `openai/gpt-oss-120b` (quality) / `openai/gpt-oss-20b` (fast) with `reasoning_effort=low` — primary, < 1 s; Gemini `gemini-3.5-flash` with `thinkingLevel=low` — fallback, ~8–17 s. The originally planned Llama 3.x (Groq) and Gemini 2.5 models had been retired for new keys; the router reported them as `model_not_found`, which is how the problem was diagnosed. All configurable in `.env`.
+Model choice in v1 (verified 2026-10-20; **current defaults are in `docs/AI_MODEL_REGISTRY.md`** — `gemini-3.5-flash` was later found not to be a listed id and replaced): Groq `openai/gpt-oss-120b` (quality) / `openai/gpt-oss-20b` (fast) with `reasoning_effort=low` — primary, < 1 s; Gemini `gemini-3.5-flash` with `thinkingLevel=low` — fallback, ~8–17 s. The originally planned Llama 3.x (Groq) and Gemini 2.5 models had been retired for new keys; the router reported them as `model_not_found`, which is how the problem was diagnosed. All configurable in `.env`.
 
 ## 4. Data model (main tables)
 
 `users` (incl. AI prefs) · `achievements` (status pending/confirmed/rejected, evidence, fingerprint) · `posts` (draft/publishing/published/failed/uncertain) ·
 `cvs` (one `master` per user + `tailored`) · `cv_versions` · `cv_suggestions` (separate draft, pending/accepted/edited/rejected/stale) ·
-`job_analyses` · `integrations` (encrypted tokens) · `oauth_states` · `user_api_keys` (encrypted) · `uploads` · `repo_snapshots` ·
-monitoring: `ai_events` · `http_events` · `quality_events` · `error_logs` · `eval_runs` · `alert_incidents` · `admin_audit_log` (admin-only; see `docs/MONITORING.md`).
+`job_analyses` · jobs: `job_listings` · `job_search_cache` · `job_api_calls` · `job_profiles` · `user_job_feed` · `saved_jobs` · `integrations` (encrypted tokens) · `oauth_states` · `user_api_keys` (encrypted) · `uploads` · `repo_snapshots` ·
+monitoring: `ai_events` · `http_events` · `quality_events` · `error_logs` · `eval_runs` · `alert_incidents` · `scheduler_leases` · `admin_audit_log` (admin-only; see `docs/MONITORING.md`).
 
 **Master-CV invariant:** the Master CV changes only through (a) explicit save in the editor, (b) Accept / Edit of a suggestion,
 (c) version restore. Every change increments `version` and snapshots `cv_versions`. Pending suggestions built on an older

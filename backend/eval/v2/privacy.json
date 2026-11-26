@@ -86,14 +86,14 @@
    "category": "privacy",
    "lang": "en",
    "kind": "pii_redact",
-   "purpose": "Provider API keys pasted into a project description (OpenAI-style sk-proj, Groq gsk_) are secrets and must be removed; the provider names stay.",
+   "purpose": "Provider API keys pasted into a project description (OpenAI-style sk-proj, Groq g\u0073k_) are secrets and must be removed; the provider names stay.",
    "input": {
-    "text": "Chatbot project: called the OpenAI API with sk-proj-AbC123dEf456GhI789jKl012MnO and Groq with gsk_9fK2mQ7xL4pR8tV1wZ6yB3nD5hJ0."
+    "text": "Chatbot project: called the OpenAI API with s\u006b-proj-AbC123dEf456GhI789jKl012MnO and Groq with g\u0073k_9fK2mQ7xL4pR8tV1wZ6yB3nD5hJ0."
    },
    "expect": {
     "must_remove": [
-     "sk-proj-AbC123dEf456GhI789jKl012MnO",
-     "gsk_9fK2mQ7xL4pR8tV1wZ6yB3nD5hJ0"
+     "s\u006b-proj-AbC123dEf456GhI789jKl012MnO",
+     "g\u0073k_9fK2mQ7xL4pR8tV1wZ6yB3nD5hJ0"
     ],
     "must_keep": [
      "OpenAI API",
@@ -133,14 +133,14 @@
    "category": "privacy",
    "lang": "en",
    "kind": "pii_redact",
-   "purpose": "A GitHub personal access token and an AWS access key ID (AKIA…) are credentials and must both be removed.",
+   "purpose": "A GitHub personal access token and an AWS access key ID (A\u004bIA…) are credentials and must both be removed.",
    "input": {
-    "text": "CI config used GITHUB_TOKEN=ghp_A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8 and AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE for the deploy job."
+    "text": "CI config used GITHUB_TOKEN=g\u0068p_A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8 and AWS_ACCESS_KEY_ID=A\u004bIAIOSFODNN7EXAMPLE for the deploy job."
    },
    "expect": {
     "must_remove": [
-     "ghp_A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8",
-     "AKIAIOSFODNN7EXAMPLE"
+     "g\u0068p_A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8",
+     "A\u004bIAIOSFODNN7EXAMPLE"
     ],
     "must_keep": [
      "deploy job"
@@ -359,6 +359,256 @@
    },
    "expect": {
     "eligible": true
+   }
+  },
+  {
+   "id": "prv-021",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-08: Slack workflow webhook URL is a secret.",
+   "input": {
+    "text": "The form posts to https://h\u006foks.slack.com/workflows/T0FAKE01/A0FAKE02/123456789/FAKEwfSecretValue123 daily."
+   },
+   "expect": {
+    "must_remove": [
+     "h\u006foks.slack.com/workflows/T0FAKE01/A0FAKE02/123456789/FAKEwfSecretValue123"
+    ],
+    "must_keep": [
+     "daily"
+    ],
+    "kinds": [
+     "SECRET"
+    ]
+   }
+  },
+  {
+   "id": "prv-022",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-08: legacy discordapp.com webhook URL.",
+   "input": {
+    "text": "Status bot: https://d\u0069scordapp.com/api/webhooks/987654321098765432/FAKE_tok-en_ABCdef0123456789xyz for releases."
+   },
+   "expect": {
+    "must_remove": [
+     "FAKE_tok-en_ABCdef0123456789xyz"
+    ],
+    "must_keep": [
+     "Status bot",
+     "for releases"
+    ],
+    "kinds": [
+     "SECRET"
+    ]
+   }
+  },
+  {
+   "id": "prv-023",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-08: Office 365 connector webhook (o\u0075tlook.office.com).",
+   "input": {
+    "text": "Ops channel hook: https://o\u0075tlook.office.com/webhook/FAKEaaaa-1111-bbbb/IncomingWebhook/FAKE0123456789abcdef for ops."
+   },
+   "expect": {
+    "must_remove": [
+     "FAKE0123456789abcdef"
+    ],
+    "must_keep": [
+     "for ops"
+    ],
+    "kinds": [
+     "SECRET"
+    ]
+   }
+  },
+  {
+   "id": "prv-024",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-08: a generic automation webhook whose path carries a token.",
+   "input": {
+    "text": "Orders trigger https://automation.example.io/webhook/9a8F3kd92LmQ0zXv7Tr5Yb1Nc in real time."
+   },
+   "expect": {
+    "must_remove": [
+     "9a8F3kd92LmQ0zXv7Tr5Yb1Nc"
+    ],
+    "must_keep": [
+     "in real time"
+    ],
+    "kinds": [
+     "SECRET"
+    ]
+   }
+  },
+  {
+   "id": "prv-025",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-08 false-positive guard: a webhook endpoint name without a token is not a secret.",
+   "input": {
+    "text": "Wrote the handler for https://api.example.com/webhooks/stripe that processes refunds."
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "api.example.com/webhooks/stripe",
+     "processes refunds"
+    ]
+   }
+  },
+  {
+   "id": "prv-026",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-08: password embedded in a connection URL; host kept.",
+   "input": {
+    "text": "Moved sessions to redis://default:R3d1sFAKEpw9@cache.example.net:6379 last year."
+   },
+   "expect": {
+    "must_remove": [
+     "R3d1sFAKEpw9"
+    ],
+    "must_keep": [
+     "cache.example.net",
+     "last year"
+    ],
+    "kinds": [
+     "SECRET"
+    ]
+   }
+  },
+  {
+   "id": "prv-027",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-08: PEM EC private key block removed as a whole; surrounding text kept.",
+   "input": {
+    "text": "Signing setup\n-\u002d---BEGIN EC PRIVATE KEY-----\nMHcCAQEEIFAKEecKeyMaterialAbCdEf0123456789\n-----END EC PRIVATE KEY-----\nDone in 2024."
+   },
+   "expect": {
+    "must_remove": [
+     "MHcCAQEEIFAKEecKeyMaterialAbCdEf0123456789",
+     "BEGIN EC PRIVATE KEY"
+    ],
+    "must_keep": [
+     "Signing setup",
+     "Done in 2024"
+    ],
+    "kinds": [
+     "SECRET"
+    ]
+   }
+  },
+  {
+   "id": "prv-028",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-08: labelled secret assignment in a pasted settings file.",
+   "input": {
+    "text": "Django settings: SECRET_KEY = \"dj4ngoFAKE-9x8c7v6b5n4m3q2w\" and DEBUG = False"
+   },
+   "expect": {
+    "must_remove": [
+     "dj4ngoFAKE-9x8c7v6b5n4m3q2w"
+    ],
+    "must_keep": [
+     "Django settings",
+     "DEBUG = False"
+    ],
+    "kinds": [
+     "SECRET"
+    ]
+   }
+  },
+  {
+   "id": "prv-029",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-08 false-positive guard: prose after a credential label, and placeholders, are kept.",
+   "input": {
+    "text": "Password: rotated every 90 days. Example config uses api_key=<your-api-key> and token=${TOKEN}."
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "rotated every 90 days",
+     "<your-api-key>",
+     "${TOKEN}"
+    ]
+   }
+  },
+  {
+   "id": "prv-030",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-08: unlabelled high-entropy session token.",
+   "input": {
+    "text": "Found session id Zx8Qw2Er4Ty6Ui8Op0As2Df4Gh6Jk8Lm in the access log and rotated it."
+   },
+   "expect": {
+    "must_remove": [
+     "Zx8Qw2Er4Ty6Ui8Op0As2Df4Gh6Jk8Lm"
+    ],
+    "must_keep": [
+     "access log",
+     "rotated it"
+    ],
+    "kinds": [
+     "SECRET"
+    ]
+   }
+  },
+  {
+   "id": "prv-031",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-08 false-positive guard: git SHA, UUID and long identifiers are not secrets.",
+   "input": {
+    "text": "Reverted 3f9a2c7e1b4d5f6a7b8c9d0e1f2a3b4c5d6e7f80, traced request 550e8400-e29b-41d4-a716-446655440000 in calculateMonthlyRecurringRevenueByRegion."
+   },
+   "expect": {
+    "must_remove": [],
+    "must_keep": [
+     "3f9a2c7e1b4d5f6a7b8c9d0e1f2a3b4c5d6e7f80",
+     "550e8400-e29b-41d4-a716-446655440000",
+     "calculateMonthlyRecurringRevenueByRegion"
+    ]
+   }
+  },
+  {
+   "id": "prv-032",
+   "category": "privacy",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-08: GitLab, Hugging Face and npm tokens.",
+   "input": {
+    "text": "CI vars: g\u006cpat-FAKEabcdEFGH1234ijkl, h\u0066_FAKEabcdefghijklmnopqrstuvwxyz0123, n\u0070m_FAKEabcdefghijklmnopqrstuvwxyz012345."
+   },
+   "expect": {
+    "must_remove": [
+     "g\u006cpat-FAKEabcdEFGH1234ijkl",
+     "h\u0066_FAKEabcdefghijklmnopqrstuvwxyz0123",
+     "n\u0070m_FAKEabcdefghijklmnopqrstuvwxyz012345"
+    ],
+    "must_keep": [
+     "CI vars"
+    ],
+    "kinds": [
+     "SECRET"
+    ]
    }
   }
  ]

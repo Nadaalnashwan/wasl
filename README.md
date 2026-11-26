@@ -6,7 +6,10 @@ Wasl is an AI-powered career development platform that helps users turn verified
 
 Wasl combines AI-powered career tools with evidence verification and user approval workflows. Contact details are redacted before text reaches an AI provider, every AI-written claim is checked against your own evidence, and your Master CV only changes when you approve. Operational monitoring and evaluation live in a separate, administrator-only console.
 
-**Live application:** [https://wasl-ruddy.vercel.app](https://wasl-ruddy.vercel.app)
+**Live application:** [https://wasl-ruddy.vercel.app](https://wasl-ruddy.vercel.app) (V2 has not been merged into `main` or deployed yet)
+
+> **Continuing development? Start with [HANDOFF.md](HANDOFF.md)**: current status, remaining tasks with priorities,
+> environment variables, setup commands, measured results and the deployment runbook for WASL V2.
 
 ---
 
@@ -82,7 +85,10 @@ Wasl provides a connected career workflow:
 - Support live job-search integrations when the relevant providers, API keys, and application configuration are available.
 - Potential providers include JSearch and SerpApi.
 
-###
+### Admin Console
+
+- A separate, administrator-only console at `/admin` (monitoring, alerts, evaluation runs, audit log), gated on the server.
+- Normal users never see operational data; administrators are provisioned only by a server-side CLI (`docs/SECURITY.md`).
 
 ### Settings and Integrations
 
@@ -159,7 +165,14 @@ The provider layer supports configured AI services, with task-specific model sel
 
 AI-generated content should not be treated as automatically verified. User review and evidence checks remain important parts of the workflow.
 
-##
+## Monitoring and Evaluation
+
+- **Monitoring** (admin only): AI attempts, HTTP requests, product quality events and errors are recorded as metadata (no prompt or
+  completion text). Alerts run on a scheduler with a multi-worker lease, deduplication, cooldown, recovery and Slack/webhook delivery.
+  See `docs/MONITORING.md`.
+- **Deterministic evaluation** (`python -m app.eval_v2`): 205 adversarial development cases gated in CI, plus two frozen held-out
+  sets reported separately. No AI provider is called; these are safeguard measurements, not model-quality numbers.
+- **Live evaluation** (`python -m app.evaluation`): real providers with a call budget; not yet run for V2 (no keys). See `docs/EVALUATION.md`.
 
 ## Deployment
 
@@ -289,7 +302,7 @@ Run the following checks from the relevant project directories.
 
 ```bash
 cd backend
-pytest -q                      # 115 tests: units, journeys, authorization matrix, PII payloads, alerts
+pytest -q                      # 128 tests: units, journeys, authorization matrix, Supabase tokens, PII payloads, alerts
 ruff check app scripts tests
 python -m app.eval_v2          # deterministic AI regression suite (no LLM calls)
 ```
@@ -320,11 +333,12 @@ Additional technical documentation is available in `docs/`:
 
 | Document               | Purpose                                         |
 | ---------------------- | ----------------------------------------------- |
+| [`HANDOFF.md`](HANDOFF.md) | **Start here:** status, remaining tasks, setup, results, deployment runbook |
 | `docs/ARCHITECTURE.md` | System architecture and development flow        |
 | `docs/MONITORING.md`   | Monitoring architecture, metrics, and alerting  |
 | `docs/EVALUATION.md`   | AI evaluation methodology and results           |
 | `docs/SETUP.md`        | Installation and environment configuration      |
-| `docs/PROGRESS.md`     | Implementation progress and acceptance criteria |
+| `docs/PROGRESS.md`     | v1 progress and acceptance criteria (October 2026, historical) |
 | `docs/SECURITY.md`     | Authorization, admin provisioning, ownership, secrets review |
 | `docs/PRIVACY.md`      | PII redaction and provider privacy policy       |
 | `docs/AI_MODEL_REGISTRY.md` | Per-task models, routing, pricing, traceability |

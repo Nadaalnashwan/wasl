@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ClaimReport } from "@/components/claims";
-import { Editor } from "@/components/studio/editor";
+import { DraftsGrid, PostWorkbench } from "@/components/studio/editor";
 import {
   asReport,
   type EvaluationResult,
@@ -14,8 +14,9 @@ import {
   type StudioPost,
   type Tone,
 } from "@/components/studio/model";
-import { PreviewPanel } from "@/components/studio/preview";
 import { PublishDialog } from "@/components/studio/publish-dialog";
+import { claimAt, claimKey, claimMarks, type EvidenceInfo, removeRange, useClaimReview } from "@/components/studio/review";
+import { reviewStatus } from "@/components/studio/review-model";
 import { SourcePanel } from "@/components/studio/source-panel";
 import { PageHeader } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/overlay";
@@ -65,6 +66,41 @@ export default function StudioPage() {
 
   const linkedin = integrations.data?.linkedin;
   const editable = isEditable(current);
+
+  // evidence review: live re-check of edits, sentence highlights, claim <-> editor linking
+  const review = useClaimReview(current, content, editable);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [scrollSignal, setScrollSignal] = useState(0);
+  const marks = useMemo(() => claimMarks(content, review.report), [content, review.report]);
+  const evidenceInfo: EvidenceInfo = useMemo(() => {
+    if (!current) return null;
+    if (current.achievement_id) {
+      const a = achievements.data?.find((x) => x.id === current.achievement_id);
+      if (!a) return null;
+      const tools = [...(a.technologies || []), ...(a.skills || [])].join(" · ");
+      return { source: "achievement", title: a.title, lines: [a.description, a.impact, a.contribution_note, tools].filter(Boolean) as string[] };
+    }
+    return review.description ? { source: "description", lines: [review.description] } : null;
+  }, [current, achievements.data, review.description]);
+
+  function activateClaim(key: string | null, scroll: boolean) {
+    setActiveKey(key);
+    if (key && scroll) setScrollSignal((n) => n + 1);
+  }
+
+  function onCaret(pos: number) {
+    const flagged = (review.report?.claims ?? []).filter((c) => reviewStatus(c.status) !== "supported");
+    const hit = claimAt(content, flagged, pos);
+    if (hit) setActiveKey(claimKey(hit));
+  }
+
+  /** Only ever called from an explicit click in the review (never automatic). The edit is re-checked right away. */
+  function replaceRange(start: number, end: number, text: string) {
+    const next = text ? content.slice(0, start) + text + content.slice(end) : removeRange(content, start, end);
+    setContent(next);
+    if (next !== current?.content) review.checkNow(next);
+    toast("ok", text ? t("studio2.rv.applied") : t("studio2.rv.removed"));
+  }
   const tagsDirty = !!current && JSON.stringify(tags) !== JSON.stringify(current.hashtags ?? []);
   const dirty = !!current && (content !== current.content || tagsDirty);
   const evaluationIsCurrent = evaluated !== null && evaluatedText === free.trim();
@@ -83,9 +119,11 @@ export default function StudioPage() {
     setTags(p.hashtags ?? []);
     setImproved(null);
     setNotConnected(null);
+    setActiveKey(null);
   }
 
   function newDraft() {
+    setActiveKey(null);
     setCurrent(null);
     setContent("");
     setTags([]);
@@ -117,6 +155,7 @@ export default function StudioPage() {
           instructions,
         },
       });
+      if (!fromAchievement) review.rememberDescription(p.id, free.trim());
       load(p);
       posts.reload();
     } catch (e) {
@@ -188,7 +227,9 @@ export default function StudioPage() {
   }
 
   function patchBody() {
-    return { content, ...(tagsDirty ? { hashtags: tags } : {}) };
+    // posts written from a description are re-checked against it on save (the server never stores it)
+    const evidence = current && !current.achievement_id && review.description ? { evidence_text: review.description } : {};
+    return { content, ...(tagsDirty ? { hashtags: tags } : {}), ...evidence };
   }
 
   async function saveEdits() {
@@ -300,6 +341,7 @@ export default function StudioPage() {
     setBusy("delete");
     try {
       await api(`/api/posts/${p.id}`, { method: "DELETE" });
+      review.forgetDescription(p.id);
       if (current?.id === p.id) newDraft();
       posts.reload();
       toast("ok", t("studio2.deleted"));
@@ -315,8 +357,9 @@ export default function StudioPage() {
     <div>
       <PageHeader title={t("studio.title")} sub={t("studio.sub")} />
 
-      <div className="grid gap-8 lg:grid-cols-[16rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_19rem] xl:gap-7">
-        <aside aria-label={t("studio.source")} className="min-w-0 lg:row-span-2 xl:row-span-1">
+      {/* v1 composition: the composer on one side, the post as it will appear on the other, every draft below */}
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] xl:gap-10">
+        <div className="min-w-0">
           <SourcePanel
             mode={mode}
             setMode={setMode}
@@ -342,15 +385,14 @@ export default function StudioPage() {
             contributionNotes={contributionNotes}
             setContributionNote={(id, v) => setContributionNotes((n) => ({ ...n, [id]: v }))}
             onReview={reviewAchievement}
+            onNew={current ? newDraft : undefined}
           />
-        </aside>
+        </div>
 
         <div className="min-w-0">
-          <Editor
-            posts={posts.data}
+          <PostWorkbench
+            user={user}
             current={current}
-            onSelect={load}
-            onNew={newDraft}
             content={content}
             setContent={setContent}
             tags={tags}
@@ -371,25 +413,29 @@ export default function StudioPage() {
             onDismissImproved={() => setImproved(null)}
             sourceLabel={sourceLabel}
             aiSteps={aiSteps}
+            linkedin={linkedin}
+            notConnected={notConnected}
+            onPublish={openPublish}
+            marks={marks}
+            scrollSignal={scrollSignal}
+            onCaret={onCaret}
+            review={{
+              report: review.report,
+              state: review.state,
+              content,
+              editable,
+              activeKey,
+              onActivate: activateClaim,
+              onRecheck: review.recheck,
+              onReplace: replaceRange,
+              onProvideDescription: review.provideDescription,
+              evidence: evidenceInfo,
+            }}
           />
         </div>
-
-        <aside aria-label={t("studio.preview")} className="min-w-0 lg:col-start-2 xl:col-start-3 xl:row-start-1">
-          <div className="xl:sticky xl:top-6">
-            <PreviewPanel
-              user={user}
-              post={current}
-              content={content}
-              tags={tags}
-              dirty={dirty}
-              busy={busy}
-              linkedin={linkedin}
-              notConnected={notConnected}
-              onPublish={openPublish}
-            />
-          </div>
-        </aside>
       </div>
+
+      <DraftsGrid posts={posts.data} current={current} onSelect={load} onDelete={setToDelete} busy={busy} />
 
       {current && (
         <PublishDialog

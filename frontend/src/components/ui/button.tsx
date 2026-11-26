@@ -5,16 +5,18 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap select-none transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 rounded-[10px] font-semibold whitespace-nowrap select-none transition-[color,background-color,border-color,box-shadow,transform] duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        primary: "bg-primary text-on-primary hover:bg-primary-hover",
-        secondary: "border border-border bg-surface text-fg hover:border-border-strong hover:bg-surface-elevated",
-        outline: "border border-border bg-transparent text-fg hover:bg-surface-2",
+        // the one bold action on a view: brand blue with v1's solid offset "stamp"
+        // v1 "sketch-btn", matured: ink outline + small offset shadow
+        primary: "ink-btn bg-primary text-on-primary hover:bg-primary-hover",
+        secondary: "ink-btn bg-surface text-fg hover:bg-primary-soft",
+        outline: "ink-chip rounded-[10px] bg-transparent text-fg hover:bg-surface-2",
         ghost: "bg-transparent text-fg-2 hover:bg-surface-2 hover:text-fg",
-        subtle: "bg-primary-soft text-primary-text hover:bg-primary-soft/70",
-        danger: "border border-border bg-surface text-bad hover:border-bad/40 hover:bg-bad-soft",
+        subtle: "ink-btn bg-primary-soft text-fg hover:bg-highlight/70",
+        danger: "ink-btn bg-surface text-bad hover:bg-bad-soft",
         "danger-solid": "bg-bad text-on-primary hover:bg-bad/90",
         success: "bg-ok text-on-primary hover:bg-ok/90",
         link: "h-auto px-0 text-primary-text underline-offset-4 hover:underline",

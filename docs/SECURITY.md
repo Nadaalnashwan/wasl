@@ -6,7 +6,7 @@
 |---|---|---|
 | Authentication | `app/security/auth.py` (`get_current_user`) | Local HS256 JWTs or Supabase access tokens (JWKS / legacy HS256). |
 | Authorization | **backend code**: `app/security/authz.py` (`require_admin`) and `app/deps.py` (`owned()`) | The backend's direct SQLAlchemy connection can bypass Supabase RLS, so every rule that matters is enforced in Python. |
-| Row Level Security | `supabase/migrations/0001–0003` | Defence in depth for the public `anon` / `authenticated` keys only. |
+| Row Level Security | `supabase/migrations/0001–0004` | Defence in depth for the public `anon` / `authenticated` keys only. |
 | Admin console shell | `frontend/src/proxy.ts` + `/api/admin-session` | Server-side gate before `/admin/*` renders; the data itself is still authorised by the backend. |
 
 ### Roles
@@ -93,6 +93,20 @@ the user (≥ 4 words, not a generic confirmation). Statements are stored on the
 `user_assertions[].basis = "user_asserted"` and never relabelled as verified; contradicted claims cannot be
 asserted (409 `contradicted_claims`); an unavailable verifier blocks publishing (409
 `verification_unavailable`). Monitoring counts approved claims without an assertion as **escaped**.
+
+### Evidence review in the studio
+
+`POST /api/posts/{id}/check` re-checks edited text with the **same deterministic verifier and rules as publishing**
+and saves nothing. Achievement posts are always checked against the saved achievement (any `evidence_text` sent by the
+client is ignored, so a client cannot make a claim "supported" by supplying its own evidence). Posts written from a
+description need that description (`evidence_text`), because it is not stored; without it the endpoint answers 409
+`evidence_not_stored` instead of pretending. `PATCH /api/posts/{id}` re-checks a description-based post when the
+description is supplied, and otherwise marks the saved report `stale: true` so an old report never looks current.
+
+The review UI groups the verifier's statuses for people (Supported = `supported`; Needs review = `ambiguous`,
+`needs_confirmation`, `unavailable`; Unsupported = `unsupported`, `contradicted`) without changing what blocks
+publishing. Suggested wording only removes or softens words, is applied only on an explicit click, and is re-checked
+immediately. "Keep it as written" does not change a claim's status; publishing still asks for a statement per claim.
 
 ## Ownership (IDOR)
 

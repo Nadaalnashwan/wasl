@@ -209,7 +209,7 @@ export function AchievementDrawer({
               <div className="flex flex-col gap-4">
                 {a.description && (
                   <p className="text-[15px] leading-relaxed text-fg" dir={isArabic(a.description) ? "rtl" : undefined}>
-                    {a.description}
+                    <bdi>{a.description}</bdi>
                   </p>
                 )}
                 <DescriptionList

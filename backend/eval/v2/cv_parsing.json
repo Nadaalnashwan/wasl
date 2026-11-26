@@ -966,6 +966,54 @@
      "RAG"
     ]
    }
+  },
+  {
+   "id": "cvp-034",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-07/R-08: CV header name separated from the email by an en dash.",
+   "input": {
+    "text": "Reem Al-Saud – reem.s@example.com\nQA Engineer, Khobar",
+    "document": true
+   },
+   "expect": {
+    "must_remove": [
+     "Reem Al-Saud",
+     "reem.s@example.com"
+    ],
+    "must_keep": [
+     "QA Engineer",
+     "Khobar"
+    ],
+    "kinds": [
+     "NAME",
+     "EMAIL"
+    ]
+   }
+  },
+  {
+   "id": "cvp-035",
+   "category": "cv_parsing",
+   "lang": "en",
+   "kind": "pii_redact",
+   "purpose": "R-07: CV header 'Name - Title' with a spaced hyphen; the title is kept.",
+   "input": {
+    "text": "Turki Al-Mutairi - Backend Developer\nSkills: Go, Redis",
+    "document": true
+   },
+   "expect": {
+    "must_remove": [
+     "Turki Al-Mutairi"
+    ],
+    "must_keep": [
+     "Backend Developer",
+     "Go, Redis"
+    ],
+    "kinds": [
+     "NAME"
+    ]
+   }
   }
  ]
 }

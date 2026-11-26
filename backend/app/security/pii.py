@@ -13,7 +13,9 @@ What is replaced (English + Arabic formats):
   CARD          payment card numbers (Luhn-valid 13–19 digits)
   PROFILE_URL   personal profile links (LinkedIn, GitHub, X/Twitter, Facebook, Instagram, Telegram, WhatsApp)
   ADDRESS       labelled addresses (Address: / العنوان:), P.O. boxes (ص.ب), street lines
-  SECRET        API keys, bearer tokens, JWTs
+  SECRET        API keys and provider tokens (known prefixes), bearer tokens, JWTs, webhook URLs (Slack, Discord,
+                Teams/Office 365, generic token-bearing /webhook/ paths), passwords embedded in URLs, PEM private
+                keys, labelled `secret=` / `password:` values and unlabelled high-entropy tokens (see `_is_random_token`)
   NAME          the account holder's known name(s) and labelled "Name:" / "الاسم:" values, plus the CV header line
 
 What is deliberately kept: employers, schools, job titles, skills, project names, dates, and metrics — the AI
@@ -31,8 +33,33 @@ KINDS = ("EMAIL", "PHONE", "NATIONAL_ID", "PASSPORT", "IBAN", "CARD", "PROFILE_U
 
 _SECRET = re.compile(
     r"(?:\b(?:sk|gsk|rk|pk)[-_][A-Za-z0-9_-]{16,}|\bAIza[0-9A-Za-z_-]{20,}|\bgh[pousr]_[A-Za-z0-9]{20,}|\bgithub_pat_[A-Za-z0-9_]{20,}"
-    r"|\bAKIA[0-9A-Z]{16}\b|\bxox[abprs]-[A-Za-z0-9-]{10,}|\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}|(?i:bearer)\s+[A-Za-z0-9._~+/=-]{16,})"
+    r"|\bAKIA[0-9A-Z]{16}\b|\bxox[abprs]-[A-Za-z0-9-]{10,}|\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}|(?i:bearer)\s+[A-Za-z0-9._~+/=-]{16,}"
+    # further provider formats: AWS temporary/role keys, Slack app tokens, GitLab, npm, Hugging Face, SendGrid, Stripe
+    # webhook signing secrets, Google OAuth access tokens, DigitalOcean, Shopify, Telegram bot tokens (id:secret)
+    r"|\b(?:ASIA|AROA|AIDA|AGPA)[0-9A-Z]{16}\b|\bxapp-[A-Za-z0-9-]{10,}|\bglpat-[A-Za-z0-9_-]{20,}|\bnpm_[A-Za-z0-9]{36,}\b"
+    r"|\bhf_[A-Za-z0-9]{30,}\b|\bSG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}|\bwhsec_[A-Za-z0-9]{20,}|\bya29\.[A-Za-z0-9_-]{20,}"
+    r"|\bdop_v1_[a-f0-9]{64}\b|\bshp(?:at|ss|ca|pa)_[a-fA-F0-9]{32}\b|(?<![\w:])\d{8,10}:AA[A-Za-z0-9_-]{30,}"
+    # webhook URLs carry their credential in the path: Slack, Discord, Microsoft Teams / Office 365 connectors
+    r"|(?:https?://)?hooks\.slack\.com/(?:services|workflows|triggers)/[^\s,;)\]}>\"']+"
+    r"|(?:https?://)?(?:\w+\.)?discord(?:app)?\.com/api/webhooks/[^\s,;)\]}>\"']+"
+    r"|(?:https?://)?[\w-]+\.webhook\.office\.com/[^\s,;)\]}>\"']+|(?:https?://)?outlook\.office(?:365)?\.com/webhook/[^\s,;)\]}>\"']+"
+    # PEM private keys: the whole block
+    r"|-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----)"
 )
+# any other URL whose path is a webhook endpoint AND carries a token-like segment (>= 20 chars, letters and digits);
+# "https://api.example.com/webhooks/stripe" has no credential and is left alone
+_WEBHOOK_URL = re.compile(r"(?i)(?:https?://)?[a-z0-9.-]+\.[a-z]{2,}/(?:[^\s/]+/)*(?:webhooks?|hooks?)/[^\s,;)\]}>\"']+")
+_WEBHOOK_TOKEN_SEGMENT = re.compile(r"[A-Za-z0-9_-]{20,}")
+# scheme://user:password@host -> only the password is a secret (the host and path are kept)
+_URL_PASSWORD = re.compile(r"(?i)\b[a-z][a-z0-9+.-]{1,20}://[^\s:/@]{1,64}:([^\s@/]{3,128})@[a-z0-9.-]+")
+# key = value / key: value where the key names a credential; the value is redacted only if it looks generated
+_LABELLED_SECRET = re.compile(
+    r"(?i)\b(?:[a-z0-9]+[_-])*(?:api[_-]?key|apikey|secret(?:[_-]?key)?|client[_-]?secret|access[_-]?(?:key|token)|auth[_-]?token|"
+    r"token|password|passwd|pwd|private[_-]?key|signing[_-]?key|webhook[_-]?secret)(?:[_-][a-z0-9]+)*\b[\"']?\s*(?:[:=]|=>)\s*[\"']?"
+    r"(?!\[[A-Z_]+_\d)([^\s\"',;]{7,199}[^\s\"',;.:)\]])"  # a value never ends with sentence punctuation
+)
+# candidate unlabelled tokens: one run of URL-safe/base64 characters
+_TOKEN_CANDIDATE = re.compile(r"(?<![\w+/=-])[A-Za-z0-9_+/=-]{32,}(?![\w+/=-])")
 _EMAIL = re.compile(r"(?<![\w.+-])[\w.+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")
 # obfuscated addresses: name [at] domain [dot] com / name (at) domain (dot) com
 _EMAIL_OBF = re.compile(r"(?i)[\w.+-]+\s*[\[(]\s*at\s*[\])]\s*[\w-]+(?:\s*[\[(]\s*dot\s*[\])]\s*[\w-]+)+")
@@ -91,6 +118,46 @@ def _luhn_ok(num: str) -> bool:
 
 def _digit_count(s: str) -> int:
     return sum(ch.isdigit() for ch in s)
+
+
+def _entropy(s: str) -> float:
+    """Shannon entropy in bits per character."""
+    from collections import Counter
+    from math import log2
+
+    n = len(s)
+    return -sum(c / n * log2(c / n) for c in Counter(s).values()) if n else 0.0
+
+
+def _is_random_token(value: str, min_len: int = 32) -> bool:
+    """True for a generated credential, False for ordinary long identifiers.
+
+    Kept: camelCase / snake_case identifiers (no digits, or words), hex digests and UUIDs (git SHAs, checksums,
+    request IDs are not secrets), file paths, and repeated characters. A secret needs letters in BOTH cases AND digits,
+    spread out (no single long letter run), with high entropy."""
+    v = value.strip("=")
+    if len(v) < min_len or re.fullmatch(r"[0-9a-fA-F-]+", v):
+        return False
+    if v.count("/") > 2:  # a path, not a token
+        return False
+    if not (re.search(r"[a-z]", v) and re.search(r"[A-Z]", v) and re.search(r"\d", v)):
+        return False
+    if _digit_count(v) < 3:
+        return False
+    if re.search(r"[A-Za-z]{18,}", v):  # a long dictionary-ish run: "useInfiniteScrollPagination…"
+        return False
+    return _entropy(v) >= 3.8
+
+
+def _looks_generated(value: str) -> bool:
+    """A labelled secret value (`password: …`) that is a real credential, not prose or a placeholder."""
+    v = value.strip("\"'")
+    if re.fullmatch(r"(?i)(?:<[^>]*>|\$\{?[A-Z0-9_]+\}?|%[A-Z0-9_]+%|x{3,}|\*{3,}|\.{3,}|redacted|changeme|none|null|true|false|"
+                    r"your[_-]?\w*|example|placeholder|\[[A-Z_]+_\d+\])", v):
+        return False
+    if re.fullmatch(r"[A-Za-z]+(?:[ _-][A-Za-z]+)*", v) and not re.search(r"[a-z][A-Z]", v):
+        return False  # a plain word or phrase ("rotated", "read-only")
+    return bool(re.search(r"\d", v) or re.search(r"[^A-Za-z0-9]", v) or re.search(r"[a-z][A-Z]", v)) and len(v) >= 8
 
 
 @dataclass
@@ -152,7 +219,8 @@ class Redactor:
                 words = line.split()
                 if _CV_HEADER_SKIP.match(line):
                     continue  # "CURRICULUM VITAE" banner: the name is on the next line
-                cand = re.split(r"\s*[|,·•]\s*", line)[0].strip()
+                # "Name | email", "Name · title", "Name - email", "Name — title": the name is the first field
+                cand = re.split(r"\s*[|,·•‧∙]\s*|\s+[-–—]\s+|\s*[–—]\s*", line)[0].strip()
                 words = cand.split()
                 from app.ai.skills import find_skills  # local import keeps this module dependency-light
 
@@ -184,6 +252,10 @@ class Redactor:
             return text
         t = text
         t = self._sub(_SECRET, "SECRET", t)
+        t = self._sub(_WEBHOOK_URL, "SECRET", t, check=lambda v: bool(_WEBHOOK_TOKEN_SEGMENT.search(re.split(r"(?i)hooks?/", v, maxsplit=1)[-1])))
+        t = self._sub(_URL_PASSWORD, "SECRET", t, group=1)
+        t = self._sub(_LABELLED_SECRET, "SECRET", t, group=1, check=_looks_generated)
+        t = self._sub(_TOKEN_CANDIDATE, "SECRET", t, check=_is_random_token)
         t = self._sub(_EMAIL, "EMAIL", t)
         t = self._sub(_EMAIL_OBF, "EMAIL", t)
         t = self._sub(_PROFILE_URL, "PROFILE_URL", t)

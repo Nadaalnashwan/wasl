@@ -130,7 +130,7 @@ export function EvidenceMatrix({ must, nice }: { must: SkillMatch[]; nice: Skill
           { value: "missing", label: `${t("career2.status.missing")} ${count("missing")}` },
         ]}
       />
-      <div className="overflow-hidden rounded-lg border border-border-soft bg-surface">
+      <div className="overflow-hidden ink-soft">
         <div className="hidden grid-cols-[minmax(0,1.1fr)_7.5rem_minmax(0,1.6fr)] gap-4 border-b border-border bg-surface-2/60 px-4 py-2 text-xs font-medium text-fg-3 md:grid" aria-hidden>
           <span>{t("career2.match.req")}</span>
           <span>{t("career2.match.status")}</span>

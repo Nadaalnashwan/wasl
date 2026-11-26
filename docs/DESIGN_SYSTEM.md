@@ -1,4 +1,102 @@
-# Wasl design system (v2.1 "Ivory")
+# Wasl design system (v3 "V1 structure, evolved maturity")
+
+> **v3 supersedes the area banners and editorial lists of v2.x.** The whole product follows V1's information
+> architecture again (navigation, page layouts, section order, cards); see `docs/V1_RESTORATION.md`.
+> Components: ink cards (`.ink-card`, 1.5px ink, 14px radius, 4px offset shadow mirrored in RTL), inner items
+> (`.ink-soft`), dashed empty states, outlined pill badges/tabs, outlined buttons with a 2px shadow, V1 page header
+> (title + blue underline + subtitle + actions). Palette unchanged: paper + ink + brand blue, navy "Blueprint" dark mode.
+
+## Previous: v2.3 "Evolved Original"
+
+> **v2.3 (2026-11-26) supersedes v2.2 "Sky" and v2.1 "Ivory" below.** The direction is original Wasl's
+> creativity, executed with maturity. The v1 site (wasl-ruddy.vercel.app) was inspected as the reference.
+>
+> **Brought back from v1:**
+> - **The Wasl machine story.** An achievement goes in, every claim is checked, and posts, a CV and plans
+>   come out. It is told with illustrations in `components/brand/art.tsx`: `WaslMachine`, `StationArt`
+>   (intake arm, verifying monitor, approval, reuse), `ChartArt` and `SpotArt`.
+> - **Numbered stations on a conveyor.**
+> - **Full-width colour bands:** the sloped brand-blue `.band`.
+> - **Coloured icon tiles.**
+> - **Ink-outlined panels with the offset stamp** (`.panel-ink`), used only for hero moments.
+> - **The sky closing band.**
+>
+> **Refined:**
+> - Illustrations are redrawn with one 2px stroke, straight geometry and consistent radii. There are no faces
+>   and no wobble.
+> - Nunito at 800 weight replaces the handwriting font.
+> - The stamp appears only on primary buttons, the active navigation item and three or four panels per page.
+> - **The background grid is removed.**
+>
+> **Product areas** each have one colour (`.tone-*` with `--tone` / `--tone-soft`, all AA on their fill and
+> on the page). `PageHeader` accepts `tone` and `art` and becomes that area's banner. The navigation icon
+> takes the same colour.
+>
+> | Area | Colour |
+> |---|---|
+> | Studio | brand blue |
+> | Master CV | sky |
+> | Achievements | amber |
+> | Jobs | green |
+> | Tailoring | violet |
+> | Gap analysis | teal |
+> | Settings / admin | slate |
+>
+> **Landing, top to bottom:**
+> 1. A split hero with the framed machine.
+> 2. The brand band with four illustrated stations.
+> 3. The evidence "inspection desk".
+> 4. An asymmetric feature mosaic: a brand spotlight plus area-coloured tiles.
+> 5. A product preview.
+> 6. Privacy tiles.
+> 7. The closing sky band with the chart.
+>
+> **Dashboard** opens with a brand welcome band carrying the machine.
+>
+> **Motion:** gentle illustration loops (floating card, turning gears, scanning line). They are disabled
+> under `prefers-reduced-motion`.
+>
+> **Verified:**
+> - `scripts/qa-visual.mjs --quick` passed 48 checks: 0 axe violations, 0 overflow, 0 pure-white pages, 0 console
+>   errors;
+> - every new colour pair is at least 5.5:1 (light) and 6.9:1 (dark).
+
+> The sections below (v2.2, then v2.1) still apply wherever they do not conflict with the above.
+
+## v2.2 "Sky" notes
+
+> **v2.2 "Sky" (2026-11-26) supersedes "Ivory" below.** Feedback on Ivory: mature, but it had lost Wasl's
+> personality: beige, muted, every page empty and alike. v2.2 restores v1's identity and keeps v2's clarity.
+>
+> **Kept from v1:**
+> - ink text (`#15171C`), brand blue (`#0B57C9`), sky fills (`#D3EBFC`) and the sky stroke (`#1E9BF0`);
+> - the faint **blueprint grid** on the page, at about a third of v1's strength;
+> - the "Blueprint" navy dark mode;
+> - **Nunito**, v1's typeface, now also used for headings at 800 weight;
+> - three signature details, used sparingly:
+>   - the hand-drawn **sky underline** under each page title (`.brand-underline`);
+>   - a **highlighter** on one key word, landing and auth only (`.highlight`, `<Marked>`);
+>   - a small solid **offset "stamp"** on primary buttons and the active navigation item (`.stamp`).
+>
+> **Kept from v2:**
+> - shared components, consistent spacing, clear hierarchy, status colours reserved for verification;
+> - no pure white, WCAG AA text contrast on every surface and tint;
+> - no handwriting, wobbly borders or illustrations.
+>
+> **New:**
+> - one warm **amber accent** (`--accent`, `--accent-soft`, `--accent-text`, Badge tone `accent`) for
+>   attention and featured items;
+> - lists, metric rows and empty states sit on real surfaces (12px radius, crisp border, soft blue shadow)
+>   instead of bare hairlines on the page.
+>
+> **Tokens:** see `frontend/src/app/globals.css`.
+>
+> **Verified:**
+> - minimum text contrast is 5.6:1 (light) and 6.2:1 (dark) on surfaces, and 4.85:1 on tints;
+> - control borders are at least 3.15:1;
+> - `scripts/qa-visual.mjs --quick` passed 48 checks with 0 axe violations, 0 overflow, 0 pure-white pages and
+>   0 console errors.
+>
 
 Wasl v2 removed the v1 "sketchbook" look (hand-drawn borders, handwritten fonts, offset shadows, cartoon
 machinery). v2.1 replaces the cold white-and-blue SaaS palette that followed with a warm, editorial identity:
@@ -93,3 +191,28 @@ ramp, warm off-white text and a lighter brand blue.
 light/dark × English/Arabic against a production build, runs axe-core (WCAG 2.0/2.1/2.2 A and AA rules), and
 checks horizontal overflow, pure-white surfaces and console errors. Results for this version are in
 `docs/QA_REPORT.md`; screenshots in `docs/screenshots/v2-ivory/` (before: `docs/screenshots/before/`).
+
+## v2.4 — original homepage and studio, matured
+
+The homepage and the Content Studio return to the original (v1) composition, executed more carefully.
+
+* **Ink cards** (`.ink-card`): 1.5px ink outline and a solid 5px offset shadow that mirrors in RTL. Ink is near-black on
+  paper and blueprint blue (`--ink: #8fb6e2`) in dark mode, so outlines stay visible on dark surfaces.
+* **Ink pills** (`.ink-pill`): the v1 navigation and call-to-action buttons, with a 2px offset shadow and a press state.
+* **Ruled band** (`.ink-ruled`): full-bleed section on tinted paper between two ink rules — the "How the Wasl machine
+  works" band, with stations joined by drawn arrows (`DrawnArrow`, flipped in RTL).
+* **Homepage** (`components/landing/home.tsx`): pill nav → split hero with the framed Wasl machine → ruled machine band
+  (4 stations) → evidence check → feature card grid + privacy card → sky closing card → footer.
+* **Studio**: stepped composer card (source → voice → write, with tone chips) beside a LinkedIn post that is edited in
+  place, with the evidence check and publishing underneath; every draft below as an ink card.
+* **Auth screens** (`components/auth/kit.tsx`): the form on an ink card beside the intake-arm illustration.
+
+### Evidence review (Content Studio)
+
+A writing-assistant review under the LinkedIn preview (`components/studio/review.tsx`, logic in `review-model.ts`):
+a one-line verdict, a three-part bar and counts (Supported / Needs review / Unsupported), then one expandable card per
+flagged claim: *In your post* (the sentence with the phrase marked), *Why it's flagged*, *What Wasl checked* (the named
+source, the closest quote or "Nothing in it mentions …", full evidence on demand), *Safer wording*, *Edit this
+sentence*, *Keep it as written*. Flagged sentences are underlined in the editor through a highlight layer behind the
+textarea; opening a card tints its sentence, and clicking a sentence opens its card. Colours stay soft (status shown
+by a thin rail, an icon and a label), never full red panels.

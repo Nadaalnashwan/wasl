@@ -190,7 +190,7 @@ export function Tracker({
       ) : (
         <>
           {/* Desktop: table */}
-          <div className="hidden overflow-hidden rounded-lg border border-border-soft bg-surface lg:block">
+          <div className="hidden overflow-hidden ink-soft lg:block">
             <table className="w-full table-fixed text-start text-sm">
               <thead className="border-b border-border bg-surface-2 text-xs text-fg-3">
                 <tr>
@@ -240,7 +240,7 @@ export function Tracker({
           </div>
 
           {/* Mobile: stacked list */}
-          <ul className="divide-y divide-border rounded-lg border border-border-soft bg-surface lg:hidden">
+          <ul className="divide-y divide-border ink-soft lg:hidden">
             {shown.map((row) => (
               <li key={row.id} className="flex flex-col gap-3 px-4 py-4">
                 <div className="flex items-start gap-3">
