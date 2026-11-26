@@ -8,14 +8,15 @@ import { AiWorking, ErrorNote } from "@/components/feedback";
 import { ClaimReportPanel } from "@/components/claims";
 import { Button } from "@/components/ui/button";
 import { Badge, Status, type BadgeTone } from "@/components/ui/card";
-import { Input, Textarea } from "@/components/ui/form";
+import { Input } from "@/components/ui/form";
 import type { ApiError } from "@/lib/api";
 import type { IntegrationStatus, User } from "@/lib/types";
 import { useI18n, type TKey } from "@/lib/i18n";
 import { cn, isArabic, timeAgo } from "@/lib/utils";
 import { asReport, blockingCount, type Improved, MAX_CONTENT, MAX_HASHTAGS, MAX_IMAGES, normalizeTag, type StudioPost } from "./model";
 import { PrivatePostImage } from "./post-image";
-import { EvidenceSection, PublishSection } from "./preview";
+import { PublishSection } from "./preview";
+import { EvidenceReview, HighlightTextarea, type Mark, type ReviewProps } from "./review";
 
 export const STATUS_TONE: Record<StudioPost["status"], BadgeTone> = {
   draft: "neutral",
@@ -186,6 +187,10 @@ export type WorkbenchProps = {
   linkedin?: IntegrationStatus;
   notConnected: string | null;
   onPublish: () => void;
+  review: ReviewProps;
+  marks: Mark[];
+  scrollSignal: number;
+  onCaret: (pos: number) => void;
 };
 
 function initialsOf(name: string) {
@@ -299,18 +304,23 @@ export function PostWorkbench(p: WorkbenchProps) {
                 <label htmlFor={textId} className="sr-only">
                   {t("studio2.editor.text")}
                 </label>
-                <Textarea
+                <HighlightTextarea
                   id={textId}
                   value={p.content}
-                  onChange={(e) => p.setContent(e.target.value)}
+                  onChange={p.setContent}
+                  marks={p.marks}
+                  activeKey={p.review.activeKey}
+                  scrollSignal={p.scrollSignal}
+                  onCaret={p.onCaret}
                   disabled={!p.editable}
                   dir={isArabic(p.content) ? "rtl" : "ltr"}
-                  className="min-h-64 border-dashed bg-bg text-[15px] leading-relaxed"
                   maxLength={MAX_CONTENT}
-                  aria-describedby={`${textId}-count`}
+                  describedBy={`${textId}-count`}
                 />
                 <div id={`${textId}-count`} className={cn("num mt-1 text-end text-xs", over ? "text-bad" : "text-fg-3")}>
-                  {p.content.length} / {MAX_CONTENT}
+                  <span dir="ltr">
+                    {p.content.length} / {MAX_CONTENT}
+                  </span>
                 </div>
               </div>
 
@@ -345,7 +355,7 @@ export function PostWorkbench(p: WorkbenchProps) {
             </div>
 
             <div className="flex flex-col gap-6 border-t border-border pt-5">
-              <EvidenceSection post={cur} dirty={p.dirty} />
+              <EvidenceReview {...p.review} />
               <div className="border-t border-border pt-5">
                 <PublishSection post={cur} dirty={p.dirty} busy={p.busy} linkedin={p.linkedin} notConnected={p.notConnected} onPublish={p.onPublish} />
               </div>

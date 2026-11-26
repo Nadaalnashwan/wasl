@@ -75,3 +75,6 @@ Wasl does **not** claim zero retention for any provider unless the configuration
 * `DELETE /api/auth/me` deletes the account and all owned rows (cascade); the Settings page exposes it with a
   typed confirmation.
 * Uploaded originals are stored privately (local disk or a private Supabase bucket with per-user folders).
+* Studio descriptions (the text a post was written from) are not stored on the server. To re-check edits, the
+  browser keeps them in `sessionStorage` for the current tab only; they are sent with a re-check or save request and
+  discarded when the tab closes or the post is deleted.

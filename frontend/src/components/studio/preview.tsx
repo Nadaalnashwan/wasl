@@ -1,9 +1,8 @@
 "use client";
 
-import { ExternalLink, Send, ShieldCheck } from "lucide-react";
+import { ExternalLink, Send } from "lucide-react";
 import Link from "next/link";
 import { LinkedinIcon } from "@/components/brand-icons";
-import { ClaimReportPanel } from "@/components/claims";
 import { Notice } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 import { Status } from "@/components/ui/card";
@@ -94,29 +93,6 @@ export function PublishSection({ post, dirty, busy, linkedin, notConnected, onPu
             <p className="text-xs text-fg-3">{t("studio2.publish.never_auto")}</p>
           </>
         )}
-      </section>
-    </>
-  );
-}
-
-/** The claim check for the open post: every number, skill, credential and role compared with the evidence. */
-export function EvidenceSection({ post, dirty }: { post: StudioPost; dirty: boolean }) {
-  const { t } = useI18n();
-  const report = asReport(post.claim_check);
-  return (
-    <>
-      <section aria-labelledby="evidence-h" className="flex flex-col gap-3">
-        <h2 id="evidence-h" className="flex items-center gap-2 text-sm font-extrabold text-fg">
-          <ShieldCheck className="size-4 text-primary-text" aria-hidden />
-          {t("studio2.v1.evidence")}
-        </h2>
-        {report ? (
-          <ClaimReportPanel report={report} showSupported />
-        ) : (
-          <p className="text-sm text-fg-3">{t("studio2.evidence.none")}</p>
-        )}
-        {dirty && post.achievement_id && <p className="text-xs text-warn">{t("studio2.evidence.dirty")}</p>}
-        {!post.achievement_id && <p className="text-xs text-fg-3">{t("studio2.evidence.freetext")}</p>}
       </section>
     </>
   );

@@ -94,6 +94,20 @@ the user (≥ 4 words, not a generic confirmation). Statements are stored on the
 asserted (409 `contradicted_claims`); an unavailable verifier blocks publishing (409
 `verification_unavailable`). Monitoring counts approved claims without an assertion as **escaped**.
 
+### Evidence review in the studio
+
+`POST /api/posts/{id}/check` re-checks edited text with the **same deterministic verifier and rules as publishing**
+and saves nothing. Achievement posts are always checked against the saved achievement (any `evidence_text` sent by the
+client is ignored, so a client cannot make a claim "supported" by supplying its own evidence). Posts written from a
+description need that description (`evidence_text`), because it is not stored; without it the endpoint answers 409
+`evidence_not_stored` instead of pretending. `PATCH /api/posts/{id}` re-checks a description-based post when the
+description is supplied, and otherwise marks the saved report `stale: true` so an old report never looks current.
+
+The review UI groups the verifier's statuses for people (Supported = `supported`; Needs review = `ambiguous`,
+`needs_confirmation`, `unavailable`; Unsupported = `unsupported`, `contradicted`) without changing what blocks
+publishing. Suggested wording only removes or softens words, is applied only on an explicit click, and is re-checked
+immediately. "Keep it as written" does not change a claim's status; publishing still asks for a statement per claim.
+
 ## Ownership (IDOR)
 
 User-owned rows are fetched with `owned(db, Model, id, user)` (404 for other users' ids — existence is not

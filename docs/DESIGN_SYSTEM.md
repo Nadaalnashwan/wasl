@@ -198,3 +198,13 @@ The homepage and the Content Studio return to the original (v1) composition, exe
 * **Studio**: stepped composer card (source → voice → write, with tone chips) beside a LinkedIn post that is edited in
   place, with the evidence check and publishing underneath; every draft below as an ink card.
 * **Auth screens** (`components/auth/kit.tsx`): the form on an ink card beside the intake-arm illustration.
+
+### Evidence review (Content Studio)
+
+A writing-assistant review under the LinkedIn preview (`components/studio/review.tsx`, logic in `review-model.ts`):
+a one-line verdict, a three-part bar and counts (Supported / Needs review / Unsupported), then one expandable card per
+flagged claim: *In your post* (the sentence with the phrase marked), *Why it's flagged*, *What Wasl checked* (the named
+source, the closest quote or "Nothing in it mentions …", full evidence on demand), *Safer wording*, *Edit this
+sentence*, *Keep it as written*. Flagged sentences are underlined in the editor through a highlight layer behind the
+textarea; opening a card tints its sentence, and clicking a sentence opens its card. Colours stay soft (status shown
+by a thin rail, an icon and a label), never full red panels.

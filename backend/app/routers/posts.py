@@ -87,6 +87,14 @@ class PostPatch(BaseModel):
         max_length=8,
     )
     tone: Tone | None = None
+    # Posts written from a description (no saved achievement): the user's own description, so the edited text can be
+    # re-checked against it. Never stored and never used for achievement posts (their evidence comes from the database).
+    evidence_text: str | None = Field(default=None, max_length=4000)
+
+
+class ClaimCheckIn(BaseModel):
+    content: str = Field(min_length=1, max_length=3000)
+    evidence_text: str | None = Field(default=None, max_length=4000)
 
 
 class ClaimAssertion(BaseModel):
@@ -310,6 +318,7 @@ async def generate(
                 "fallback_used",
                 False,
             ),
+            "evidence_source": "achievement" if body.achievement_id else "description",
         },
     )
 
@@ -354,24 +363,68 @@ def edit(
     ensure_editable(p)
 
     data = body.model_dump(exclude_none=True)
+    description = (data.pop("evidence_text", None) or "").strip()
+    previous_content = p.content
 
     for key, value in data.items():
         setattr(p, key, value)
+
+    content_changed = "content" in data and data["content"] != previous_content
 
     if "content" in data and p.achievement_id:
         a = db.get(Achievement, p.achievement_id)
 
         if a and a.user_id == user.id:
+            ad = achievement_dict(a)
+            # same rules as publishing (including the unconfirmed-contribution check)
             p.claim_check = {
                 **check_claims(
                     p.content,
-                    evidence_text(achievement_dict(a)),
+                    evidence_text(ad),
+                    contribution_confirmed=_contribution_confirmed(ad),
                 ),
                 "edited_by_user": True,
             }
+    elif content_changed and len(description) >= 20:
+        p.claim_check = {
+            **check_claims(p.content, description),
+            "edited_by_user": True,
+            "evidence_source": "description",
+        }
+    elif content_changed:
+        # The description this post was written from is not stored, so the edited text was not re-checked.
+        # Say so instead of letting the old report look current.
+        p.claim_check = {**(p.claim_check or {}), "stale": True}
 
     db.commit()
     return post_out(p)
+
+
+@router.post("/{post_id}/check")
+def check_post_claims(
+    post_id: str,
+    body: ClaimCheckIn,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Re-check edited text with the same deterministic verifier used at publish time. Read-only: nothing is saved.
+
+    Achievement posts are always checked against the saved achievement (client-sent evidence is ignored). Posts
+    written from a description need that description, because it is not stored with the post.
+    """
+    p = owned(db, Post, post_id, user)
+    if p.achievement_id:
+        a = db.get(Achievement, p.achievement_id)
+        if a is None or a.user_id != user.id:
+            raise HTTPException(409, {"code": "evidence_missing", "message": "The achievement this post was written from no longer exists."})
+        ad = achievement_dict(a)
+        report = check_claims(body.content, evidence_text(ad), contribution_confirmed=_contribution_confirmed(ad))
+        return {"claim_check": report, "evidence_source": "achievement"}
+    description = (body.evidence_text or "").strip()
+    if len(description) < 20:
+        raise HTTPException(409, {"code": "evidence_not_stored",
+                                  "message": "Add the description this post was written from to re-check it."})
+    return {"claim_check": check_claims(body.content, description), "evidence_source": "description"}
 
 
 # -------------------------------------------------------
