@@ -1,17 +1,21 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Copy, FilePlus2, ImagePlus, Save, Trash2, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Copy, Globe, ImagePlus, Save, Trash2, X } from "lucide-react";
 import { useId, useState } from "react";
-import { AiWorking, EmptyState, ErrorNote } from "@/components/feedback";
+import { LinkedinIcon } from "@/components/brand-icons";
+import { SpotArt } from "@/components/brand/art";
+import { AiWorking, ErrorNote } from "@/components/feedback";
 import { ClaimReportPanel } from "@/components/claims";
 import { Button } from "@/components/ui/button";
 import { Badge, Status, type BadgeTone } from "@/components/ui/card";
-import { Input, Select, Textarea } from "@/components/ui/form";
+import { Input, Textarea } from "@/components/ui/form";
 import type { ApiError } from "@/lib/api";
+import type { IntegrationStatus, User } from "@/lib/types";
 import { useI18n, type TKey } from "@/lib/i18n";
 import { cn, isArabic, timeAgo } from "@/lib/utils";
 import { asReport, blockingCount, type Improved, MAX_CONTENT, MAX_HASHTAGS, MAX_IMAGES, normalizeTag, type StudioPost } from "./model";
 import { PrivatePostImage } from "./post-image";
+import { EvidenceSection, PublishSection } from "./preview";
 
 export const STATUS_TONE: Record<StudioPost["status"], BadgeTone> = {
   draft: "neutral",
@@ -159,11 +163,9 @@ function Images({
   );
 }
 
-export type EditorProps = {
-  posts: StudioPost[] | null;
+export type WorkbenchProps = {
+  user: User | null;
   current: StudioPost | null;
-  onSelect: (p: StudioPost) => void;
-  onNew: () => void;
   content: string;
   setContent: (v: string) => void;
   tags: string[];
@@ -181,187 +183,259 @@ export type EditorProps = {
   onDismissImproved: () => void;
   sourceLabel: string | null;
   aiSteps: string[] | null;
+  linkedin?: IntegrationStatus;
+  notConnected: string | null;
+  onPublish: () => void;
 };
 
-export function Editor(p: EditorProps) {
+function initialsOf(name: string) {
+  return (
+    name
+      .split(/[\s@]+/)
+      .filter(Boolean)
+      .map((s) => s[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?"
+  );
+}
+
+/**
+ * The right-hand workbench, as in the original studio: the post is shown as it will look on LinkedIn and edited in
+ * place; hashtags and images live inside the post; the evidence check and publishing sit underneath.
+ */
+export function PostWorkbench(p: WorkbenchProps) {
   const { t } = useI18n();
   const textId = useId();
   const cur = p.current;
   const over = p.content.length > MAX_CONTENT;
+  const name = p.user?.full_name || p.user?.email || "";
 
   return (
-    <div className="flex min-w-0 flex-col gap-5">
-      {/* Draft switcher */}
-      <div className="flex items-center gap-2">
-        <label htmlFor="studio-draft" className="sr-only">
-          {t("studio2.drafts.switch")}
-        </label>
-        <Select
-          id="studio-draft"
-          className="min-w-0 flex-1"
-          value={cur?.id ?? ""}
-          onChange={(e) => {
-            const next = p.posts?.find((x) => x.id === e.target.value);
-            if (next) p.onSelect(next);
-            else p.onNew();
-          }}
-        >
-          <option value="">{t("studio2.drafts.new")}</option>
-          {p.posts?.map((x) => (
-            <option key={x.id} value={x.id}>
-              {t(`post.status.${x.status}` as TKey)} · {snippet(x.content, 48)}
-            </option>
-          ))}
-        </Select>
-        <Button variant="secondary" size="icon" onClick={p.onNew} aria-label={t("studio2.drafts.new")} title={t("studio2.drafts.new")}>
-          <FilePlus2 />
-        </Button>
-      </div>
+    <section aria-labelledby="workbench-h" className="ink-card overflow-hidden">
+      <header className="flex items-start gap-3 border-b-[1.5px] border-ink bg-surface-2 px-5 py-4 sm:px-6">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl border-[1.5px] border-ink bg-surface text-[#0a66c2] dark:text-primary-text" aria-hidden>
+          <LinkedinIcon className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 id="workbench-h" className="text-base font-extrabold text-fg">
+            {t("studio2.v1.preview")}
+          </h2>
+          <p className="mt-0.5 text-xs leading-relaxed text-fg-2">{t("studio2.v1.preview.d")}</p>
+        </div>
+        {cur && (
+          <Status tone={STATUS_TONE[cur.status]} className="shrink-0">
+            {t(`post.status.${cur.status}` as TKey)}
+          </Status>
+        )}
+      </header>
 
-      <ErrorNote error={p.error} />
-      {p.aiSteps && <AiWorking steps={p.aiSteps} />}
+      <div className="flex flex-col gap-5 px-5 py-6 sm:px-6">
+        <ErrorNote error={p.error} />
+        {p.aiSteps && <AiWorking steps={p.aiSteps} />}
 
-      {p.improved && (
-        <section aria-labelledby="improved-h" className="rounded-xl border border-primary/20 bg-primary-soft/40 p-4">
-          <div className="mb-2 flex items-center gap-2">
-            <h2 id="improved-h" className="text-sm font-semibold text-fg">
-              {t("studio2.improved.title")}
-            </h2>
-            <Badge tone="outline">{t("studio2.improved.unsaved")}</Badge>
-            <button type="button" onClick={p.onDismissImproved} className="ms-auto grid size-7 place-items-center rounded-md text-fg-3 hover:bg-surface hover:text-fg" aria-label={t("common.close")}>
-              <X className="size-4" />
-            </button>
-          </div>
-          <div className="text-[15px] leading-relaxed whitespace-pre-wrap text-fg" dir="auto">
-            {p.improved.content}
-          </div>
-          {p.improved.hashtags.length > 0 && <p className="mt-2 text-sm text-primary-text">{p.improved.hashtags.join(" ")}</p>}
-          <ClaimReportPanel report={p.improved.claim_check} className="mt-4" />
-          <Button variant="secondary" size="sm" className="mt-3" onClick={() => p.onCopy(p.improved!.content + "\n\n" + p.improved!.hashtags.join(" "))}>
-            <Copy />
-            {t("common.copy")}
-          </Button>
-        </section>
-      )}
-
-      {!cur ? (
-        !p.aiSteps && !p.improved && <EmptyState title={t("studio.empty")} text={t("studio2.editor.empty.d")} />
-      ) : (
-        <section aria-labelledby="editor-h" className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
-          <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border px-4 py-2.5">
-            <h2 id="editor-h" className="sr-only">
-              {t("studio2.editor")}
-            </h2>
-            <Status tone={STATUS_TONE[cur.status]}>{t(`post.status.${cur.status}` as TKey)}</Status>
-            <span className="text-xs text-fg-3">
-              {t(`tone.${cur.tone}` as TKey)} · {cur.language === "ar" ? "العربية" : "English"}
-            </span>
-            {p.sourceLabel && (
-              <span className="min-w-0 truncate text-xs text-fg-3" dir="auto">
-                · {p.sourceLabel}
-              </span>
-            )}
-            <span className="ms-auto text-xs text-fg-3">{timeAgo(cur.updated_at)}</span>
-          </header>
-          <div className="flex flex-col gap-4 p-4">
-            <div className="-mx-2 rounded-lg px-2 pt-1 focus-within:ring-2 focus-within:ring-primary/25">
-              <label htmlFor={textId} className="sr-only">
-                {t("studio2.editor.text")}
-              </label>
-              <Textarea
-                id={textId}
-                value={p.content}
-                onChange={(e) => p.setContent(e.target.value)}
-                disabled={!p.editable}
-                dir={isArabic(p.content) ? "rtl" : "ltr"}
-                className="min-h-72 border-transparent bg-transparent px-0 text-[15px] shadow-none hover:border-transparent focus:border-transparent focus:ring-0"
-                maxLength={MAX_CONTENT}
-                aria-describedby={`${textId}-count`}
-              />
-              <div id={`${textId}-count`} className={cn("num mt-1 text-end text-xs", over ? "text-bad" : "text-fg-3")}>
-                {p.content.length} / {MAX_CONTENT}
-              </div>
+        {p.improved && (
+          <section aria-labelledby="improved-h" className="rounded-xl border-[1.5px] border-dashed border-primary/40 bg-primary-soft/40 p-4">
+            <div className="mb-2 flex items-center gap-2">
+              <h3 id="improved-h" className="text-sm font-extrabold text-fg">
+                {t("studio2.improved.title")}
+              </h3>
+              <Badge tone="outline">{t("studio2.improved.unsaved")}</Badge>
+              <button
+                type="button"
+                onClick={p.onDismissImproved}
+                className="ms-auto grid size-7 place-items-center rounded-md text-fg-3 hover:bg-surface hover:text-fg"
+                aria-label={t("common.close")}
+              >
+                <X className="size-4" />
+              </button>
             </div>
-            <HashtagEditor key={cur.id} tags={p.tags} onChange={p.setTags} disabled={!p.editable} />
-            <Images post={cur} editable={p.editable} busy={p.busy} onUpload={p.onUpload} onDelete={p.onDeleteImage} />
-          </div>
-          <footer className="flex flex-wrap items-center gap-2 border-t border-border px-4 py-3">
-            <Button variant="secondary" size="sm" onClick={p.onSave} loading={p.busy === "save"} disabled={!p.dirty || !p.editable || p.busy !== null}>
-              <Save />
-              {t("common.save")}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => p.onCopy(p.content + (p.tags.length ? "\n\n" + p.tags.join(" ") : ""))}>
+            <div className="text-[15px] leading-relaxed whitespace-pre-wrap text-fg" dir="auto">
+              {p.improved.content}
+            </div>
+            {p.improved.hashtags.length > 0 && <p className="mt-2 text-sm text-primary-text">{p.improved.hashtags.join(" ")}</p>}
+            <ClaimReportPanel report={p.improved.claim_check} className="mt-4" />
+            <Button variant="secondary" size="sm" className="mt-3" onClick={() => p.onCopy(p.improved!.content + "\n\n" + p.improved!.hashtags.join(" "))}>
               <Copy />
               {t("common.copy")}
             </Button>
-            {p.dirty && <span className="text-xs text-warn">{t("studio2.editor.unsaved")}</span>}
-            {(cur.status === "draft" || cur.status === "failed") && (
-              <Button variant="ghost" size="sm" className="ms-auto text-fg-3 hover:text-bad" onClick={() => p.onDelete(cur)} disabled={p.busy !== null}>
-                <Trash2 />
-                {t("common.delete")}
-              </Button>
-            )}
-          </footer>
-        </section>
-      )}
+          </section>
+        )}
 
-      {/* All drafts */}
-      {!!p.posts?.length && (
-        <section aria-labelledby="drafts-h">
-          <h2 id="drafts-h" className="mb-2 text-sm font-semibold text-fg">
-            {t("studio.drafts")} <span className="num font-normal text-fg-3">· {p.posts.length}</span>
-          </h2>
-          <ul className="divide-y divide-border rounded-xl border border-border bg-surface shadow-sm">
-            {p.posts.map((x) => {
-              const r = asReport(x.claim_check);
-              const flagged = blockingCount(r);
-              const active = cur?.id === x.id;
-              return (
-                <li key={x.id} className={cn("flex items-center gap-2 pe-2", active && "bg-primary-soft/50")}>
-                  <button
-                    type="button"
-                    onClick={() => p.onSelect(x)}
+        {!cur && !p.aiSteps && !p.improved && (
+          <div className="flex flex-col items-center rounded-xl border-[1.5px] border-dashed border-border-strong bg-bg px-6 py-10 text-center">
+            <SpotArt kind="studio" className="h-28 w-auto" />
+            <h3 className="mt-5 text-base font-extrabold text-fg">{t("studio2.v1.empty.t")}</h3>
+            <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-fg-2">{t("studio2.v1.empty.d")}</p>
+          </div>
+        )}
+
+        {cur && (
+          <>
+            {/* the post, as it will appear in the feed */}
+            <article aria-label={t("studio.preview")} className="rounded-xl border border-border bg-surface shadow-sm">
+              <div className="flex items-start gap-3 px-4 pt-4">
+                <div className="grid size-11 shrink-0 place-items-center rounded-full border-[1.5px] border-ink bg-primary-soft text-sm font-extrabold text-fg" aria-hidden>
+                  {initialsOf(name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-bold text-fg">
+                    <bdi>{name}</bdi>
+                  </div>
+                  <div className="truncate text-xs text-fg-3">
+                    <bdi>{p.user?.headline || t("studio2.preview.member")}</bdi>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-fg-3">
+                    {t("studio2.preview.now")} · <Globe className="size-3" aria-label={t("studio2.preview.public")} />
+                  </div>
+                </div>
+                <span className="hidden shrink-0 text-end text-xs text-fg-3 sm:block">
+                  {t(`tone.${cur.tone}` as TKey)} · {cur.language === "ar" ? "العربية" : "English"}
+                  <span className="block">{timeAgo(cur.updated_at)}</span>
+                </span>
+              </div>
+
+              <div className="px-4 pt-3">
+                <label htmlFor={textId} className="sr-only">
+                  {t("studio2.editor.text")}
+                </label>
+                <Textarea
+                  id={textId}
+                  value={p.content}
+                  onChange={(e) => p.setContent(e.target.value)}
+                  disabled={!p.editable}
+                  dir={isArabic(p.content) ? "rtl" : "ltr"}
+                  className="min-h-64 border-dashed bg-bg text-[15px] leading-relaxed"
+                  maxLength={MAX_CONTENT}
+                  aria-describedby={`${textId}-count`}
+                />
+                <div id={`${textId}-count`} className={cn("num mt-1 text-end text-xs", over ? "text-bad" : "text-fg-3")}>
+                  {p.content.length} / {MAX_CONTENT}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 px-4 pt-2 pb-4">
+                <HashtagEditor key={cur.id} tags={p.tags} onChange={p.setTags} disabled={!p.editable} />
+                <Images post={cur} editable={p.editable} busy={p.busy} onUpload={p.onUpload} onDelete={p.onDeleteImage} />
+              </div>
+
+              {p.sourceLabel && (
+                <p className="border-t border-border px-4 py-2 text-xs text-fg-3">
+                  {t("studio2.v1.source")}: <bdi className="font-medium text-fg-2">{p.sourceLabel}</bdi>
+                </p>
+              )}
+            </article>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" onClick={p.onSave} loading={p.busy === "save"} disabled={!p.dirty || !p.editable || p.busy !== null}>
+                <Save />
+                {t("common.save")}
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => p.onCopy(p.content + (p.tags.length ? "\n\n" + p.tags.join(" ") : ""))}>
+                <Copy />
+                {t("common.copy")}
+              </Button>
+              {p.dirty && <span className="text-xs font-semibold text-warn">{t("studio2.editor.unsaved")}</span>}
+              {(cur.status === "draft" || cur.status === "failed") && (
+                <Button variant="ghost" size="sm" className="ms-auto text-fg-3 hover:text-bad" onClick={() => p.onDelete(cur)} disabled={p.busy !== null}>
+                  <Trash2 />
+                  {t("common.delete")}
+                </Button>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-6 border-t border-border pt-5">
+              <EvidenceSection post={cur} dirty={p.dirty} />
+              <div className="border-t border-border pt-5">
+                <PublishSection post={cur} dirty={p.dirty} busy={p.busy} linkedin={p.linkedin} notConnected={p.notConnected} onPublish={p.onPublish} />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/** Every saved post as a card, as in the original studio. */
+export function DraftsGrid({
+  posts,
+  current,
+  onSelect,
+  onDelete,
+  busy,
+}: {
+  posts: StudioPost[] | null;
+  current: StudioPost | null;
+  onSelect: (p: StudioPost) => void;
+  onDelete: (p: StudioPost) => void;
+  busy: string | null;
+}) {
+  const { t } = useI18n();
+  return (
+    <section aria-labelledby="drafts-h" className="mt-14">
+      <h2 id="drafts-h" className="font-display text-2xl text-fg">
+        <span className="brand-underline">{t("studio.drafts")}</span> <span className="num text-base font-semibold text-fg-3">· {posts?.length ?? 0}</span>
+      </h2>
+      {!posts?.length ? (
+        <p className="mt-6 text-sm text-fg-3">{t("studio2.v1.drafts.empty")}</p>
+      ) : (
+        <ul className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {posts.map((x) => {
+            const r = asReport(x.claim_check);
+            const flagged = blockingCount(r);
+            const active = current?.id === x.id;
+            return (
+              <li key={x.id} className={cn("ink-card flex flex-col gap-3 p-5", active && "!bg-primary-soft")}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Status tone={STATUS_TONE[x.status]}>{t(`post.status.${x.status}` as TKey)}</Status>
+                  <Badge tone="outline">{t(`tone.${x.tone}` as TKey)}</Badge>
+                  {r &&
+                    (flagged ? (
+                      <AlertTriangle className="size-4 text-warn" aria-label={t("studio2.drafts.flagged")} />
+                    ) : (
+                      <CheckCircle2 className="size-4 text-ok" aria-label={t("studio.claims.ok")} />
+                    ))}
+                  <span className="num ms-auto text-xs text-fg-3">{timeAgo(x.updated_at)}</span>
+                </div>
+                <p className="line-clamp-4 text-sm leading-relaxed text-fg" dir="auto">
+                  {x.content}
+                </p>
+                {(x.images?.length ?? 0) > 0 && (
+                  <span className="num inline-flex items-center gap-1.5 text-xs text-fg-3">
+                    <ImagePlus className="size-3.5" aria-hidden />
+                    {x.images.length}
+                  </span>
+                )}
+                <div className="mt-auto flex items-center gap-2 pt-1">
+                  <Button
+                    variant={active ? "ghost" : "secondary"}
+                    size="sm"
+                    onClick={() => onSelect(x)}
                     aria-current={active ? "true" : undefined}
-                    className="flex min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-start"
+                    aria-label={`${t("studio2.v1.open")}: ${snippet(x.content, 40)}`}
+                    disabled={active}
                   >
-                    <Status tone={STATUS_TONE[x.status]} className="w-24 shrink-0">
-                      {t(`post.status.${x.status}` as TKey)}
-                    </Status>
-                    <span className="min-w-0 flex-1 truncate text-sm text-fg" dir="auto">
-                      {snippet(x.content, 90)}
-                    </span>
-                    {r &&
-                      (flagged ? (
-                        <AlertTriangle className="size-4 shrink-0 text-warn" aria-label={t("studio2.drafts.flagged")} />
-                      ) : (
-                        <CheckCircle2 className="size-4 shrink-0 text-ok" aria-label={t("studio.claims.ok")} />
-                      ))}
-                    {(x.images?.length ?? 0) > 0 && (
-                      <span className="num hidden shrink-0 items-center gap-1 text-xs text-fg-3 sm:inline-flex">
-                        <ImagePlus className="size-3.5" aria-hidden />
-                        {x.images.length}
-                      </span>
-                    )}
-                    <span className="num w-8 shrink-0 text-end text-xs text-fg-3">{timeAgo(x.updated_at)}</span>
-                  </button>
+                    {active ? t("studio2.v1.opened") : t("studio2.v1.open")}
+                  </Button>
                   {(x.status === "draft" || x.status === "failed") && (
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => p.onDelete(x)}
-                      disabled={p.busy !== null}
+                      onClick={() => onDelete(x)}
+                      disabled={busy !== null}
                       aria-label={`${t("common.delete")}: ${snippet(x.content, 40)}`}
-                      className="text-fg-3 hover:text-bad"
+                      className="ms-auto text-fg-3 hover:text-bad"
                     >
                       <Trash2 />
                     </Button>
                   )}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
-    </div>
+    </section>
   );
 }

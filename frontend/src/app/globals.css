@@ -89,6 +89,10 @@
   --band-2: #0a3d8f;
   --on-band: #fbfdff;
   --on-band-2: #d3ebfc;
+  /* v1 ink: drawn outlines and the solid offset shadow (blueprint lines in dark) */
+  --ink: #15171c;
+  --ink-shadow: #15171c;
+  --paper-ruled: #eaf3fd;
   color-scheme: light;
 }
 
@@ -160,6 +164,9 @@
   --band-2: #0b2c58;
   --on-band: #e8f1fb;
   --on-band-2: #b4d4f5;
+  --ink: #8fb6e2;
+  --ink-shadow: #02070e;
+  --paper-ruled: #0f2440;
   color-scheme: dark;
 }
 
@@ -200,6 +207,8 @@
   --color-accent-text: var(--accent-text);
   --color-brand-2: var(--brand-2);
   --color-highlight: var(--highlight);
+  --color-ink: var(--ink);
+  --color-paper-ruled: var(--paper-ruled);
 
   --font-sans: var(--font-nunito), var(--font-plex-ar), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: var(--font-nunito), var(--font-plex-ar), ui-sans-serif, system-ui, sans-serif;
@@ -340,6 +349,42 @@ body {
   .tone-teal { --tone-soft: var(--tone-teal-soft); --tone: var(--tone-teal); }
   .tone-slate { --tone-soft: var(--tone-slate-soft); --tone: var(--tone-slate); }
   /* ink-outlined panel with the stamp: reserved for a few hero moments per page */
+  /* v1 signature, refined: an ink-outlined card with a solid offset shadow that follows reading direction */
+  .ink-card {
+    border: 1.5px solid var(--ink);
+    border-radius: 18px;
+    background: var(--surface);
+    box-shadow: 5px 5px 0 var(--ink-shadow);
+  }
+  [dir="rtl"] .ink-card {
+    box-shadow: -5px 5px 0 var(--ink-shadow);
+  }
+  .ink-pill {
+    border: 1.5px solid var(--ink);
+    border-radius: 12px;
+    box-shadow: 2px 2px 0 var(--ink-shadow);
+    transition: transform 120ms ease, box-shadow 120ms ease;
+  }
+  [dir="rtl"] .ink-pill {
+    box-shadow: -2px 2px 0 var(--ink-shadow);
+  }
+  .ink-pill:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--ink-shadow);
+  }
+  [dir="rtl"] .ink-pill:hover {
+    transform: translate(1px, -1px);
+    box-shadow: -3px 3px 0 var(--ink-shadow);
+  }
+  .ink-pill:active {
+    transform: translate(1px, 1px);
+    box-shadow: 0 0 0 var(--ink-shadow);
+  }
+  /* full-bleed section ruled top and bottom with ink, on lightly tinted paper (v1's "machine" band) */
+  .ink-ruled {
+    background: var(--paper-ruled);
+    border-block: 1.5px solid var(--ink);
+  }
   .panel-ink {
     border: 1.5px solid var(--stamp);
     border-radius: 16px;

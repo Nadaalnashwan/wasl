@@ -10,6 +10,15 @@ export default defineMessages(
     "landing2.nav.features": "Features",
     "landing2.nav.privacy": "Privacy",
     "landing2.cta": "Create account",
+    "landing2.v1.badge": "Nothing invented. Ever.",
+    "landing2.v1.secondary": "How the Wasl machine works",
+    "landing2.v1.how.title": "How the Wasl machine works",
+    "landing2.v1.theme.dark": "Blueprint",
+    "landing2.v1.theme.light": "Paper",
+    "landing2.v1.lang": "العربية",
+    "landing2.v1.f.title": "Everything grows from one record",
+    "landing2.v1.ev.cta": "Every draft is checked before you see it",
+    "landing2.v1.foot.credit": "Built for the Tuwaiq Academy AI Product Development & Monitoring project.",
 
     /* hero */
     "landing2.hero.eyebrow": "Evidence-grounded career workspace",
@@ -157,6 +166,15 @@ export default defineMessages(
     "landing2.nav.features": "المزايا",
     "landing2.nav.privacy": "الخصوصية",
     "landing2.cta": "إنشاء حساب",
+    "landing2.v1.badge": "لا شيء مُختلَق. أبدًا.",
+    "landing2.v1.secondary": "كيف تعمل آلة وصل",
+    "landing2.v1.how.title": "كيف تعمل آلة وصل",
+    "landing2.v1.theme.dark": "مخطط",
+    "landing2.v1.theme.light": "ورق",
+    "landing2.v1.lang": "English",
+    "landing2.v1.f.title": "كل شيء ينطلق من سجل واحد",
+    "landing2.v1.ev.cta": "تُفحص كل مسودة قبل أن تراها",
+    "landing2.v1.foot.credit": "بُني لمشروع أكاديمية طويق لتطوير منتجات الذكاء الاصطناعي ومراقبتها.",
 
     /* hero */
     "landing2.hero.eyebrow": "مساحة مهنية مبنية على الأدلة",

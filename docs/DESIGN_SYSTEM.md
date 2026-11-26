@@ -183,3 +183,18 @@ ramp, warm off-white text and a lighter brand blue.
 light/dark × English/Arabic against a production build, runs axe-core (WCAG 2.0/2.1/2.2 A and AA rules), and
 checks horizontal overflow, pure-white surfaces and console errors. Results for this version are in
 `docs/QA_REPORT.md`; screenshots in `docs/screenshots/v2-ivory/` (before: `docs/screenshots/before/`).
+
+## v2.4 — original homepage and studio, matured
+
+The homepage and the Content Studio return to the original (v1) composition, executed more carefully.
+
+* **Ink cards** (`.ink-card`): 1.5px ink outline and a solid 5px offset shadow that mirrors in RTL. Ink is near-black on
+  paper and blueprint blue (`--ink: #8fb6e2`) in dark mode, so outlines stay visible on dark surfaces.
+* **Ink pills** (`.ink-pill`): the v1 navigation and call-to-action buttons, with a 2px offset shadow and a press state.
+* **Ruled band** (`.ink-ruled`): full-bleed section on tinted paper between two ink rules — the "How the Wasl machine
+  works" band, with stations joined by drawn arrows (`DrawnArrow`, flipped in RTL).
+* **Homepage** (`components/landing/home.tsx`): pill nav → split hero with the framed Wasl machine → ruled machine band
+  (4 stations) → evidence check → feature card grid + privacy card → sky closing card → footer.
+* **Studio**: stepped composer card (source → voice → write, with tone chips) beside a LinkedIn post that is edited in
+  place, with the evidence check and publishing underneath; every draft below as an ink card.
+* **Auth screens** (`components/auth/kit.tsx`): the form on an ink card beside the intake-arm illustration.

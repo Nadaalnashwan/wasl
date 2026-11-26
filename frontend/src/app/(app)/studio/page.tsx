@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { ClaimReport } from "@/components/claims";
-import { Editor } from "@/components/studio/editor";
+import { DraftsGrid, PostWorkbench } from "@/components/studio/editor";
 import {
   asReport,
   type EvaluationResult,
@@ -14,7 +14,6 @@ import {
   type StudioPost,
   type Tone,
 } from "@/components/studio/model";
-import { PreviewPanel } from "@/components/studio/preview";
 import { PublishDialog } from "@/components/studio/publish-dialog";
 import { SourcePanel } from "@/components/studio/source-panel";
 import { PageHeader } from "@/components/ui/card";
@@ -315,8 +314,9 @@ export default function StudioPage() {
     <div>
       <PageHeader tone="brand" art="studio" title={t("studio.title")} sub={t("studio.sub")} />
 
-      <div className="grid gap-8 lg:grid-cols-[16rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_19rem] xl:gap-7">
-        <aside aria-label={t("studio.source")} className="min-w-0 lg:row-span-2 xl:row-span-1">
+      {/* v1 composition: the composer on one side, the post as it will appear on the other, every draft below */}
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] xl:gap-10">
+        <div className="min-w-0">
           <SourcePanel
             mode={mode}
             setMode={setMode}
@@ -342,15 +342,14 @@ export default function StudioPage() {
             contributionNotes={contributionNotes}
             setContributionNote={(id, v) => setContributionNotes((n) => ({ ...n, [id]: v }))}
             onReview={reviewAchievement}
+            onNew={current ? newDraft : undefined}
           />
-        </aside>
+        </div>
 
         <div className="min-w-0">
-          <Editor
-            posts={posts.data}
+          <PostWorkbench
+            user={user}
             current={current}
-            onSelect={load}
-            onNew={newDraft}
             content={content}
             setContent={setContent}
             tags={tags}
@@ -371,25 +370,14 @@ export default function StudioPage() {
             onDismissImproved={() => setImproved(null)}
             sourceLabel={sourceLabel}
             aiSteps={aiSteps}
+            linkedin={linkedin}
+            notConnected={notConnected}
+            onPublish={openPublish}
           />
         </div>
-
-        <aside aria-label={t("studio.preview")} className="min-w-0 lg:col-start-2 xl:col-start-3 xl:row-start-1">
-          <div className="xl:sticky xl:top-6">
-            <PreviewPanel
-              user={user}
-              post={current}
-              content={content}
-              tags={tags}
-              dirty={dirty}
-              busy={busy}
-              linkedin={linkedin}
-              notConnected={notConnected}
-              onPublish={openPublish}
-            />
-          </div>
-        </aside>
       </div>
+
+      <DraftsGrid posts={posts.data} current={current} onSelect={load} onDelete={setToDelete} busy={busy} />
 
       {current && (
         <PublishDialog

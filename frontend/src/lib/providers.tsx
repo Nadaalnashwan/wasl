@@ -113,6 +113,28 @@ const SUPA_ANON =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   "";
 
+/**
+ * What the auth redirect said when this page loaded (e-mail confirmation, password recovery, OAuth return).
+ * Captured before the Supabase client consumes and strips the URL hash, so auth pages can tell a real
+ * recovery link from a plain visit, and show "expired / invalid link" errors instead of failing silently.
+ */
+export type AuthRedirect = { type: string | null; errorCode: string | null; errorDescription: string | null; code: string | null };
+const initialRedirect: AuthRedirect = (() => {
+  if (typeof window === "undefined") return { type: null, errorCode: null, errorDescription: null, code: null };
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const query = new URLSearchParams(window.location.search);
+  const pick = (k: string) => hash.get(k) ?? query.get(k);
+  return {
+    type: pick("type"),
+    errorCode: pick("error_code") ?? pick("error"),
+    errorDescription: pick("error_description"),
+    code: query.get("code"),
+  };
+})();
+export function getInitialAuthRedirect(): AuthRedirect {
+  return initialRedirect;
+}
+
 const supabase: SupabaseClient | null =
   AUTH_MODE === "supabase" && SUPA_URL && SUPA_ANON
     ? createClient(SUPA_URL, SUPA_ANON)
@@ -121,6 +143,26 @@ const supabase: SupabaseClient | null =
 type RegisterResult =
   | "email_confirmation_required"
   | "signed_in";
+
+/** The Supabase browser client (null in local auth mode). Auth pages use it to observe recovery / OAuth sessions. */
+export function getSupabase(): SupabaseClient | null {
+  return supabase;
+}
+
+/**
+ * Supabase Auth error codes are stable identifiers; the UI translates them (see auth locale "auth2.code.*").
+ * The raw message is kept as the fallback text so nothing is lost when a new code appears.
+ */
+function authError(status: number, error: { message: string; code?: string; status?: number }): ApiError {
+  return new ApiError(error.status ?? status, error.message, undefined, error.code ? `auth:${error.code}` : undefined);
+}
+
+/** Absolute URL on this site, used as the e-mail / OAuth return address (must be in Supabase's redirect allow-list). */
+function siteUrl(path: string): string {
+  return `${window.location.origin}${path}`;
+}
+
+export type AuthProviders = { linkedin: boolean; emailRecovery: boolean };
 
 type AuthCtx = {
   user: User | null;
@@ -137,6 +179,12 @@ type AuthCtx = {
   ) => Promise<RegisterResult>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  /** Which optional sign-in methods this deployment really supports (read from Supabase Auth settings). */
+  providers: AuthProviders | null;
+  requestPasswordReset: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
+  resendConfirmation: (email: string) => Promise<void>;
+  signInWithLinkedIn: (next: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthCtx | null>(null);
@@ -277,7 +325,7 @@ function AuthProvider({
           });
 
         if (error) {
-          throw new ApiError(401, error.message);
+          throw authError(401, error);
         }
       } else {
         const result = await api<{
@@ -325,13 +373,17 @@ function AuthProvider({
             data: {
               full_name: fullName.trim(),
             },
+            // The confirmation link returns here; /auth/callback finishes the session and opens the workspace.
+            emailRedirectTo: siteUrl("/auth/callback"),
           },
         });
 
         if (error) {
-          throw new ApiError(400, error.message);
+          throw authError(400, error);
         }
 
+        // Supabase answers an already-registered (confirmed) address with an obfuscated user that has no
+        // identities, so the address is not leaked. Treat it like a confirmation-pending sign-up.
         // When email confirmation is enabled, Supabase
         // normally returns a user without a session.
         if (!data.session) {
@@ -385,6 +437,71 @@ function AuthProvider({
     clear();
   }, [requireSupabase, clear]);
 
+  const [providers, setProviders] = useState<AuthProviders | null>(
+    AUTH_MODE === "supabase" ? null : { linkedin: false, emailRecovery: false },
+  );
+
+  // Ask Supabase Auth which providers are really enabled, so the UI never offers a sign-in method that would fail.
+  useEffect(() => {
+    if (AUTH_MODE !== "supabase" || !SUPA_URL) return;
+    let alive = true;
+    fetch(`${SUPA_URL.replace(/\/+$/, "")}/auth/v1/settings`, { headers: { apikey: SUPA_ANON } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s: { external?: Record<string, boolean> } | null) => {
+        if (!alive) return;
+        setProviders({ linkedin: Boolean(s?.external?.linkedin_oidc), emailRecovery: Boolean(s?.external?.email ?? true) });
+      })
+      .catch(() => alive && setProviders({ linkedin: false, emailRecovery: true }));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const requestPasswordReset = useCallback(
+    async (email: string) => {
+      const client = requireSupabase();
+      const { error } = await client.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: siteUrl("/reset-password"),
+      });
+      if (error) throw authError(400, error);
+    },
+    [requireSupabase],
+  );
+
+  const updatePassword = useCallback(
+    async (password: string) => {
+      const client = requireSupabase();
+      const { error } = await client.auth.updateUser({ password });
+      if (error) throw authError(400, error);
+    },
+    [requireSupabase],
+  );
+
+  const resendConfirmation = useCallback(
+    async (email: string) => {
+      const client = requireSupabase();
+      const { error } = await client.auth.resend({
+        type: "signup",
+        email: email.trim(),
+        options: { emailRedirectTo: siteUrl("/auth/callback") },
+      });
+      if (error) throw authError(400, error);
+    },
+    [requireSupabase],
+  );
+
+  const signInWithLinkedIn = useCallback(
+    async (next: string) => {
+      const client = requireSupabase();
+      const { error } = await client.auth.signInWithOAuth({
+        provider: "linkedin_oidc",
+        options: { redirectTo: siteUrl(`/auth/callback?next=${encodeURIComponent(next)}`) },
+      });
+      if (error) throw authError(400, error);
+    },
+    [requireSupabase],
+  );
+
   const value = useMemo<AuthCtx>(
     () => ({
       user,
@@ -394,6 +511,11 @@ function AuthProvider({
       register,
       logout,
       refresh,
+      providers,
+      requestPasswordReset,
+      updatePassword,
+      resendConfirmation,
+      signInWithLinkedIn,
     }),
     [
       user,
@@ -402,6 +524,11 @@ function AuthProvider({
       register,
       logout,
       refresh,
+      providers,
+      requestPasswordReset,
+      updatePassword,
+      resendConfirmation,
+      signInWithLinkedIn,
     ],
   );
 
