@@ -32,6 +32,9 @@ export default defineMessages(
     "dashboard2.ach.empty": "No confirmed achievements yet",
     "dashboard2.ach.empty.d": "Add one yourself, or let Wasl find candidates in a document or your GitHub repositories. You confirm each one.",
     "dashboard2.ach.add": "Add achievement",
+    "dashboard2.stat.rejected": "{n} rejected",
+    "dashboard2.stat.drafts": "{n} draft(s)",
+    "dashboard2.stat.failed": "{n} failed",
 
     "dashboard2.posts.title": "Published on LinkedIn",
 
@@ -93,6 +96,9 @@ export default defineMessages(
     "dashboard2.ach.empty": "لا توجد إنجازات مؤكدة بعد",
     "dashboard2.ach.empty.d": "أضف إنجازاً بنفسك، أو دع وصل يبحث عن إنجازات في مستند أو في مستودعاتك على GitHub، ثم أكّد كلاً منها.",
     "dashboard2.ach.add": "أضف إنجازاً",
+    "dashboard2.stat.rejected": "{n} مرفوضة",
+    "dashboard2.stat.drafts": "{n} مسودة",
+    "dashboard2.stat.failed": "{n} فشل",
 
     "dashboard2.posts.title": "منشور على LinkedIn",
 

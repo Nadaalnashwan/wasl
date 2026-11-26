@@ -162,14 +162,15 @@ export function Tabs({ dir, ...props }: React.ComponentProps<typeof TabsPrimitiv
   const { dir: uiDir } = useI18n();
   return <TabsPrimitive.Root dir={dir ?? uiDir} {...props} />;
 }
+/** v1 pill tabs: the active tab is filled with ink, the others are outlined. */
 export function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
-  return <TabsPrimitive.List className={cn("mb-6 flex gap-5 overflow-x-auto border-b border-border", className)} {...props} />;
+  return <TabsPrimitive.List className={cn("mb-6 flex flex-wrap gap-2.5 p-0.5", className)} {...props} />;
 }
 export function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "-mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 border-transparent pb-2.5 text-sm font-medium text-fg-3 transition-colors hover:text-fg data-[state=active]:border-primary data-[state=active]:text-fg [&_svg]:size-4",
+        "inline-flex h-10 shrink-0 items-center gap-2 rounded-full border-[1.5px] border-ink bg-surface px-4 text-sm font-semibold text-fg transition-colors hover:bg-primary-soft data-[state=active]:bg-ink data-[state=active]:text-bg [&_svg]:size-4",
         className,
       )}
       {...props}

@@ -352,12 +352,59 @@ body {
   /* v1 signature, refined: an ink-outlined card with a solid offset shadow that follows reading direction */
   .ink-card {
     border: 1.5px solid var(--ink);
-    border-radius: 18px;
+    border-radius: 14px;
     background: var(--surface);
-    box-shadow: 5px 5px 0 var(--ink-shadow);
+    box-shadow: 4px 4px 0 var(--ink-shadow);
   }
   [dir="rtl"] .ink-card {
-    box-shadow: -5px 5px 0 var(--ink-shadow);
+    box-shadow: -4px 4px 0 var(--ink-shadow);
+  }
+  /* v1 "sketch-soft": the inner item of an ink card (activity rows, list items, nested panels) */
+  .ink-soft {
+    border: 1px solid color-mix(in srgb, var(--ink) 55%, transparent);
+    border-radius: 11px;
+    background: var(--surface);
+  }
+  /* v1 "sketch-dashed": empty states and drop zones */
+  .ink-dashed {
+    border: 1.5px dashed color-mix(in srgb, var(--ink) 40%, transparent);
+    border-radius: 14px;
+  }
+  /* v1 "sketch-pill": badges and chips */
+  .ink-chip {
+    border: 1px solid color-mix(in srgb, var(--ink) 60%, transparent);
+    border-radius: 999px;
+  }
+  /* v1 "sketch-btn": outlined button with a small offset shadow */
+  .ink-btn {
+    border: 1.5px solid var(--ink);
+    box-shadow: 2px 2px 0 var(--ink-shadow);
+    transition: transform 120ms ease, box-shadow 120ms ease, background-color 150ms ease;
+  }
+  [dir="rtl"] .ink-btn {
+    box-shadow: -2px 2px 0 var(--ink-shadow);
+  }
+  .ink-btn:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--ink-shadow);
+  }
+  [dir="rtl"] .ink-btn:hover:not(:disabled) {
+    transform: translate(1px, -1px);
+    box-shadow: -3px 3px 0 var(--ink-shadow);
+  }
+  .ink-btn:active:not(:disabled) {
+    transform: translate(1px, 1px);
+    box-shadow: 0 0 0 var(--ink-shadow);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ink-btn,
+    .ink-pill {
+      transition: none;
+    }
+    .ink-btn:hover:not(:disabled),
+    .ink-pill:hover {
+      transform: none;
+    }
   }
   .ink-pill {
     border: 1.5px solid var(--ink);

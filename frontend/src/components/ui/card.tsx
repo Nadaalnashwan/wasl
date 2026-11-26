@@ -3,23 +3,22 @@ import { SpotArt, type SpotKind } from "@/components/brand/art";
 import { cn } from "@/lib/utils";
 
 /**
- * Surface container. Use sparingly — only when grouping genuinely helps.
- * Prefer <Section> + plain lists/dividers for most page content.
+ * v1's card, matured: ink outline, even radius and a solid offset shadow (mirrors in RTL).
+ * tone "sky" is v1's highlighted card; "soft" is the inner item of a card (no shadow).
  */
 export function Card({
   className,
-  tone = "surface",
+  tone = "paper",
   padded = true,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & { tone?: "surface" | "muted" | "brand"; padded?: boolean }) {
+}: React.HTMLAttributes<HTMLDivElement> & { tone?: "paper" | "sky" | "soft" | "tint"; padded?: boolean }) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-border",
-        tone === "surface" && "bg-surface shadow-sm",
-        tone === "muted" && "bg-surface-2",
-        tone === "brand" && "border-primary/25 bg-primary-soft",
-        padded && "p-5",
+        tone === "soft" ? "ink-soft" : "ink-card",
+        tone === "sky" && "!bg-primary-soft",
+        tone === "tint" && "!bg-surface-2",
+        padded && (tone === "soft" ? "p-4" : "p-5 sm:p-6"),
         className,
       )}
       {...props}
@@ -27,24 +26,31 @@ export function Card({
   );
 }
 
+/** v1 card title: an outlined sky icon square, the title, and an optional action at the end. */
 export function CardTitle({
   className,
   icon,
   children,
   action,
   description,
+  as: As = "h2",
 }: {
   className?: string;
   icon?: React.ReactNode;
   children: React.ReactNode;
   action?: React.ReactNode;
   description?: React.ReactNode;
+  as?: "h2" | "h3";
 }) {
   return (
-    <div className={cn("mb-4 flex items-start gap-3", className)}>
-      {icon && <span className="mt-0.5 text-fg-3 [&_svg]:size-4">{icon}</span>}
+    <div className={cn("mb-5 flex items-center gap-3", className)}>
+      {icon && (
+        <span className="grid size-9 shrink-0 place-items-center rounded-[10px] border-[1.5px] border-ink bg-primary-soft text-fg [&_svg]:size-[18px]" aria-hidden>
+          {icon}
+        </span>
+      )}
       <div className="min-w-0 flex-1">
-        <h2 className="text-heading font-bold text-fg">{children}</h2>
+        <As className="font-display text-xl leading-tight text-fg">{children}</As>
         {description && <p className="mt-0.5 text-sm text-fg-3">{description}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
@@ -52,22 +58,58 @@ export function CardTitle({
   );
 }
 
+/** v1 stat card: icon + label, a large number, an optional hint. */
+export function StatCard({
+  label,
+  value,
+  hint,
+  icon,
+  tone = "paper",
+  href,
+}: {
+  label: string;
+  value: React.ReactNode;
+  hint?: React.ReactNode;
+  icon?: React.ReactNode;
+  tone?: "paper" | "sky";
+  href?: string;
+}) {
+  const body = (
+    <>
+      <div className="flex items-center gap-2 text-sm text-fg-2">
+        {icon && <span className="text-fg-3 [&_svg]:size-4" aria-hidden>{icon}</span>}
+        {label}
+      </div>
+      <div className="num font-display mt-2 text-[2.1rem] leading-none text-fg">{value}</div>
+      {hint && <div className="mt-2 text-xs text-fg-3">{hint}</div>}
+    </>
+  );
+  const cls = cn("ink-card flex min-h-[7.25rem] flex-col p-4 sm:p-5", tone === "sky" && "!bg-primary-soft");
+  return href ? (
+    <a href={href} className={cn(cls, "transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary")}>
+      {body}
+    </a>
+  ) : (
+    <div className={cls}>{body}</div>
+  );
+}
+
 export type BadgeTone = "neutral" | "brand" | "accent" | "ok" | "warn" | "bad" | "outline";
 
 export function Badge({ className, tone = "neutral", ...props }: React.HTMLAttributes<HTMLSpanElement> & { tone?: BadgeTone }) {
   const tones: Record<BadgeTone, string> = {
-    neutral: "bg-surface-2 text-fg-2",
-    brand: "bg-primary-soft text-primary-text",
-    accent: "bg-accent-soft text-accent-text",
-    ok: "bg-ok-soft text-ok",
-    warn: "bg-warn-soft text-warn",
-    bad: "bg-bad-soft text-bad",
-    outline: "border border-border text-fg-2",
+    neutral: "ink-chip bg-surface-2 text-fg-2",
+    brand: "ink-chip bg-primary-soft text-fg",
+    accent: "ink-chip bg-accent-soft text-accent-text",
+    ok: "ink-chip bg-ok-soft text-ok",
+    warn: "ink-chip bg-warn-soft text-warn",
+    bad: "ink-chip bg-bad-soft text-bad",
+    outline: "ink-chip bg-surface text-fg-2",
   };
   return (
     <span
       className={cn(
-        "inline-flex h-5 items-center gap-1 rounded-full px-2 text-xs font-semibold whitespace-nowrap [&_svg]:size-3",
+        "inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-xs font-semibold whitespace-nowrap [&_svg]:size-3",
         tones[tone],
         className,
       )}
@@ -122,15 +164,18 @@ export function MetricRow({ children, className }: { children: React.ReactNode; 
 
 export type AreaTone = "brand" | "sky" | "amber" | "green" | "violet" | "teal" | "slate";
 
-/** Page title. With `art` + `tone` it becomes the area's banner: its colour, its illustration, the same layout everywhere. */
+/**
+ * v1 page header: a large title with the blue underline, the subtitle, and actions (or a small line illustration)
+ * at the end. `tone` is accepted for compatibility and ignored: v1 had no per-area banners.
+ */
 export function PageHeader({
   title,
   sub,
   actions,
   eyebrow,
   className,
-  tone,
   art,
+  artNode,
 }: {
   title: string;
   sub?: React.ReactNode;
@@ -138,37 +183,21 @@ export function PageHeader({
   eyebrow?: React.ReactNode;
   className?: string;
   tone?: AreaTone;
+  /** a small line illustration beside the actions (v1 Job Matches) */
   art?: SpotKind;
+  artNode?: React.ReactNode;
 }) {
-  if (art) {
-    return (
-      <header
-        className={cn(
-          `tone-${tone ?? "brand"}`,
-          "relative mb-10 overflow-hidden rounded-2xl border border-border bg-tone-soft px-6 py-7 sm:px-8",
-          className,
-        )}
-      >
-        <div className="relative z-10 flex flex-wrap items-end gap-x-6 gap-y-4 sm:pe-40">
-          <div className="min-w-0 flex-1">
-            {eyebrow && <div className="mb-2 text-sm font-bold text-tone">{eyebrow}</div>}
-            <h1 className="font-display brand-underline text-title text-fg">{title}</h1>
-            {sub && <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-fg-2">{sub}</p>}
-          </div>
-          {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
-        </div>
-        <SpotArt kind={art} className="pointer-events-none absolute end-5 top-1/2 hidden h-28 w-auto -translate-y-1/2 sm:block" />
-      </header>
-    );
-  }
   return (
-    <header className={cn("mb-10 flex flex-wrap items-end gap-x-6 gap-y-4", className)}>
+    <header className={cn("mb-9 flex flex-wrap items-end gap-x-6 gap-y-5", className)}>
       <div className="min-w-0 flex-1">
-        {eyebrow && <div className="eyebrow mb-2">{eyebrow}</div>}
-        <h1 className="font-display brand-underline text-title text-fg">{title}</h1>
+        {eyebrow && <div className="mb-2 text-sm font-bold text-primary-text">{eyebrow}</div>}
+        <h1 className="font-display text-[2.1rem] leading-[1.15] text-fg sm:text-[2.6rem] rtl:leading-snug">
+          <span className="brand-underline">{title}</span>
+        </h1>
         {sub && <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-fg-2">{sub}</p>}
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      {(art || artNode) && <div className="hidden shrink-0 self-center md:block">{artNode ?? <SpotArt kind={art!} className="h-24 w-auto" />}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2.5">{actions}</div>}
     </header>
   );
 }

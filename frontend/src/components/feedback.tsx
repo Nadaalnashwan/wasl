@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Check, Inbox, Loader2, PlugZap, RefreshCw } from "lucide-react";
+import { AlertCircle, Check, Loader2, PlugZap, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { ApiError } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
@@ -51,33 +51,53 @@ export function AiWorking({ steps, className }: { steps: string[]; className?: s
   );
 }
 
+/** v1 empty state: a dashed box with a line illustration, a title, a sentence and an optional action. */
 export function EmptyState({
   title,
   text,
   action,
   icon,
   className,
+  art,
+  compact,
 }: {
   title: string;
   text?: React.ReactNode;
   action?: React.ReactNode;
   icon?: React.ReactNode;
   className?: string;
+  art?: React.ReactNode;
+  compact?: boolean;
 }) {
   return (
-    <div className={cn("flex items-start gap-4 rounded-xl border border-border-soft bg-primary-soft/45 px-5 py-4", className)}>
-      <span
-        className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary-text ring-1 ring-primary/15 [&_svg]:size-[18px]"
-        aria-hidden
-      >
-        {icon ?? <Inbox />}
-      </span>
-      <div className="min-w-0 pt-0.5">
-        <h3 className="text-sm font-bold text-fg">{title}</h3>
-        {text && <p className="mt-1 max-w-lg text-sm leading-relaxed text-fg-2">{text}</p>}
-        {action && <div className="mt-3">{action}</div>}
-      </div>
+    <div className={cn("ink-dashed flex flex-col items-center px-6 text-center", compact ? "py-6" : "py-10", className)}>
+      {art ??
+        (icon ? (
+          <span className="grid size-11 place-items-center rounded-full border-[1.5px] border-ink bg-primary-soft text-fg [&_svg]:size-5" aria-hidden>
+            {icon}
+          </span>
+        ) : (
+          <EmptyBox />
+        ))}
+      <h3 className="mt-4 text-base font-extrabold text-fg">{title}</h3>
+      {text && <p className="mt-1.5 max-w-md text-sm leading-relaxed text-fg-2">{text}</p>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
+  );
+}
+
+/** v1's "box on the conveyor", redrawn as a calm line illustration (no face). */
+function EmptyBox() {
+  return (
+    <svg viewBox="0 0 120 64" className="h-14 w-auto" fill="none" aria-hidden>
+      <path d="M38 20h44v26H38z" fill="var(--art-fill)" stroke="var(--art-ink)" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M38 20l-6-9h44l6 9M82 20l7-8" stroke="var(--art-ink)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      <path d="M50 32h20" stroke="var(--art-brand)" strokeWidth="2" strokeLinecap="round" />
+      <path d="M14 52h92" stroke="var(--art-ink)" strokeWidth="2" strokeLinecap="round" />
+      {[28, 46, 64, 82].map((x) => (
+        <circle key={x} cx={x} cy="57" r="2.6" fill="var(--art-ink)" />
+      ))}
+    </svg>
   );
 }
 
