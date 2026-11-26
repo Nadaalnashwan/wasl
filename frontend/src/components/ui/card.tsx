@@ -243,7 +243,7 @@ export function Section({
 export function List({ className, ...props }: React.HTMLAttributes<HTMLUListElement>) {
   return (
     <ul
-      className={cn("divide-y divide-border-soft overflow-hidden rounded-xl border border-border bg-surface shadow-sm", className)}
+      className={cn("divide-y divide-border-soft overflow-hidden ink-soft", className)}
       {...props}
     />
   );

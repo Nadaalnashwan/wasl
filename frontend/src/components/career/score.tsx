@@ -78,7 +78,7 @@ export function ScoreExplain({ score, className, open }: { score: Score; classNa
     );
   };
   return (
-    <details className={cn("group rounded-xl border border-border bg-surface shadow-sm", className)} open={open}>
+    <details className={cn("group ink-soft", className)} open={open}>
       <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-fg marker:hidden [&::-webkit-details-marker]:hidden">
         <span className="flex items-center justify-between gap-3">
           {t("career2.score.how")}

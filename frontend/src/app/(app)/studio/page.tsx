@@ -355,7 +355,7 @@ export default function StudioPage() {
 
   return (
     <div>
-      <PageHeader tone="brand" art="studio" title={t("studio.title")} sub={t("studio.sub")} />
+      <PageHeader title={t("studio.title")} sub={t("studio.sub")} />
 
       {/* v1 composition: the composer on one side, the post as it will appear on the other, every draft below */}
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] xl:gap-10">

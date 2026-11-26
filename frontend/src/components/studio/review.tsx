@@ -353,7 +353,7 @@ function Summary({ report }: { report: ClaimReport }) {
   const headline =
     b.total === 0 ? t("studio2.rv.headline.none") : flagged === 0 ? t("studio2.rv.headline.ok") : fill(t("studio2.rv.headline.flagged"), { n: flagged, total: b.total });
   return (
-    <div className="rounded-xl border border-border bg-surface px-4 py-3.5">
+    <div className="ink-soft px-4 py-3.5">
       <p className="text-sm font-bold text-fg">{headline}</p>
       {b.total > 0 && (
         <>
@@ -693,7 +693,7 @@ export function EvidenceReview(props: ReviewProps) {
       )}
 
       {supported.length > 0 && (
-        <details className="rounded-xl border border-border bg-surface px-4 py-3">
+        <details className="ink-soft px-4 py-3">
           <summary className="cursor-pointer text-sm font-semibold text-fg-2">
             <CircleCheck className="me-1.5 inline size-4 text-ok" aria-hidden />
             {fill(t("studio2.rv.supported.list"), { n: supported.length })}

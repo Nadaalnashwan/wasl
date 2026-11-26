@@ -57,6 +57,7 @@ export function useAuthError() {
   };
 }
 
+/** v1: the intake arm and the promise on the start side of the page (no panel, on paper). */
 function SidePanel() {
   const { t } = useI18n();
   const points: { t: TKey; d: TKey }[] = [
@@ -65,48 +66,42 @@ function SidePanel() {
     { t: "auth2.side.p3.t", d: "auth2.side.p3.d" },
   ];
   return (
-    <aside className="relative hidden overflow-hidden bg-primary-soft/70 lg:flex lg:flex-col lg:justify-center lg:px-14 lg:py-12 xl:px-20">
-      <div className="max-w-md">
-        <div className="ink-card mb-10 grid w-fit place-items-center px-8 py-6">
-          <StationArt kind="document" className="h-32 w-auto" />
-        </div>
-        <p className="mb-4 text-sm font-bold text-primary-text">{t("auth2.side.eyebrow")}</p>
-        <p className="font-display text-[2.4rem] leading-[1.08] text-fg rtl:leading-snug">
-          <Marked text={t("auth2.side.title")} mark={t("landing2.hero.mark")} />
-        </p>
-        <ul className="mt-10 flex flex-col gap-6">
-          {points.map((p) => (
-            <li key={p.t} className="flex gap-3">
-              <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-surface text-primary-text ring-1 ring-primary/30">
-                <Check className="size-3" aria-hidden />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-fg">{t(p.t)}</p>
-                <p className="mt-1 text-sm leading-relaxed text-fg-2">{t(p.d)}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-12 text-xs text-fg-3">{t("auth2.side.foot")}</p>
-      </div>
+    <aside className="hidden min-w-0 lg:block">
+      <StationArt kind="document" className="mb-8 h-36 w-auto" />
+      <p className="mb-3 text-sm font-bold text-primary-text">{t("auth2.side.eyebrow")}</p>
+      <p className="font-display max-w-md text-[2.3rem] leading-[1.1] text-fg rtl:leading-snug">
+        <Marked text={t("auth2.side.title")} mark={t("landing2.hero.mark")} />
+      </p>
+      <ul className="mt-9 flex max-w-md flex-col gap-5">
+        {points.map((p) => (
+          <li key={p.t} className="flex gap-3">
+            <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border-[1.5px] border-ink bg-primary-soft text-fg">
+              <Check className="size-3" aria-hidden />
+            </span>
+            <div>
+              <p className="text-sm font-bold text-fg">{t(p.t)}</p>
+              <p className="mt-0.5 text-sm leading-relaxed text-fg-2">{t(p.d)}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-10 text-xs text-fg-3">{t("auth2.side.foot")}</p>
     </aside>
   );
 }
 
-/** Split screen: the form on an ink-outlined card (v1's signature card), the promise and the intake arm beside it. */
+/** v1's auth layout: logo and pills across the top; the arm and promise on the start side, the form card on the end side. */
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <div className="flex min-h-screen flex-col">
-        <header className="flex items-center gap-3 px-4 py-5 sm:px-8">
-          <Logo imageClassName="h-7" />
-          <Toggles className="ms-auto" />
-        </header>
-        <main id="main" className="flex flex-1 items-center justify-center px-4 pt-2 pb-16 sm:px-8">
-          <div className="ink-card w-full max-w-[26rem] px-6 py-8 sm:px-9 sm:py-10">{children}</div>
-        </main>
-      </div>
-      <SidePanel />
+    <div className="flex min-h-screen flex-col">
+      <header className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-5 sm:px-6 lg:px-8">
+        <Logo imageClassName="h-8" />
+        <Toggles className="ms-auto" />
+      </header>
+      <main id="main" className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-14 px-4 pt-4 pb-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:px-8">
+        <SidePanel />
+        <div className="ink-card mx-auto w-full max-w-[27rem] px-6 py-8 sm:px-9 sm:py-10 lg:mx-0">{children}</div>
+      </main>
     </div>
   );
 }

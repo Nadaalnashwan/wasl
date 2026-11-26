@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ArrowLeft, Check, FilePlus2, FileText, RotateCcw, ShieldAlert, Upload, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, FilePlus2, FileText, History, PenLine, RotateCcw, Scissors, ShieldAlert, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -11,7 +11,7 @@ import { changedSections, cleanCV, EMPTY_CV, isEmptyCV, normalizeCV, sameCV } fr
 import { StaleSuggestions, suggestionMarks, SuggestionReview } from "@/components/cv/suggestions";
 import { AiWorking, EmptyState, ErrorNote, Notice, SkeletonRows } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
-import { Badge, PageHeader, Section, Status } from "@/components/ui/card";
+import { Badge, Card, CardTitle, PageHeader, Status } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/form";
 import { ConfirmDialog } from "@/components/ui/overlay";
 import { api, ApiError, upload } from "@/lib/api";
@@ -237,28 +237,81 @@ export default function CVPage() {
     previewMarks = suggestionMarks(previewSuggestion);
   }
 
-  const tabs: { k: Pane; label: string; count?: number; mobileOnly?: boolean }[] = [
+  const editing = working !== null;
+  const hasWorkspace = !!saved || editing;
+  const startEdit = () => {
+    setWorking(normalizeCV(saved?.data ?? EMPTY_CV));
+    setBaseVersion(saved?.version ?? null);
+    setMode(saved ? { kind: "edit" } : { kind: "new" });
+    setPreview({ kind: "working" });
+    setPane("edit");
+  };
+  const stopPreview = () => setPreview({ kind: "working" });
+
+  // Edit mode on small screens: switch between the editor and the live preview.
+  const editTabs: { k: Pane; label: string }[] = [
     { k: "edit", label: t("cv2.tab.edit") },
-    { k: "preview", label: t("cv2.tab.preview"), mobileOnly: true },
-    { k: "suggestions", label: t("cv2.tab.suggestions"), count: pendingCount },
-    { k: "history", label: t("cv2.tab.history") },
+    { k: "preview", label: t("cv2.tab.preview") },
   ];
-  const visibleTabs = tabs.filter((x) => !(x.mobileOnly && isLg));
   const onTabKey = (e: React.KeyboardEvent, i: number) => {
     const dir = (e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0) * (document.dir === "rtl" ? -1 : 1);
     if (!dir) return;
     e.preventDefault();
-    const next = visibleTabs[(i + dir + visibleTabs.length) % visibleTabs.length];
+    const next = editTabs[(i + dir + editTabs.length) % editTabs.length];
     setPane(next.k);
     document.getElementById(`cv-tab-${next.k}`)?.focus();
   };
 
-  const hasWorkspace = !!saved || working !== null;
+  /** What the document card is showing instead of the saved CV (a past version or a suggestion), with a way back. */
+  const previewBanner =
+    preview.kind === "version" ? (
+      <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[11px] bg-surface-2 px-3.5 py-2.5" aria-live="polite">
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold text-fg">
+            {fill(t("cv2.preview.version"), { v: preview.version })} <span className="num font-normal text-fg-3">· {fmtDate(preview.created_at, locale)}</span>
+          </div>
+          <div className="truncate text-xs text-fg-3">{preview.change_summary}</div>
+        </div>
+        {preview.version !== saved?.version && (
+          <Button size="xs" variant="secondary" onClick={() => setRestoreTarget(preview.version)}>
+            <RotateCcw /> {t("cv.restore")}
+          </Button>
+        )}
+        <Button size="xs" variant="ghost" onClick={stopPreview}>
+          <ArrowLeft className="rtl:rotate-180" /> {t("cv2.preview.back")}
+        </Button>
+      </div>
+    ) : previewSuggestion ? (
+      <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[11px] bg-warn-soft px-3.5 py-2.5" aria-live="polite">
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold text-fg">{t("cv2.preview.suggestion")}</div>
+          <div className="text-xs text-fg-2">{t("cv2.preview.suggestionHint")}</div>
+        </div>
+        <Button size="xs" variant="ghost" onClick={stopPreview}>
+          <ArrowLeft className="rtl:rotate-180" /> {t("cv2.preview.back")}
+        </Button>
+      </div>
+    ) : null;
 
-  /* ---------------------------------------------------------------- render */
+  /* ---------------------------------------------------------------- render (v1 layout) */
   return (
     <div>
-      <PageHeader tone="sky" art="cv" title={t("nav.cv")} sub={t("cv2.sub")} />
+      <PageHeader
+        title={t("cv.title")}
+        sub={t("cv.sub")}
+        actions={
+          !editing && (
+            <>
+              <Button variant="subtle" onClick={pickFile} loading={parsing}>
+                {!parsing && <Upload />} {t("cv.upload")}
+              </Button>
+              <Button variant="secondary" onClick={startEdit}>
+                {saved ? <PenLine /> : <FilePlus2 />} {saved ? t("cv.edit") : t("cv.create")}
+              </Button>
+            </>
+          )
+        }
+      />
       <input
         ref={fileRef}
         type="file"
@@ -274,53 +327,158 @@ export default function CVPage() {
         {uploadErr && <ErrorNote error={uploadErr} className="mb-6" />}
       </div>
 
-      {master.loading && !saved && working === null && <SkeletonRows rows={4} />}
+      {master.loading && !saved && !editing && <SkeletonRows rows={4} />}
       {master.error && <ErrorNote error={master.error} onRetry={master.reload} className="mb-6" />}
 
       {/* ------------------------------------------------ first run: no Master CV yet */}
       {!master.loading && !master.error && !hasWorkspace && (
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <Section title={t("cv2.start.title")} description={t("cv2.start.text")}>
-            <ol className="mt-4 flex flex-col divide-y divide-border rounded-xl border border-border bg-surface shadow-sm">
-              <li className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold text-fg">{t("cv2.start.upload")}</div>
-                  <p className="mt-0.5 text-sm text-fg-3">{t("cv2.start.uploadText")}</p>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          <Card>
+            <CardTitle icon={<FilePlus2 />} description={t("cv2.start.text")}>
+              {t("cv2.start.title")}
+            </CardTitle>
+            <EmptyState
+              title={t("cv.empty")}
+              text={t("cv2.start.uploadText")}
+              action={
+                <div className="flex flex-wrap justify-center gap-3">
+                  <Button onClick={pickFile} loading={parsing}>
+                    {!parsing && <Upload />} {t("cv.upload")}
+                  </Button>
+                  <Button variant="secondary" onClick={startEdit}>
+                    <FilePlus2 /> {t("cv.create")}
+                  </Button>
                 </div>
-                <Button onClick={pickFile} loading={parsing}>
-                  <Upload /> {t("cv.upload")}
-                </Button>
-              </li>
-              <li className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold text-fg">{t("cv.create")}</div>
-                  <p className="mt-0.5 text-sm text-fg-3">{t("cv2.start.scratchText")}</p>
-                </div>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setWorking(EMPTY_CV);
-                    setBaseVersion(null);
-                    setMode({ kind: "new" });
-                  }}
-                >
-                  <FilePlus2 /> {t("cv.create")}
-                </Button>
-              </li>
-            </ol>
-          </Section>
-          <div className="hidden lg:block">
-            <CVDocument data={EMPTY_CV} emptyHint={t("cv2.doc.emptyStart")} label={t("cv2.preview.title")} />
-          </div>
+              }
+            />
+          </Card>
+          <Card tone="sky">
+            <CardTitle icon={<History />}>{t("cv.history")}</CardTitle>
+            <p className="text-sm text-fg-2">{t("cv2.start.scratchText")}</p>
+          </Card>
         </div>
       )}
 
-      {/* ------------------------------------------------ workspace */}
-      {hasWorkspace && doc && (
+      {/* ------------------------------------------------ v1 view: suggestions, the CV, history and tailored versions */}
+      {!editing && saved && doc && (
         <>
-          {/* toolbar */}
-          <div className="sticky top-14 z-20 -mx-4 mb-6 border-b border-border bg-bg/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 md:top-0 md:-mx-10 md:px-10">
-            <div className="mx-auto flex max-w-[1120px] flex-wrap items-center gap-x-4 gap-y-2">
+          {(pendingCount > 0 || staleNotice || (stale.data?.length ?? 0) > 0) && (
+            <section className="mb-10" aria-labelledby="cv-sug-h">
+              <h2 id="cv-sug-h" className="font-display mb-2 flex items-center gap-2.5 text-2xl text-fg">
+                {t("cv.suggestions")}
+                {pendingCount > 0 && (
+                  <Badge tone="warn" className="num">
+                    {pendingCount}
+                  </Badge>
+                )}
+              </h2>
+              <p className="mb-5 max-w-2xl text-sm text-fg-2">{t("cv2.sug.intro")}</p>
+              <div className="flex flex-col gap-5">
+                {staleNotice && (
+                  <Notice tone="warn" icon={<AlertTriangle />} title={t("cv2.sug.staleTitle")}>
+                    <p>{staleNotice}</p>
+                    <p className="mt-1">{t("cv2.sug.staleExplain")}</p>
+                    <div className="mt-2 flex gap-3">
+                      <Link href="/achievements" className="text-sm font-medium text-primary-text hover:underline">
+                        {t("cv2.sug.regenerate")}
+                      </Link>
+                      <button type="button" className="text-sm text-fg-3 hover:text-fg" onClick={() => setStaleNotice(null)}>
+                        {t("common.close")}
+                      </button>
+                    </div>
+                  </Notice>
+                )}
+                {suggestions.error && <ErrorNote error={suggestions.error} onRetry={suggestions.reload} />}
+                {suggestions.data?.map((s) => (
+                  <SuggestionReview
+                    key={s.id}
+                    s={s}
+                    master={saved}
+                    previewing={preview.kind === "suggestion" && preview.id === s.id}
+                    onPreview={() => {
+                      if (preview.kind === "suggestion" && preview.id === s.id) stopPreview();
+                      else {
+                        setPreview({ kind: "suggestion", id: s.id });
+                        document.getElementById("cv-document")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }
+                    }}
+                    guard={guard}
+                    onResolved={(kind, msg) => {
+                      if (preview.kind === "suggestion" && preview.id === s.id) stopPreview();
+                      if (kind === "stale") {
+                        setStaleNotice(msg ?? t("cv2.sug.outdatedTitle"));
+                        suggestions.reload();
+                        stale.reload();
+                      } else {
+                        reloadAll();
+                      }
+                    }}
+                  />
+                ))}
+                <StaleSuggestions items={stale.data ?? []} />
+              </div>
+            </section>
+          )}
+
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+            <Card id="cv-document" className="min-w-0 scroll-mt-6">
+              <CardTitle action={<div className="flex items-center gap-2">{<ExportButtons cv={saved} />}</div>}>
+                <span className="inline-flex flex-wrap items-center gap-2.5">
+                  {t("cv.current")}
+                  <Badge tone="brand" className="num">
+                    v{saved.version}
+                  </Badge>
+                </span>
+              </CardTitle>
+              {previewBanner}
+              {previewData && <CVDocument data={previewData} marks={previewMarks} label={t("cv2.preview.title")} />}
+            </Card>
+
+            <aside className="flex min-w-0 flex-col gap-6">
+              <Card>
+                <CardTitle icon={<History />} description={t("cv2.hist.text")}>
+                  {t("cv.history")}
+                </CardTitle>
+                {versions.error && <ErrorNote error={versions.error} onRetry={versions.reload} />}
+                {versions.loading && !versions.data ? (
+                  <SkeletonRows rows={2} />
+                ) : (
+                  <VersionList
+                    versions={versions.data ?? []}
+                    current={saved.version}
+                    viewing={preview.kind === "version" ? preview.version : null}
+                    onView={async (v) => {
+                      await viewVersion(v);
+                      document.getElementById("cv-document")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    onRestore={(v) => setRestoreTarget(v)}
+                  />
+                )}
+              </Card>
+              <Card>
+                <CardTitle
+                  icon={<Scissors />}
+                  action={
+                    <Link href="/tailor" className="text-sm font-semibold text-primary-text hover:underline">
+                      {t("cv2.tailored.new")}
+                    </Link>
+                  }
+                >
+                  {t("cv.tailored")}
+                </CardTitle>
+                {tailored.error && <ErrorNote error={tailored.error} onRetry={tailored.reload} />}
+                <TailoredList items={tailored.data ?? []} onDeleted={tailored.reload} />
+              </Card>
+            </aside>
+          </div>
+        </>
+      )}
+
+      {/* ------------------------------------------------ edit mode: the editor beside the live document */}
+      {editing && doc && (
+        <>
+          <div className="sticky top-16 z-20 -mx-4 mb-6 border-b-[1.5px] border-ink bg-bg/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 md:top-0 md:-mx-10 md:px-10 lg:-mx-12 lg:px-12">
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2">
               <div className="min-w-0 flex-1 basis-56" aria-live="polite">
                 {mode.kind === "import" ? (
                   <Status tone="warn">{t("cv2.status.import")}</Status>
@@ -343,22 +501,14 @@ export default function CVPage() {
                 <Button size="sm" variant="ghost" onClick={pickFile} loading={parsing}>
                   {!parsing && <Upload />} {t("cv2.toolbar.upload")}
                 </Button>
-                {saved && (
-                  <div className="flex items-center gap-2">
-                    <ExportButtons cv={saved} />
-                  </div>
-                )}
-                {working !== null && (dirty || mode.kind !== "edit") && (
-                  <Button size="sm" variant="ghost" onClick={() => (dirty ? setPending({ run: () => undefined }) : discard())}>
-                    <X /> {t("cv2.toolbar.discard")}
-                  </Button>
-                )}
+                <Button size="sm" variant="secondary" onClick={() => (dirty ? setPending({ run: () => undefined }) : discard())}>
+                  <X /> {dirty ? t("cv2.toolbar.discard") : t("cv2.preview.back")}
+                </Button>
                 <Button size="sm" onClick={openSave} disabled={!dirty}>
                   <Check /> {mode.kind === "import" || !saved ? t("cv.review.save") : t("cv2.toolbar.save")}
                 </Button>
               </div>
             </div>
-            {saved && dirty && <p className="mx-auto mt-1 max-w-[1120px] text-end text-[11px] text-fg-3">{fill(t("cv2.export.savedOnly"), { v: saved.version })}</p>}
           </div>
 
           {mode.kind === "import" && (
@@ -384,135 +534,40 @@ export default function CVPage() {
             </div>
           )}
 
-          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8">
-            {/* left: tabs + context pane */}
-            <div className="min-w-0">
-              <div role="tablist" aria-label={t("cv2.tab.label")} className="mb-5 flex gap-5 border-b border-border">
-                {visibleTabs.map((tab, i) => {
-                  const sel = effPane === tab.k;
-                  return (
-                    <button
-                      key={tab.k}
-                      id={`cv-tab-${tab.k}`}
-                      type="button"
-                      role="tab"
-                      aria-selected={sel}
-                      aria-controls={`cv-panel-${tab.k}`}
-                      tabIndex={sel ? 0 : -1}
-                      onClick={() => setPane(tab.k)}
-                      onKeyDown={(e) => onTabKey(e, i)}
-                      className={cn(
-                        "-mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 pb-2.5 text-sm font-medium transition-colors",
-                        sel ? "border-primary text-fg" : "border-transparent text-fg-3 hover:text-fg",
-                      )}
-                    >
-                      {tab.label}
-                      {!!tab.count && (
-                        <Badge tone="warn" className="num">
-                          {tab.count}
-                        </Badge>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {effPane === "edit" && (
-                <div role="tabpanel" id="cv-panel-edit" aria-labelledby="cv-tab-edit">
-                  <CVEditor value={doc} onChange={onEdit} defaultOpen={mode.kind === "edit" ? ["contact", "summary"] : ["contact", "summary", "experience"]} />
-                </div>
-              )}
-
-              {effPane === "suggestions" && (
-                <div role="tabpanel" id="cv-panel-suggestions" aria-labelledby="cv-tab-suggestions" className="flex flex-col gap-5">
-                  <p className="text-sm text-fg-2">{t("cv2.sug.intro")}</p>
-                  {staleNotice && (
-                    <Notice tone="warn" icon={<AlertTriangle />} title={t("cv2.sug.staleTitle")}>
-                      <p>{staleNotice}</p>
-                      <p className="mt-1">{t("cv2.sug.staleExplain")}</p>
-                      <div className="mt-2 flex gap-3">
-                        <Link href="/achievements" className="text-sm font-medium text-primary-text hover:underline">
-                          {t("cv2.sug.regenerate")}
-                        </Link>
-                        <button type="button" className="text-sm text-fg-3 hover:text-fg" onClick={() => setStaleNotice(null)}>
-                          {t("common.close")}
-                        </button>
-                      </div>
-                    </Notice>
-                  )}
-                  {suggestions.error && <ErrorNote error={suggestions.error} onRetry={suggestions.reload} />}
-                  {suggestions.loading && !suggestions.data && <SkeletonRows rows={2} />}
-                  {saved && suggestions.data?.map((s) => (
-                    <SuggestionReview
-                      key={s.id}
-                      s={s}
-                      master={saved}
-                      previewing={preview.kind === "suggestion" && preview.id === s.id}
-                      onPreview={() => {
-                        if (preview.kind === "suggestion" && preview.id === s.id) setPreview({ kind: "working" });
-                        else {
-                          setPreview({ kind: "suggestion", id: s.id });
-                          if (!isLg) setPane("preview");
-                        }
-                      }}
-                      guard={guard}
-                      onResolved={(kind, msg) => {
-                        if (preview.kind === "suggestion" && preview.id === s.id) setPreview({ kind: "working" });
-                        if (kind === "stale") {
-                          setStaleNotice(msg ?? t("cv2.sug.outdatedTitle"));
-                          suggestions.reload();
-                          stale.reload();
-                        } else {
-                          if (kind === "accepted") discard();
-                          reloadAll();
-                        }
-                      }}
-                    />
-                  ))}
-                  {suggestions.data && suggestions.data.length === 0 && (
-                    <EmptyState title={t("cv2.sug.emptyTitle")} text={t("cv2.sug.emptyText")} action={
-                      <Button asChild variant="secondary" size="sm">
-                        <Link href="/achievements">{t("cv2.sug.toAchievements")}</Link>
-                      </Button>
-                    } />
-                  )}
-                  <StaleSuggestions items={stale.data ?? []} />
-                </div>
-              )}
-
-              {effPane === "history" && (
-                <div role="tabpanel" id="cv-panel-history" aria-labelledby="cv-tab-history" className="flex flex-col gap-10">
-                  <Section title={t("cv.history")} description={t("cv2.hist.text")}>
-                    {versions.error && <ErrorNote error={versions.error} onRetry={versions.reload} />}
-                    {versions.loading && !versions.data ? (
-                      <SkeletonRows rows={2} />
-                    ) : (
-                      <VersionList
-                        versions={versions.data ?? []}
-                        current={saved?.version}
-                        viewing={preview.kind === "version" ? preview.version : null}
-                        onView={viewVersion}
-                        onRestore={(v) => setRestoreTarget(v)}
-                      />
+          {!isLg && (
+            <div role="tablist" aria-label={t("cv2.tab.label")} className="mb-5 flex gap-2.5">
+              {editTabs.map((tab, i) => {
+                const sel = effPane === tab.k;
+                return (
+                  <button
+                    key={tab.k}
+                    id={`cv-tab-${tab.k}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={sel}
+                    aria-controls={`cv-panel-${tab.k}`}
+                    tabIndex={sel ? 0 : -1}
+                    onClick={() => setPane(tab.k)}
+                    onKeyDown={(e) => onTabKey(e, i)}
+                    className={cn(
+                      "inline-flex h-10 items-center rounded-full border-[1.5px] border-ink px-4 text-sm font-semibold",
+                      sel ? "bg-ink text-bg" : "bg-surface text-fg hover:bg-primary-soft",
                     )}
-                  </Section>
-                  <Section
-                    title={t("cv.tailored")}
-                    description={t("cv2.tailored.text")}
-                    action={
-                      <Button asChild variant="link" size="sm">
-                        <Link href="/tailor">{t("cv2.tailored.new")}</Link>
-                      </Button>
-                    }
                   >
-                    {tailored.error && <ErrorNote error={tailored.error} onRetry={tailored.reload} />}
-                    <TailoredList items={tailored.data ?? []} onDeleted={tailored.reload} />
-                  </Section>
-                </div>
-              )}
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
+          )}
 
-            {/* right: live document preview */}
+          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8">
+            <div id="cv-panel-edit" role={isLg ? undefined : "tabpanel"} aria-labelledby={isLg ? undefined : "cv-tab-edit"} className={cn("min-w-0", effPane === "edit" || isLg ? "block" : "hidden")}>
+              <Card>
+                <CardTitle icon={<PenLine />}>{saved ? t("cv.edit") : t("cv.create")}</CardTitle>
+                <CVEditor value={doc} onChange={onEdit} defaultOpen={mode.kind === "edit" ? ["contact", "summary"] : ["contact", "summary", "experience"]} />
+              </Card>
+            </div>
             <aside
               id="cv-panel-preview"
               role={isLg ? "complementary" : "tabpanel"}
@@ -520,41 +575,9 @@ export default function CVPage() {
               aria-label={isLg ? t("cv2.preview.title") : undefined}
               className={cn("min-w-0", pane === "preview" || isLg ? "block" : "hidden", "lg:sticky lg:top-24 lg:self-start")}
             >
-              <div className="mb-3 flex min-h-8 flex-wrap items-center gap-x-3 gap-y-2" aria-live="polite">
-                {preview.kind === "version" ? (
-                  <>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-fg">
-                        {fill(t("cv2.preview.version"), { v: preview.version })}{" "}
-                        <span className="num font-normal text-fg-3">· {fmtDate(preview.created_at, locale)}</span>
-                      </div>
-                      <div className="truncate text-xs text-fg-3">{preview.change_summary}</div>
-                    </div>
-                    {preview.version !== saved?.version && (
-                      <Button size="xs" variant="secondary" onClick={() => setRestoreTarget(preview.version)}>
-                        <RotateCcw /> {t("cv.restore")}
-                      </Button>
-                    )}
-                    <Button size="xs" variant="ghost" onClick={() => setPreview({ kind: "working" })}>
-                      <ArrowLeft className="rtl:rotate-180" /> {t("cv2.preview.back")}
-                    </Button>
-                  </>
-                ) : previewSuggestion ? (
-                  <>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-fg">{t("cv2.preview.suggestion")}</div>
-                      <div className="text-xs text-fg-3">{t("cv2.preview.suggestionHint")}</div>
-                    </div>
-                    <Button size="xs" variant="ghost" onClick={() => setPreview({ kind: "working" })}>
-                      <ArrowLeft className="rtl:rotate-180" /> {t("cv2.preview.back")}
-                    </Button>
-                  </>
-                ) : (
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium text-fg">{t("cv2.preview.title")}</div>
-                    <div className="text-xs text-fg-3">{dirty ? t("cv2.preview.unsaved") : t("cv2.preview.saved")}</div>
-                  </div>
-                )}
+              <div className="mb-3">
+                <div className="text-sm font-semibold text-fg">{t("cv2.preview.title")}</div>
+                <div className="text-xs text-fg-3">{dirty ? t("cv2.preview.unsaved") : t("cv2.preview.saved")}</div>
               </div>
               <div
                 className="lg:max-h-[calc(100vh-11rem)] lg:overflow-y-auto lg:rounded-md lg:pb-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -562,7 +585,7 @@ export default function CVPage() {
                 aria-label={t("cv2.preview.title")}
                 tabIndex={0}
               >
-                {previewData && <CVDocument data={previewData} marks={previewMarks} label={t("cv2.preview.title")} />}
+                <CVDocument data={doc} label={t("cv2.preview.title")} />
               </div>
             </aside>
           </div>

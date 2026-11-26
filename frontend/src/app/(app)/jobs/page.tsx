@@ -9,6 +9,7 @@ import { JobDetail } from "@/components/jobs/detail";
 import { FilterBar, type Filters, isFiltered, NO_FILTERS, ResultsList } from "@/components/jobs/results";
 import { Tracker } from "@/components/jobs/tracker";
 import { Button } from "@/components/ui/button";
+import { StationArt } from "@/components/brand/art";
 import { PageHeader } from "@/components/ui/card";
 import { Dialog, DrawerContent, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/overlay";
 import { api, ApiError } from "@/lib/api";
@@ -211,8 +212,7 @@ export default function JobsPage() {
   return (
     <div>
       <PageHeader
-        tone="green"
-        art="jobs"
+        artNode={<StationArt kind="document" className="h-24 w-auto" />}
         title={t("jobs.title")}
         sub={t("jobs.sub")}
         actions={
@@ -220,7 +220,7 @@ export default function JobsPage() {
           data.state !== "no_cv" &&
           !noProviders && (
             <div className="flex flex-col items-start gap-1 sm:items-end">
-              <Button variant="secondary" onClick={() => refresh(true)} loading={refreshing} disabled={refreshing || blocked}>
+              <Button size="lg" onClick={() => refresh(true)} loading={refreshing} disabled={refreshing || blocked}>
                 {!refreshing && <RefreshCw />}
                 {refreshing ? t("jobs.refreshing") : t("jobs.refresh")}
               </Button>
@@ -299,7 +299,7 @@ export default function JobsPage() {
             {refreshing && <AiWorking steps={[t("jobs2.steps.cv"), t("jobs2.steps.search"), t("jobs2.steps.dedupe"), t("jobs2.steps.match")]} />}
 
             {(data.state === "ok" || filtered) && (
-              <div className="border-y border-border py-3">
+              <div className="ink-soft px-4 py-3">
                 <FilterBar filters={filters} facets={data.facets} onChange={setFilter} onReset={resetFilters} />
               </div>
             )}
@@ -331,7 +331,7 @@ export default function JobsPage() {
                   aria-busy={loading}
                   aria-live="polite"
                 >
-                  <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
+                  <div className="ink-card overflow-hidden">
                     <ResultsList items={items} selectedId={selected?.id ?? null} onSelect={select} />
                     <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
                       <span className="num text-xs text-fg-3">{fill(t("jobs.showing"), { n: items.length, t: total })}</span>
@@ -345,7 +345,7 @@ export default function JobsPage() {
                 </div>
 
                 {split && (
-                  <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto rounded-xl border border-border bg-surface shadow-sm">
+                  <div className="ink-card sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
                     {selected ? (
                       <JobDetail key={selected.id} item={selected} {...actions} />
                     ) : (

@@ -35,7 +35,7 @@ export function DialogContent({
       <DialogPrimitive.Overlay className="fade-in fixed inset-0 z-50 bg-scrim" />
       <DialogPrimitive.Content
         className={cn(
-          "fade-in fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[min(94vw,520px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-border-soft bg-surface-elevated shadow-lg",
+          "fade-in fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[min(94vw,520px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-[14px] border-[1.5px] border-ink bg-surface-elevated shadow-[5px_5px_0_var(--ink-shadow)] rtl:shadow-[-5px_5px_0_var(--ink-shadow)]",
           wide && "w-[min(96vw,1080px)]",
           className,
         )}
@@ -131,7 +131,7 @@ export function DrawerContent({
       <DialogPrimitive.Overlay className="fade-in fixed inset-0 z-50 bg-scrim" />
       <DialogPrimitive.Content
         className={cn(
-          "fixed inset-y-0 end-0 z-50 flex w-[min(100vw,560px)] flex-col border-s border-border-soft bg-surface-elevated shadow-lg",
+          "fixed inset-y-0 end-0 z-50 flex w-[min(100vw,560px)] flex-col border-s-[1.5px] border-ink bg-surface-elevated shadow-lg",
           className,
         )}
       >

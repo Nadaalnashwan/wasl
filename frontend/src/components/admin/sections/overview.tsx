@@ -31,7 +31,7 @@ export function OverviewView() {
         {d && health && (
           <div className="flex flex-col gap-8">
             {/* system status line */}
-            <ul className="flex flex-wrap gap-x-6 gap-y-2 rounded-xl border border-border bg-surface shadow-sm px-4 py-3 text-xs" aria-label="System status">
+            <ul className="flex flex-wrap gap-x-6 gap-y-2 ink-soft px-4 py-3 text-xs" aria-label="System status">
               <li>
                 <Status tone={health.backend === "ok" ? "ok" : "bad"}>Backend {health.backend}</Status>
               </li>
@@ -144,12 +144,12 @@ export function OverviewView() {
                   }
                 >
                   {d.alerts.length === 0 ? (
-                    <p className="flex items-start gap-2 rounded-xl border border-border bg-surface shadow-sm px-4 py-3 text-sm text-fg-2">
+                    <p className="flex items-start gap-2 ink-soft px-4 py-3 text-sm text-fg-2">
                       <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" aria-hidden />
                       No rule is firing. Rules need at least the minimum sample before they can fire.
                     </p>
                   ) : (
-                    <ul className="divide-y divide-border rounded-xl border border-border bg-surface shadow-sm">
+                    <ul className="divide-y divide-border ink-soft">
                       {d.alerts.map((a) => (
                         <li key={a.key} className="flex gap-3 px-4 py-3">
                           {a.level === "critical" ? (
@@ -184,7 +184,7 @@ export function OverviewView() {
                   {!d.latest_eval ? (
                     <p className="border-s-2 border-border py-1 ps-4 text-sm text-fg-3">No evaluation run has been recorded. Scores appear only after a real run.</p>
                   ) : (
-                    <div className="rounded-xl border border-border bg-surface shadow-sm px-4 py-3 text-sm">
+                    <div className="ink-soft px-4 py-3 text-sm">
                       <div className="flex flex-wrap items-center gap-2">
                         <EvalKindBadge kind={d.latest_eval.kind} />
                         <span className="text-xs text-fg-3">{fmtDateTime(d.latest_eval.at, locale)}</span>
@@ -210,7 +210,7 @@ export function OverviewView() {
                     </Link>
                   }
                 >
-                  <dl className="grid grid-cols-2 gap-y-2 rounded-xl border border-border bg-surface shadow-sm px-4 py-3 text-xs">
+                  <dl className="grid grid-cols-2 gap-y-2 ink-soft px-4 py-3 text-xs">
                     <dt className="text-fg-3">Requests</dt>
                     <dd className="num text-end text-fg">{fmtNum(d.http.requests)}</dd>
                     <dt className="text-fg-3">5xx rate</dt>

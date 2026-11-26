@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, BookOpen, FileText, Hammer, Lightbulb, Plus, ShieldAlert, Target, Zap } from "lucide-react";
+import { ArrowLeft, BookOpen, FileText, Hammer, History, Lightbulb, Plus, ShieldAlert, Target, Zap } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { AnalysisHistory } from "@/components/career/history";
@@ -113,7 +113,7 @@ export default function GapPage() {
 
   return (
     <div id="gap-top" className="scroll-mt-24">
-      <PageHeader tone="teal" art="gap" title={t("gap.title")} sub={t("career2.gap.sub")} />
+      <PageHeader title={t("gap.title")} sub={t("gap.sub")} />
 
       {master.loading && !master.data && <SkeletonRows rows={3} />}
       {master.error && <ErrorNote error={master.error} onRetry={master.reload} />}
@@ -131,14 +131,19 @@ export default function GapPage() {
       )}
 
       {master.data && (
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
           {/* ------------------------------------------------ main column */}
           <div className="min-w-0">
             {!a ? (
-              <section aria-labelledby="gap-form-h" className="flex flex-col gap-5">
-                <h2 id="gap-form-h" className="text-heading font-semibold text-fg">
-                  {t("career2.gap.formTitle")}
-                </h2>
+              <section aria-labelledby="gap-form-h" className="ink-card flex flex-col gap-5 p-5 sm:p-6">
+                <div className="flex items-center gap-3">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-[10px] border-[1.5px] border-ink bg-primary-soft text-fg" aria-hidden>
+                    <Target className="size-[18px]" />
+                  </span>
+                  <h2 id="gap-form-h" className="font-display text-xl leading-tight text-fg">
+                    {t("career2.gap.formTitle")}
+                  </h2>
+                </div>
                 <Field
                   label={t("career2.gap.jd")}
                   hint={
@@ -203,7 +208,7 @@ export default function GapPage() {
                 {/* ---------------- strengths */}
                 <ReportSection id="gap-strengths" title={t("career2.gap.strengths")} description={t("career2.gap.strengthsText")}>
                   {verified.length ? (
-                    <ul className="divide-y divide-border-soft overflow-hidden rounded-xl border border-border bg-surface shadow-sm [&>li]:px-4">
+                    <ul className="ink-card divide-y divide-border-soft overflow-hidden [&>li]:px-4">
                       {verified.map((r, i) => (
                         <ReqLine key={r.skill + i} r={r}>
                           <ul className="flex flex-col gap-0.5">
@@ -225,7 +230,7 @@ export default function GapPage() {
                 <ReportSection id="gap-unverified" title={t("career2.gap.unverified")} description={t("career2.gap.unverifiedText")}>
                   {unverified.length ? (
                     <>
-                      <ul className="divide-y divide-border-soft overflow-hidden rounded-xl border border-border bg-surface shadow-sm [&>li]:px-4">
+                      <ul className="ink-card divide-y divide-border-soft overflow-hidden [&>li]:px-4">
                         {unverified.map((r, i) => {
                           const st = stepFor(r.skill);
                           return (
@@ -258,7 +263,7 @@ export default function GapPage() {
                 {/* ---------------- missing */}
                 <ReportSection id="gap-missing" title={t("career2.gap.missing")} description={t("career2.gap.missingText")}>
                   {missing.length ? (
-                    <ul className="divide-y divide-border-soft overflow-hidden rounded-xl border border-border bg-surface shadow-sm [&>li]:px-4">
+                    <ul className="ink-card divide-y divide-border-soft overflow-hidden [&>li]:px-4">
                       {missing.map((r, i) => {
                         const st = stepFor(r.skill);
                         return (
@@ -418,13 +423,24 @@ export default function GapPage() {
           </div>
 
           {/* ------------------------------------------------ side column */}
-          <aside className="flex min-w-0 flex-col gap-8">
-            {a && <ScoreExplain score={a.result.score} />}
-            <section aria-labelledby="gap-history-h">
-              <h2 id="gap-history-h" className="text-heading font-semibold text-fg">
-                {t("career2.hist.gapTitle")}
-              </h2>
-              <p className="mt-0.5 mb-3 text-sm text-fg-3">{t("career2.hist.gapText")}</p>
+          <aside className="flex min-w-0 flex-col gap-6">
+            {a && (
+              <div className="ink-card p-5 sm:p-6">
+                <ScoreExplain score={a.result.score} />
+              </div>
+            )}
+            <section aria-labelledby="gap-history-h" className="ink-card !bg-primary-soft p-5 sm:p-6">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-[10px] border-[1.5px] border-ink bg-surface text-fg" aria-hidden>
+                  <History className="size-[18px]" />
+                </span>
+                <div className="min-w-0">
+                  <h2 id="gap-history-h" className="font-display text-xl leading-tight text-fg">
+                    {t("career2.hist.gapTitle")}
+                  </h2>
+                  <p className="mt-0.5 text-sm text-fg-2">{t("career2.hist.gapText")}</p>
+                </div>
+              </div>
               {history.error && <ErrorNote error={history.error} onRetry={history.reload} />}
               {history.loading && !history.data ? (
                 <SkeletonRows rows={2} />

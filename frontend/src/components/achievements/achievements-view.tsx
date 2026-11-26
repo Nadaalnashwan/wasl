@@ -25,7 +25,7 @@ function Legend() {
     { icon: UserPen, tone: "text-warn", label: t("achievements2.state.pending"), d: t("achievements2.legend.pending") },
   ];
   return (
-    <dl className="mb-8 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-3">
+    <dl className="ink-soft mb-8 grid gap-x-8 gap-y-3 bg-primary-soft/50 p-4 text-sm sm:grid-cols-3">
       {items.map((it) => (
         <div key={it.label} className="min-w-0">
           <dt className="flex items-center gap-2.5 font-medium text-fg">
@@ -82,8 +82,6 @@ export function AchievementsView({ initialStatus, initialOpen }: { initialStatus
   return (
     <div>
       <PageHeader
-        tone="amber"
-        art="achievements"
         title={t("achievements2.title")}
         sub={t("achievements2.sub")}
         actions={
@@ -104,7 +102,7 @@ export function AchievementsView({ initialStatus, initialOpen }: { initialStatus
           {TABS.map((s) => (
             <TabsTrigger key={s} value={s}>
               {t(`achievements2.tab.${s}`)}
-              <span className="num rounded bg-surface-2 px-1.5 text-xs text-fg-3">{data ? counts[s] : "–"}</span>
+              <span className="num rounded-full bg-surface-2 px-2 text-xs font-bold text-fg">{data ? counts[s] : "–"}</span>
             </TabsTrigger>
           ))}
         </TabsList>
@@ -182,7 +180,7 @@ export function AchievementsView({ initialStatus, initialOpen }: { initialStatus
                 <p className="mb-2 text-xs text-fg-3" aria-live="polite">
                   {fmt(t("achievements2.filter.showing"), { n: visible.length, t: inTab })}
                 </p>
-                <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-sm" aria-label={t("achievements2.list.label")}>
+                <ul className="ink-card divide-y divide-border-soft overflow-hidden" aria-label={t("achievements2.list.label")}>
                   {visible.map((a) => (
                     <AchievementRow key={a.id} a={a} active={a.id === openId} onOpen={(x) => {
                         setTab(active);

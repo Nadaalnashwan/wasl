@@ -114,7 +114,7 @@ export function CostView() {
                 <NoData />
               ) : (
                 <div className="grid gap-6 lg:grid-cols-2">
-                  <div className="flex flex-col gap-5 rounded-xl border border-border bg-surface shadow-sm p-4">
+                  <div className="flex flex-col gap-5 ink-soft p-4">
                     {(ks.platform?.est_cost_usd ?? 0) + (ks.byok?.est_cost_usd ?? 0) > 0 ? (
                       <SegmentBar
                         label="Estimated cost by key source"

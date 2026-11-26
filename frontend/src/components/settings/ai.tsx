@@ -66,7 +66,7 @@ export function AiProvidersSection({ data, error, loading, reload, setData }: Pr
         <div className="flex flex-col gap-5">
           <fieldset disabled={saving} aria-busy={saving}>
             <legend className="mb-2 text-sm font-medium text-fg">{t("settings2.ai.mode")}</legend>
-            <div className="divide-y divide-border rounded-xl border border-border bg-surface shadow-sm">
+            <div className="divide-y divide-border ink-soft">
               {MODES.map((m) => {
                 const checked = data.ai_mode === m;
                 return (
@@ -320,7 +320,7 @@ export function ApiKeysSection({ data, error, loading, reload, setData }: Props)
       ) : loading && !data ? (
         <SkeletonRows rows={3} />
       ) : data ? (
-        <ul className="divide-y divide-border rounded-xl border border-border bg-surface shadow-sm">
+        <ul className="divide-y divide-border ink-soft">
           {data.byok_providers.map((p) => (
             <KeyRow
               key={p}

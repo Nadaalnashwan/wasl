@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowLeft, Loader2, ShieldAlert } from "lucide-react";
+import { Activity, Loader2, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Logo, Toggles } from "@/components/shell/app-shell";
+import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { Badge, type BadgeTone } from "@/components/ui/card";
 import { API_URL } from "@/lib/api";
@@ -11,7 +11,8 @@ import { useI18n, type TKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { AdminAccessProvider, useAdminAccess, useHealth } from "./context";
 
-/* Separate admin application shell: compact top bar + horizontal section nav (no workspace sidebar). */
+/* v1 placement: Monitoring lives inside the workspace (System group). The admin gate is unchanged: the proxy checks the
+ * admin session cookie server-side, AdminAccessProvider re-verifies the role, and every API call is authorised again. */
 
 type Item = { href: string; key: TKey; keepQuery?: boolean };
 
@@ -34,8 +35,8 @@ function SectionNav() {
   // carry the shared date-range / provider / model / task filters between data sections
   const qs = params.toString();
   return (
-    <nav aria-label={t("admin2.nav.label")} className="mx-auto max-w-[1280px] px-4 sm:px-6">
-      <ul className="-mb-px flex gap-5 overflow-x-auto [scrollbar-width:none]">
+    <nav aria-label={t("admin2.nav.label")}>
+      <ul className="flex flex-wrap gap-2 p-0.5">
         {ADMIN_NAV.map((it) => {
           const active = pathname === it.href;
           return (
@@ -44,8 +45,8 @@ function SectionNav() {
                 href={it.keepQuery && qs ? `${it.href}?${qs}` : it.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "inline-flex h-10 items-center border-b-2 text-sm whitespace-nowrap transition-colors",
-                  active ? "border-primary font-medium text-fg" : "border-transparent text-fg-3 hover:text-fg",
+                  "inline-flex h-9 items-center rounded-full border-[1.5px] border-ink px-3.5 text-sm font-semibold whitespace-nowrap transition-colors",
+                  active ? "bg-ink text-bg" : "bg-surface text-fg hover:bg-primary-soft",
                 )}
               >
                 {t(it.key)}
@@ -89,30 +90,20 @@ function EnvBadge() {
   );
 }
 
-function TopBar({ showNav }: { showNav: boolean }) {
+function ConsoleBar({ showNav }: { showNav: boolean }) {
   const { t } = useI18n();
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-4 sm:px-6">
-        <Logo href="/admin/monitoring" imageClassName="h-6" />
-        <span className="text-border-strong" aria-hidden>
-          /
+    <div className="mb-8 flex flex-col gap-4 border-b-[1.5px] border-ink pb-5">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="grid size-9 shrink-0 place-items-center rounded-[10px] border-[1.5px] border-ink bg-primary-soft text-fg" aria-hidden>
+          <Activity className="size-[18px]" />
         </span>
-        <span className="truncate text-sm font-semibold text-fg">{t("admin2.console")}</span>
+        <span className="font-display text-xl text-fg">{t("nav.admin")}</span>
+        <span className="text-sm text-fg-3">· {t("admin2.console")}</span>
         {showNav && <EnvBadge />}
-        <div className="ms-auto flex items-center gap-1">
-          <Toggles />
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/dashboard">
-              <ArrowLeft className="rtl:rotate-180" aria-hidden />
-              <span className="hidden sm:inline">{t("admin2.workspace")}</span>
-              <span className="sr-only sm:hidden">{t("admin2.workspace.long")}</span>
-            </Link>
-          </Button>
-        </div>
       </div>
       {showNav && <SectionNav />}
-    </header>
+    </div>
   );
 }
 
@@ -151,12 +142,10 @@ function Frame({ children }: { children: React.ReactNode }) {
   const { access } = useAdminAccess();
   const ok = access === "admin";
   return (
-    <div className="min-h-screen bg-bg">
-      <TopBar showNav={ok} />
-      <main id="main" className="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:py-8">
-        {ok ? children : <GateScreen kind={access} />}
-      </main>
-    </div>
+    <AppShell>
+      <ConsoleBar showNav={ok} />
+      {ok ? children : <GateScreen kind={access} />}
+    </AppShell>
   );
 }
 

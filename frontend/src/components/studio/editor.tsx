@@ -218,20 +218,20 @@ export function PostWorkbench(p: WorkbenchProps) {
 
   return (
     <section aria-labelledby="workbench-h" className="ink-card overflow-hidden">
-      <header className="flex items-start gap-3 border-b-[1.5px] border-ink bg-surface-2 px-5 py-4 sm:px-6">
-        <span className="grid size-10 shrink-0 place-items-center rounded-xl border-[1.5px] border-ink bg-surface text-[#0a66c2] dark:text-primary-text" aria-hidden>
-          <LinkedinIcon className="size-5" />
+      <header className="flex items-center gap-3 px-5 pt-5 sm:px-6 sm:pt-6">
+        <span className="grid size-9 shrink-0 place-items-center rounded-[10px] border-[1.5px] border-ink bg-primary-soft text-fg" aria-hidden>
+          <LinkedinIcon className="size-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 id="workbench-h" className="text-base font-extrabold text-fg">
-            {t("studio2.v1.preview")}
+          <h2 id="workbench-h" className="font-display text-xl leading-tight text-fg">
+            {t("studio.preview")}
           </h2>
-          <p className="mt-0.5 text-xs leading-relaxed text-fg-2">{t("studio2.v1.preview.d")}</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-fg-3">{t("studio2.v1.preview.d")}</p>
         </div>
         {cur && (
-          <Status tone={STATUS_TONE[cur.status]} className="shrink-0">
+          <Badge tone={STATUS_TONE[cur.status]} className="shrink-0">
             {t(`post.status.${cur.status}` as TKey)}
-          </Status>
+          </Badge>
         )}
       </header>
 
@@ -278,7 +278,7 @@ export function PostWorkbench(p: WorkbenchProps) {
         {cur && (
           <>
             {/* the post, as it will appear in the feed */}
-            <article aria-label={t("studio.preview")} className="rounded-xl border border-border bg-surface shadow-sm">
+            <article aria-label={t("studio.preview")} className="ink-soft">
               <div className="flex items-start gap-3 px-4 pt-4">
                 <div className="grid size-11 shrink-0 place-items-center rounded-full border-[1.5px] border-ink bg-primary-soft text-sm font-extrabold text-fg" aria-hidden>
                   {initialsOf(name)}
@@ -423,10 +423,10 @@ export function DraftsGrid({
                     size="sm"
                     onClick={() => onSelect(x)}
                     aria-current={active ? "true" : undefined}
-                    aria-label={`${t("studio2.v1.open")}: ${snippet(x.content, 40)}`}
+                    aria-label={`${t("common.edit")}: ${snippet(x.content, 40)}`}
                     disabled={active}
                   >
-                    {active ? t("studio2.v1.opened") : t("studio2.v1.open")}
+                    {active ? t("studio2.v1.opened") : t("common.edit")}
                   </Button>
                   {(x.status === "draft" || x.status === "failed") && (
                     <Button
