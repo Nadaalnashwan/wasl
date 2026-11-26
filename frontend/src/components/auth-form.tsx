@@ -12,6 +12,7 @@ import { ApiError } from "@/lib/api";
 import { useI18n, type TKey } from "@/lib/i18n";
 import { useAuth } from "@/lib/providers";
 import { Marked } from "@/components/ui/marked";
+import { StationArt } from "@/components/brand/art";
 
 const DEFAULT_NEXT = "/dashboard";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -63,7 +64,10 @@ function StatementPanel() {
     <aside className="hidden border-s border-border bg-primary-soft/60 lg:flex lg:flex-col lg:justify-between lg:px-14 lg:py-12 xl:px-20">
       <div />
       <div className="max-w-md">
-        <p className="eyebrow mb-4">{t("auth2.side.eyebrow")}</p>
+        <div className="panel-ink mb-10 grid w-fit place-items-center bg-surface px-8 py-6">
+          <StationArt kind="document" className="h-32 w-auto" />
+        </div>
+        <p className="mb-4 text-sm font-bold text-primary-text">{t("auth2.side.eyebrow")}</p>
         <p className="font-display text-[2.5rem] leading-[1.08] text-fg rtl:leading-snug">
           <Marked text={t("auth2.side.title")} mark={t("landing2.hero.mark")} />
         </p>

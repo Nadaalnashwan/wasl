@@ -3,17 +3,17 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* =====================================================================
-   Wasl design system v2.2 "Sky" — see docs/DESIGN_SYSTEM.md
-   Wasl's own identity, matured: ink text, the brand blue and sky fills on a faint blueprint grid (from v1),
-   with v2's clarity — consistent components, crisp borders, restrained depth, no hand-drawn wobble.
-   One warm amber accent keeps it human. Never pure white (QA rule).
+   Wasl design system v2.3 "Evolved Original" — see docs/DESIGN_SYSTEM.md
+   Original Wasl's creativity, executed with maturity: ink text, brand blue and sky fills, v1's machine
+   illustrations redrawn with precise geometry, a brand band, and one colour per product area.
+   No background grid, no hand-drawn wobble. Never pure white (QA rule).
    Every text token passes WCAG AA (>= 4.5:1) on every surface and tint token in both themes;
    --border-strong (form controls) passes 3:1.
    ===================================================================== */
 
 :root {
   /* surfaces — cool paper with a hint of sky, layered by tone */
-  --bg: #eef4fb; /* page (carries the faint blueprint grid) */
+  --bg: #f4f8fd; /* page */
   --bg-sidebar: #e6effa; /* navigation rail */
   --surface: #f8fbfe; /* primary surface: panels, rows, editors */
   --surface-elevated: #fafcff; /* dialogs, drawers, menus, popovers */
@@ -50,7 +50,6 @@
   --bad-soft: #fde2e2;
   --focus: #0b57c9;
   --scrim: rgb(13 27 46 / 0.4);
-  --grid: rgb(11 87 201 / 0.045);
   /* depth: soft blue shadows + v1's solid "stamp" offset, refined (primary actions only) */
   --stamp: #15171c;
   --shadow-sm: 0 1px 2px rgb(11 45 100 / 0.06);
@@ -62,10 +61,38 @@
   --chart-3: #2a9d6f;
   --chart-4: #6b4fa0;
   --chart-grid: #d6e3f2;
+  /* illustrations (components/brand/art.tsx) */
+  --art-ink: #15171c;
+  --art-fill: #d3ebfc;
+  --art-paper: #fbfdff;
+  --art-brand: #0b57c9;
+  --art-sky: #a9d6f7;
+  --art-warm: #f0a23a;
+  --art-ok: #2a9d6f;
+  /* product areas: each has a soft fill and a text tone (both pass AA on the fill and on the page) */
+  --tone-brand-soft: #d3ebfc;
+  --tone-brand: #0a4fb8;
+  --tone-sky-soft: #d6eefc;
+  --tone-sky: #075985;
+  --tone-amber-soft: #fde9c8;
+  --tone-amber: #8a4400;
+  --tone-green-soft: #d7f2e3;
+  --tone-green: #0d6b45;
+  --tone-violet-soft: #e7e1fb;
+  --tone-violet: #5b3fa8;
+  --tone-teal-soft: #d3f1ef;
+  --tone-teal: #0b6461;
+  --tone-slate-soft: #e2e8f1;
+  --tone-slate: #3b4a62;
+  /* the brand band (landing "machine" section) */
+  --band: #0b57c9;
+  --band-2: #0a3d8f;
+  --on-band: #fbfdff;
+  --on-band-2: #d3ebfc;
   color-scheme: light;
 }
 
-/* Dark: v1's "Blueprint" — deep navy paper with the same faint grid. */
+/* Dark: v1's "Blueprint" — deep navy paper. */
 :root[data-theme="dark"] {
   --bg: #0d1b2e;
   --bg-sidebar: #0b1727;
@@ -99,7 +126,6 @@
   --bad-soft: #4a1c22;
   --focus: #8fd0ff;
   --scrim: rgb(2 7 14 / 0.62);
-  --grid: rgb(143 208 255 / 0.05);
   --stamp: #02070e;
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-md: 0 8px 22px -8px rgb(0 0 0 / 0.6);
@@ -109,10 +135,40 @@
   --chart-3: #2fa866;
   --chart-4: #b49bef;
   --chart-grid: #1f3a5a;
+  --art-ink: #e8f1fb;
+  --art-fill: #17406e;
+  --art-paper: #12253e;
+  --art-brand: #4fb0ff;
+  --art-sky: #1f5591;
+  --art-warm: #f2b35b;
+  --art-ok: #2fa866;
+  --tone-brand-soft: #17406e;
+  --tone-brand: #a9d6ff;
+  --tone-sky-soft: #123d5c;
+  --tone-sky: #9ad8ff;
+  --tone-amber-soft: #46370f;
+  --tone-amber: #f6c27a;
+  --tone-green-soft: #12402a;
+  --tone-green: #7fe0a8;
+  --tone-violet-soft: #2e2552;
+  --tone-violet: #c9b8ff;
+  --tone-teal-soft: #0f3f3d;
+  --tone-teal: #7fe3dc;
+  --tone-slate-soft: #1f2d42;
+  --tone-slate: #c3d0e2;
+  --band: #0f3a73;
+  --band-2: #0b2c58;
+  --on-band: #e8f1fb;
+  --on-band-2: #b4d4f5;
   color-scheme: dark;
 }
 
 @theme inline {
+  --color-tone: var(--tone);
+  --color-tone-soft: var(--tone-soft);
+  --color-band: var(--band);
+  --color-on-band: var(--on-band);
+  --color-on-band-2: var(--on-band-2);
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
@@ -173,11 +229,6 @@ html {
 
 body {
   background-color: var(--bg);
-  /* v1's blueprint grid, much fainter: texture and identity without noise */
-  background-image:
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 28px 28px;
   color: var(--text);
   font-family: var(--font-sans);
   text-rendering: optimizeLegibility;
@@ -271,6 +322,39 @@ body {
     box-shadow: var(--shadow-md);
   }
 }
+
+/* ---------------------------------------------------------------- brand bands & illustration motion */
+@layer components {
+  /* full-width brand band with sloped edges (landing "machine" section) */
+  .band {
+    background: linear-gradient(160deg, var(--band) 0%, var(--band-2) 100%);
+    color: var(--on-band);
+    clip-path: polygon(0 3.5rem, 100% 0, 100% calc(100% - 3.5rem), 0 100%);
+  }
+  /* product-area tone, set once on a container: <div class="tone-amber"> */
+  .tone-brand { --tone-soft: var(--tone-brand-soft); --tone: var(--tone-brand); }
+  .tone-sky { --tone-soft: var(--tone-sky-soft); --tone: var(--tone-sky); }
+  .tone-amber { --tone-soft: var(--tone-amber-soft); --tone: var(--tone-amber); }
+  .tone-green { --tone-soft: var(--tone-green-soft); --tone: var(--tone-green); }
+  .tone-violet { --tone-soft: var(--tone-violet-soft); --tone: var(--tone-violet); }
+  .tone-teal { --tone-soft: var(--tone-teal-soft); --tone: var(--tone-teal); }
+  .tone-slate { --tone-soft: var(--tone-slate-soft); --tone: var(--tone-slate); }
+  /* ink-outlined panel with the stamp: reserved for a few hero moments per page */
+  .panel-ink {
+    border: 1.5px solid var(--stamp);
+    border-radius: 16px;
+    box-shadow: 5px 5px 0 var(--stamp);
+  }
+}
+@keyframes art-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+@keyframes art-spin { to { transform: rotate(360deg); } }
+@keyframes art-scan { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(70px); } }
+@keyframes art-rise { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.art-float { animation: art-float 4s ease-in-out infinite; }
+.art-spin { animation: art-spin 14s linear infinite; }
+.art-spin-rev { animation: art-spin 10s linear infinite reverse; }
+.art-scan { animation: art-scan 5s ease-in-out infinite; }
+.art-rise { animation: art-rise 4.5s ease-in-out infinite; }
 
 /* ---------------------------------------------------------------- motion (functional only) */
 @keyframes fade-in {

@@ -17,6 +17,13 @@ export default defineMessages(
     "landing2.hero.t2": "Use it everywhere.",
     /* the word in t1 (and in auth2.side.title) that gets the highlighter marker */
     "landing2.hero.mark": "once",
+    "landing2.hero.art": "The Wasl machine: an achievement goes in, every claim is checked, and it comes out as a LinkedIn post, a verified CV and a plan.",
+    "landing2.hero.art.in": "Your achievement",
+    "landing2.hero.art.check": "Every claim checked",
+    "landing2.hero.art.out": "Posts, CVs and plans",
+    "landing2.how.station": "Station",
+    "landing2.preview.title": "A look inside",
+    "landing2.preview.sub": "The same achievement, followed from evidence to an approved CV update.",
     "landing2.hero.sub":
       "Wasl turns your projects, documents and repositories into structured achievements, then helps you keep a verified Master CV, draft LinkedIn posts, tailor your CV to jobs and plan the skills you still need. Every AI draft is checked against your own evidence.",
     "landing2.hero.cta": "Create your account",
@@ -156,6 +163,13 @@ export default defineMessages(
     "landing2.hero.t1": "وثّق إنجازك مرة واحدة.",
     "landing2.hero.t2": "واستخدمه في كل مكان.",
     "landing2.hero.mark": "مرة واحدة",
+    "landing2.hero.art": "آلة وصل: يدخل الإنجاز، وتُفحص كل معلومة فيه، ثم يخرج منشورًا على LinkedIn وسيرة ذاتية موثقة وخطة.",
+    "landing2.hero.art.in": "إنجازك",
+    "landing2.hero.art.check": "فحص كل معلومة",
+    "landing2.hero.art.out": "منشورات وسير ذاتية وخطط",
+    "landing2.how.station": "المحطة",
+    "landing2.preview.title": "نظرة من الداخل",
+    "landing2.preview.sub": "الإنجاز نفسه، من الدليل حتى تحديث السيرة الذاتية بعد موافقتك.",
     "landing2.hero.sub":
       "يحوّل وصل مشاريعك ومستنداتك ومستودعاتك البرمجية إلى إنجازات منظمة، ثم يساعدك على الحفاظ على سيرة ذاتية رئيسية موثّقة، وكتابة منشورات LinkedIn، وتخصيص سيرتك للوظائف، والتخطيط للمهارات التي تحتاجها. وتُقارن كل مسودة يكتبها الذكاء الاصطناعي بأدلتك أنت.",
     "landing2.hero.cta": "أنشئ حسابك",

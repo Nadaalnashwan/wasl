@@ -50,6 +50,21 @@ const NAV: { group: TKey; items: NavItem[] }[] = [
   },
 ];
 
+/** Each product area has its own colour (globals.css: .tone-*); presentation only. */
+const AREA_TONES: [string, string][] = [
+  ["/achievements", "tone-amber"],
+  ["/cv", "tone-sky"],
+  ["/studio", "tone-brand"],
+  ["/jobs", "tone-green"],
+  ["/tailor", "tone-violet"],
+  ["/gap", "tone-teal"],
+  ["/settings", "tone-slate"],
+  ["/admin", "tone-slate"],
+];
+function areaTone(href: string) {
+  return AREA_TONES.find(([p]) => href.startsWith(p))?.[1] ?? "tone-brand";
+}
+
 export function Logo({ className, imageClassName, href = "/" }: { className?: string; imageClassName?: string; href?: string }) {
   return (
     <Link href={href} className={cn("flex items-center", className)} aria-label="Wasl">
@@ -88,13 +103,12 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
+        areaTone(item.href),
         "relative flex h-9 items-center gap-2.5 rounded-[10px] px-2.5 text-sm font-semibold transition-colors",
-        active
-          ? "stamp bg-primary-soft text-fg ring-1 ring-primary/25"
-          : "text-fg-2 hover:bg-surface hover:text-fg",
+        active ? "stamp bg-tone-soft text-fg" : "text-fg-2 hover:bg-surface hover:text-fg",
       )}
     >
-      <Icon className={cn("size-4 shrink-0", active ? "text-primary" : "text-fg-3")} />
+      <Icon className="size-4 shrink-0 text-tone" />
       {t(item.key)}
     </Link>
   );

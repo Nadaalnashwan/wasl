@@ -137,7 +137,7 @@ export default function TailorPage() {
 
   return (
     <div>
-      <PageHeader title={t("tailor.title")} sub={t("career2.tailor.sub")} />
+      <PageHeader tone="violet" art="tailor" title={t("tailor.title")} sub={t("career2.tailor.sub")} />
 
       {master.loading && !master.data && <SkeletonRows rows={3} />}
       {master.error && <ErrorNote error={master.error} onRetry={master.reload} />}

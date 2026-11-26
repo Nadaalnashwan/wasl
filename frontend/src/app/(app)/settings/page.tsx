@@ -71,7 +71,7 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <PageHeader title={t("set.title")} sub={t("settings2.sub")} />
+      <PageHeader tone="slate" art="settings" title={t("set.title")} sub={t("settings2.sub")} />
 
       <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-12">
         <nav aria-label={t("settings2.nav")} className="mb-8 lg:mb-0">

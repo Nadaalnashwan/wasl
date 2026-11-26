@@ -313,7 +313,7 @@ export default function StudioPage() {
 
   return (
     <div>
-      <PageHeader title={t("studio.title")} sub={t("studio.sub")} />
+      <PageHeader tone="brand" art="studio" title={t("studio.title")} sub={t("studio.sub")} />
 
       <div className="grid gap-8 lg:grid-cols-[16rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_19rem] xl:gap-7">
         <aside aria-label={t("studio.source")} className="min-w-0 lg:row-span-2 xl:row-span-1">

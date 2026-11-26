@@ -258,7 +258,7 @@ export default function CVPage() {
   /* ---------------------------------------------------------------- render */
   return (
     <div>
-      <PageHeader title={t("nav.cv")} sub={t("cv2.sub")} />
+      <PageHeader tone="sky" art="cv" title={t("nav.cv")} sub={t("cv2.sub")} />
       <input
         ref={fileRef}
         type="file"

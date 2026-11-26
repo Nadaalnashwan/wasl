@@ -211,6 +211,8 @@ export default function JobsPage() {
   return (
     <div>
       <PageHeader
+        tone="green"
+        art="jobs"
         title={t("jobs.title")}
         sub={t("jobs.sub")}
         actions={

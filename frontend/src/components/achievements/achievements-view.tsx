@@ -82,6 +82,8 @@ export function AchievementsView({ initialStatus, initialOpen }: { initialStatus
   return (
     <div>
       <PageHeader
+        tone="amber"
+        art="achievements"
         title={t("achievements2.title")}
         sub={t("achievements2.sub")}
         actions={

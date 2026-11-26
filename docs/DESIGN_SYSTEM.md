@@ -1,4 +1,61 @@
-# Wasl design system (v2.2 "Sky")
+# Wasl design system (v2.3 "Evolved Original")
+
+> **v2.3 (2026-11-26) supersedes v2.2 "Sky" and v2.1 "Ivory" below.** The direction is original Wasl's
+> creativity, executed with maturity. The v1 site (wasl-ruddy.vercel.app) was inspected as the reference.
+>
+> **Brought back from v1:**
+> - **The Wasl machine story.** An achievement goes in, every claim is checked, and posts, a CV and plans
+>   come out. It is told with illustrations in `components/brand/art.tsx`: `WaslMachine`, `StationArt`
+>   (intake arm, verifying monitor, approval, reuse), `ChartArt` and `SpotArt`.
+> - **Numbered stations on a conveyor.**
+> - **Full-width colour bands:** the sloped brand-blue `.band`.
+> - **Coloured icon tiles.**
+> - **Ink-outlined panels with the offset stamp** (`.panel-ink`), used only for hero moments.
+> - **The sky closing band.**
+>
+> **Refined:**
+> - Illustrations are redrawn with one 2px stroke, straight geometry and consistent radii. There are no faces
+>   and no wobble.
+> - Nunito at 800 weight replaces the handwriting font.
+> - The stamp appears only on primary buttons, the active navigation item and three or four panels per page.
+> - **The background grid is removed.**
+>
+> **Product areas** each have one colour (`.tone-*` with `--tone` / `--tone-soft`, all AA on their fill and
+> on the page). `PageHeader` accepts `tone` and `art` and becomes that area's banner. The navigation icon
+> takes the same colour.
+>
+> | Area | Colour |
+> |---|---|
+> | Studio | brand blue |
+> | Master CV | sky |
+> | Achievements | amber |
+> | Jobs | green |
+> | Tailoring | violet |
+> | Gap analysis | teal |
+> | Settings / admin | slate |
+>
+> **Landing, top to bottom:**
+> 1. A split hero with the framed machine.
+> 2. The brand band with four illustrated stations.
+> 3. The evidence "inspection desk".
+> 4. An asymmetric feature mosaic: a brand spotlight plus area-coloured tiles.
+> 5. A product preview.
+> 6. Privacy tiles.
+> 7. The closing sky band with the chart.
+>
+> **Dashboard** opens with a brand welcome band carrying the machine.
+>
+> **Motion:** gentle illustration loops (floating card, turning gears, scanning line). They are disabled
+> under `prefers-reduced-motion`.
+>
+> **Verified:**
+> - `scripts/qa-visual.mjs --quick` passed 48 checks: 0 axe violations, 0 overflow, 0 pure-white pages, 0 console
+>   errors;
+> - every new colour pair is at least 5.5:1 (light) and 6.9:1 (dark).
+
+> The sections below (v2.2, then v2.1) still apply wherever they do not conflict with the above.
+
+## v2.2 "Sky" notes
 
 > **v2.2 "Sky" (2026-11-26) supersedes "Ivory" below.** Feedback on Ivory: mature, but it had lost Wasl's
 > personality: beige, muted, every page empty and alike. v2.2 restores v1's identity and keeps v2's clarity.
@@ -32,7 +89,6 @@
 > - `scripts/qa-visual.mjs --quick` passed 48 checks with 0 axe violations, 0 overflow, 0 pure-white pages and
 >   0 console errors.
 >
-> The rest of this document describes v2.1 and still applies wherever it doesn't conflict with the above.
 
 Wasl v2 removed the v1 "sketchbook" look (hand-drawn borders, handwritten fonts, offset shadows, cartoon
 machinery). v2.1 replaces the cold white-and-blue SaaS palette that followed with a warm, editorial identity:

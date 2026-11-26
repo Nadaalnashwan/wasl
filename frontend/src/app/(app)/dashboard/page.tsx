@@ -3,6 +3,7 @@
 import { ArrowRight, Briefcase, CheckCircle2, ChevronRight, PenLine, Plus, ScanSearch } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { WaslMachine } from "@/components/brand/art";
 import { AddAchievementDialog } from "@/components/achievements";
 import { fmt } from "@/components/achievements/shared";
 import { ClaimSummary } from "@/components/claims";
@@ -189,33 +190,36 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-10">
-      <header className="flex flex-wrap items-end gap-x-6 gap-y-5 border-b border-border pb-8">
-        <div className="min-w-0 flex-1">
-          <p className="eyebrow mb-3">
+      {/* welcome band: the brand colour with the Wasl machine, like the landing's band */}
+      <header className="relative overflow-hidden rounded-3xl bg-[linear-gradient(160deg,var(--band)_0%,var(--band-2)_100%)] px-6 py-8 text-on-band sm:px-10 sm:py-10">
+        <WaslMachine className="pointer-events-none absolute end-6 -bottom-10 hidden h-[17rem] w-auto xl:block" />
+        <div className="relative z-10 flex flex-col gap-6 xl:max-w-[56%]">
+        <div className="min-w-0">
+          <p className="mb-3 text-sm font-semibold text-on-band-2">
             <time dateTime={new Date().toISOString().slice(0, 10)}>
               {new Date().toLocaleDateString(locale === "ar" ? "ar-SA-u-ca-gregory" : "en-GB", { weekday: "long", day: "numeric", month: "long" })}
             </time>
           </p>
-          <h1 className="font-display brand-underline text-[2.25rem] leading-[1.1] text-fg sm:text-[2.75rem]">
+          <h1 className="font-display brand-underline text-[2.25rem] leading-[1.1] text-on-band sm:text-[2.75rem]">
             {name ? fmt(t("dashboard2.greeting"), { name }) : t("dashboard2.greeting.anon")}
           </h1>
-          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-fg-2" dir="auto">
+          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-on-band-2" dir="auto">
             {data?.user.headline || t("dashboard2.sub")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <nav aria-label={t("dashboard2.quick")} className="flex flex-wrap items-center gap-1">
-            <Button asChild variant="ghost" size="sm">
+            <Button asChild variant="ghost" size="sm" className="text-on-band hover:bg-on-band/15 hover:text-on-band">
               <Link href="/studio">
                 <PenLine /> {t("nav.studio")}
               </Link>
             </Button>
-            <Button asChild variant="ghost" size="sm">
+            <Button asChild variant="ghost" size="sm" className="text-on-band hover:bg-on-band/15 hover:text-on-band">
               <Link href="/jobs">
                 <Briefcase /> {t("nav.jobs")}
               </Link>
             </Button>
-            <Button asChild variant="ghost" size="sm">
+            <Button asChild variant="ghost" size="sm" className="text-on-band hover:bg-on-band/15 hover:text-on-band">
               <Link href="/tailor">
                 <ScanSearch /> {t("nav.tailor")}
               </Link>
@@ -224,11 +228,12 @@ export default function DashboardPage() {
           <AddAchievementDialog
             onDone={refreshAll}
             trigger={
-              <Button>
+              <Button className="bg-surface text-primary-text hover:bg-primary-soft">
                 <Plus /> {t("dashboard2.ach.add")}
               </Button>
             }
           />
+        </div>
         </div>
       </header>
 

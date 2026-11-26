@@ -113,7 +113,7 @@ export default function GapPage() {
 
   return (
     <div id="gap-top" className="scroll-mt-24">
-      <PageHeader title={t("gap.title")} sub={t("career2.gap.sub")} />
+      <PageHeader tone="teal" art="gap" title={t("gap.title")} sub={t("career2.gap.sub")} />
 
       {master.loading && !master.data && <SkeletonRows rows={3} />}
       {master.error && <ErrorNote error={master.error} onRetry={master.reload} />}

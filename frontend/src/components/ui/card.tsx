@@ -1,4 +1,5 @@
 import * as React from "react";
+import { SpotArt, type SpotKind } from "@/components/brand/art";
 import { cn } from "@/lib/utils";
 
 /**
@@ -119,19 +120,47 @@ export function MetricRow({ children, className }: { children: React.ReactNode; 
   );
 }
 
+export type AreaTone = "brand" | "sky" | "amber" | "green" | "violet" | "teal" | "slate";
+
+/** Page title. With `art` + `tone` it becomes the area's banner: its colour, its illustration, the same layout everywhere. */
 export function PageHeader({
   title,
   sub,
   actions,
   eyebrow,
   className,
+  tone,
+  art,
 }: {
   title: string;
   sub?: React.ReactNode;
   actions?: React.ReactNode;
   eyebrow?: React.ReactNode;
   className?: string;
+  tone?: AreaTone;
+  art?: SpotKind;
 }) {
+  if (art) {
+    return (
+      <header
+        className={cn(
+          `tone-${tone ?? "brand"}`,
+          "relative mb-10 overflow-hidden rounded-2xl border border-border bg-tone-soft px-6 py-7 sm:px-8",
+          className,
+        )}
+      >
+        <div className="relative z-10 flex flex-wrap items-end gap-x-6 gap-y-4 sm:pe-40">
+          <div className="min-w-0 flex-1">
+            {eyebrow && <div className="mb-2 text-sm font-bold text-tone">{eyebrow}</div>}
+            <h1 className="font-display brand-underline text-title text-fg">{title}</h1>
+            {sub && <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-fg-2">{sub}</p>}
+          </div>
+          {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+        </div>
+        <SpotArt kind={art} className="pointer-events-none absolute end-5 top-1/2 hidden h-28 w-auto -translate-y-1/2 sm:block" />
+      </header>
+    );
+  }
   return (
     <header className={cn("mb-10 flex flex-wrap items-end gap-x-6 gap-y-4", className)}>
       <div className="min-w-0 flex-1">
