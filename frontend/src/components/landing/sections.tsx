@@ -51,7 +51,7 @@ function SectionIntro({
   return (
     <div className={cn("max-w-xl", className)}>
       <p className="eyebrow mb-3">{eyebrow}</p>
-      <h2 id={id} className="font-display text-3xl text-fg sm:text-[2.5rem] sm:leading-[1.1] rtl:leading-snug">
+      <h2 id={id} className="font-display brand-underline text-3xl text-fg sm:text-[2.5rem] sm:leading-[1.1] rtl:leading-snug">
         {title}
       </h2>
       {sub && <p className="mt-4 text-[15px] leading-relaxed text-fg-2">{sub}</p>}

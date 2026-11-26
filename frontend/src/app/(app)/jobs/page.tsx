@@ -329,7 +329,7 @@ export default function JobsPage() {
                   aria-busy={loading}
                   aria-live="polite"
                 >
-                  <div className="overflow-hidden rounded-lg border border-border-soft bg-surface">
+                  <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
                     <ResultsList items={items} selectedId={selected?.id ?? null} onSelect={select} />
                     <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
                       <span className="num text-xs text-fg-3">{fill(t("jobs.showing"), { n: items.length, t: total })}</span>
@@ -343,7 +343,7 @@ export default function JobsPage() {
                 </div>
 
                 {split && (
-                  <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto rounded-lg border border-border-soft bg-surface">
+                  <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto rounded-xl border border-border bg-surface shadow-sm">
                     {selected ? (
                       <JobDetail key={selected.id} item={selected} {...actions} />
                     ) : (

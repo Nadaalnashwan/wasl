@@ -101,13 +101,13 @@ function AttentionList({ items }: { items: AttentionItem[] }) {
   const { t } = useI18n();
   if (items.length === 0) {
     return (
-      <p className="flex items-center gap-2 border-y border-border-soft py-3.5 text-sm text-fg-2">
+      <p className="flex items-center gap-2 rounded-xl border border-ok/25 bg-ok-soft px-4 py-3.5 text-sm text-fg">
         <CheckCircle2 className="size-4 shrink-0 text-ok" aria-hidden /> {t("dashboard2.attention.none")}
       </p>
     );
   }
   return (
-    <ul className="divide-y divide-border-soft border-y border-border">
+    <ul className="divide-y divide-border-soft overflow-hidden rounded-xl border border-border bg-surface shadow-sm [&>li]:px-4">
       {items.map((it) => (
         <li key={it.id}>
           <Link
@@ -196,7 +196,7 @@ export default function DashboardPage() {
               {new Date().toLocaleDateString(locale === "ar" ? "ar-SA-u-ca-gregory" : "en-GB", { weekday: "long", day: "numeric", month: "long" })}
             </time>
           </p>
-          <h1 className="font-display text-[2.25rem] leading-[1.1] text-fg sm:text-[2.75rem]">
+          <h1 className="font-display brand-underline text-[2.25rem] leading-[1.1] text-fg sm:text-[2.75rem]">
             {name ? fmt(t("dashboard2.greeting"), { name }) : t("dashboard2.greeting.anon")}
           </h1>
           <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-fg-2" dir="auto">
@@ -259,7 +259,7 @@ export default function DashboardPage() {
                 {recentAch.length === 0 ? (
                   <EmptyState title={t("dashboard2.ach.empty")} text={t("dashboard2.ach.empty.d")} />
                 ) : (
-                  <ul className="divide-y divide-border border-y border-border">
+                  <ul className="divide-y divide-border-soft overflow-hidden rounded-xl border border-border bg-surface shadow-sm [&>li]:px-4">
                     {recentAch.map((a) => (
                       <li key={a.id}>
                         <Link
@@ -416,7 +416,7 @@ export default function DashboardPage() {
                 action={jobs.data?.items.length ? <SectionLink href="/jobs">{t("dash.jobs.all")}</SectionLink> : undefined}
               >
                 {jobs.data?.items.length ? (
-                  <ul className="divide-y divide-border border-y border-border">
+                  <ul className="divide-y divide-border-soft overflow-hidden rounded-xl border border-border bg-surface shadow-sm [&>li]:px-4">
                     {jobs.data.items.map((j) => (
                       <li key={j.id}>
                         <Link href="/jobs" className="group flex items-start gap-3 py-3">

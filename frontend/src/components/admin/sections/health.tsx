@@ -71,7 +71,7 @@ export function HealthView() {
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <Block title="Runtime" description={`Checked ${fmtDateTime(health.checked_at, locale)}`}>
                 <DescriptionList
-                  className="rounded-lg border border-border-soft bg-surface p-4"
+                  className="rounded-xl border border-border bg-surface shadow-sm p-4"
                   items={[
                     { label: "Backend", value: <Status tone={health.backend === "ok" ? "ok" : "bad"}>{health.backend}</Status> },
                     {
@@ -113,7 +113,7 @@ export function HealthView() {
               </Block>
               <Block title="Privacy & alerting configuration">
                 <DescriptionList
-                  className="rounded-lg border border-border-soft bg-surface p-4"
+                  className="rounded-xl border border-border bg-surface shadow-sm p-4"
                   items={[
                     { label: "Personal-data minimum", value: <Mono>{health.privacy.personal_min_privacy}</Mono> },
                     { label: "PII redaction", value: <Status tone={health.privacy.pii_redaction ? "ok" : "warn"}>{health.privacy.pii_redaction ? "enabled" : "disabled"}</Status> },

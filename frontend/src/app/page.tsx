@@ -18,6 +18,7 @@ import { FullPageSpinner } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/providers";
+import { Marked } from "@/components/ui/marked";
 
 export default function Landing() {
   const { t } = useI18n();
@@ -38,7 +39,7 @@ export default function Landing() {
       <main id="main" className="flex-1">
         {/* Hero */}
         <section aria-labelledby="hero-title" className="mx-auto w-full max-w-6xl px-4 pt-16 pb-20 sm:px-6 md:pt-24 md:pb-28 lg:px-8">
-          <div className="max-w-3xl">
+          <div className="max-w-4xl">
             <p className="eyebrow mb-5 flex items-center gap-2">
               <ShieldCheck className="size-3.5 text-primary" aria-hidden />
               {t("landing2.hero.eyebrow")}
@@ -47,8 +48,10 @@ export default function Landing() {
               id="hero-title"
               className="font-display text-[2.75rem] leading-[1.04] text-fg sm:text-6xl lg:text-display rtl:leading-[1.3]"
             >
-              <span className="block">{t("landing2.hero.t1")}</span>
-              <span className="block text-fg-3 italic rtl:not-italic">{t("landing2.hero.t2")}</span>
+              <span className="block">
+                <Marked text={t("landing2.hero.t1")} mark={t("landing2.hero.mark")} />
+              </span>
+              <span className="brand-underline block w-fit text-primary-text">{t("landing2.hero.t2")}</span>
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-fg-2 sm:text-lg">{t("landing2.hero.sub")}</p>
             <div className="mt-9 flex flex-wrap items-center gap-3">

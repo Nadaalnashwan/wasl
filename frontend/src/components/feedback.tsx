@@ -34,7 +34,7 @@ export function SkeletonRows({ rows = 3 }: { rows?: number }) {
 /** Staged progress for long AI calls: shows which workflow step is likely running. */
 export function AiWorking({ steps, className }: { steps: string[]; className?: string }) {
   return (
-    <div className={cn("rounded-lg border border-border-soft bg-surface p-5", className)} role="status" aria-live="polite">
+    <div className={cn("rounded-xl border border-border bg-surface p-5 shadow-sm", className)} role="status" aria-live="polite">
       <ol className="flex flex-col gap-3">
         {steps.map((s, i) => (
           <li key={s} className="fade-in flex items-center gap-3 text-sm" style={{ animationDelay: `${i * 0.9}s` }}>
@@ -65,10 +65,15 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-start gap-4 border-s-2 border-border py-1.5 ps-5", className)}>
-      <span className="mt-0.5 shrink-0 text-fg-3 [&_svg]:size-[18px]" aria-hidden>{icon ?? <Inbox />}</span>
-      <div className="min-w-0">
-        <h3 className="text-sm font-semibold text-fg">{title}</h3>
+    <div className={cn("flex items-start gap-4 rounded-xl border border-border-soft bg-primary-soft/45 px-5 py-4", className)}>
+      <span
+        className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary-text ring-1 ring-primary/15 [&_svg]:size-[18px]"
+        aria-hidden
+      >
+        {icon ?? <Inbox />}
+      </span>
+      <div className="min-w-0 pt-0.5">
+        <h3 className="text-sm font-bold text-fg">{title}</h3>
         {text && <p className="mt-1 max-w-lg text-sm leading-relaxed text-fg-2">{text}</p>}
         {action && <div className="mt-3">{action}</div>}
       </div>

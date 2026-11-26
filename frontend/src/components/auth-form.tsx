@@ -11,6 +11,7 @@ import { Input, Label } from "@/components/ui/form";
 import { ApiError } from "@/lib/api";
 import { useI18n, type TKey } from "@/lib/i18n";
 import { useAuth } from "@/lib/providers";
+import { Marked } from "@/components/ui/marked";
 
 const DEFAULT_NEXT = "/dashboard";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -59,11 +60,13 @@ function StatementPanel() {
     { t: "auth2.side.p3.t", d: "auth2.side.p3.d" },
   ];
   return (
-    <aside className="hidden border-s border-border bg-surface lg:flex lg:flex-col lg:justify-between lg:px-14 lg:py-12 xl:px-20">
+    <aside className="hidden border-s border-border bg-primary-soft/60 lg:flex lg:flex-col lg:justify-between lg:px-14 lg:py-12 xl:px-20">
       <div />
       <div className="max-w-md">
         <p className="eyebrow mb-4">{t("auth2.side.eyebrow")}</p>
-        <p className="font-display text-[2.5rem] leading-[1.08] text-fg rtl:leading-snug">{t("auth2.side.title")}</p>
+        <p className="font-display text-[2.5rem] leading-[1.08] text-fg rtl:leading-snug">
+          <Marked text={t("auth2.side.title")} mark={t("landing2.hero.mark")} />
+        </p>
         <ul className="mt-10 flex flex-col gap-6">
           {points.map((p) => (
             <li key={p.t} className="flex gap-3">

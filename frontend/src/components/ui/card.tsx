@@ -14,10 +14,10 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-lg border border-border-soft",
-        tone === "surface" && "bg-surface",
+        "rounded-xl border border-border",
+        tone === "surface" && "bg-surface shadow-sm",
         tone === "muted" && "bg-surface-2",
-        tone === "brand" && "border-primary/20 bg-primary-soft",
+        tone === "brand" && "border-primary/25 bg-primary-soft",
         padded && "p-5",
         className,
       )}
@@ -43,7 +43,7 @@ export function CardTitle({
     <div className={cn("mb-4 flex items-start gap-3", className)}>
       {icon && <span className="mt-0.5 text-fg-3 [&_svg]:size-4">{icon}</span>}
       <div className="min-w-0 flex-1">
-        <h2 className="text-heading font-semibold text-fg">{children}</h2>
+        <h2 className="text-heading font-bold text-fg">{children}</h2>
         {description && <p className="mt-0.5 text-sm text-fg-3">{description}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
@@ -51,12 +51,13 @@ export function CardTitle({
   );
 }
 
-export type BadgeTone = "neutral" | "brand" | "ok" | "warn" | "bad" | "outline";
+export type BadgeTone = "neutral" | "brand" | "accent" | "ok" | "warn" | "bad" | "outline";
 
 export function Badge({ className, tone = "neutral", ...props }: React.HTMLAttributes<HTMLSpanElement> & { tone?: BadgeTone }) {
   const tones: Record<BadgeTone, string> = {
     neutral: "bg-surface-2 text-fg-2",
     brand: "bg-primary-soft text-primary-text",
+    accent: "bg-accent-soft text-accent-text",
     ok: "bg-ok-soft text-ok",
     warn: "bg-warn-soft text-warn",
     bad: "bg-bad-soft text-bad",
@@ -65,7 +66,7 @@ export function Badge({ className, tone = "neutral", ...props }: React.HTMLAttri
   return (
     <span
       className={cn(
-        "inline-flex h-5 items-center gap-1 rounded-md px-1.5 text-xs font-medium whitespace-nowrap [&_svg]:size-3",
+        "inline-flex h-5 items-center gap-1 rounded-full px-2 text-xs font-semibold whitespace-nowrap [&_svg]:size-3",
         tones[tone],
         className,
       )}
@@ -79,6 +80,7 @@ export function Status({ tone = "neutral", children, className }: { tone?: Badge
   const dot: Record<BadgeTone, string> = {
     neutral: "bg-fg-3",
     brand: "bg-primary",
+    accent: "bg-accent",
     ok: "bg-ok",
     warn: "bg-warn",
     bad: "bg-bad",
@@ -97,18 +99,18 @@ export function Stat({ label, value, hint, className }: { label: string; value: 
   return (
     <div className={cn("min-w-0", className)}>
       <div className="text-xs font-medium text-fg-3">{label}</div>
-      <div className="num mt-1 text-2xl font-semibold tracking-tight text-fg">{value}</div>
+      <div className="num mt-1 text-2xl font-extrabold tracking-tight text-fg">{value}</div>
       {hint && <div className="mt-0.5 text-xs text-fg-3">{hint}</div>}
     </div>
   );
 }
 
-/** Metrics separated by hairlines instead of boxed cards. */
+/** Metrics on one surface, separated by hairlines (one container, not a card per number). */
 export function MetricRow({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div
       className={cn(
-        "grid grid-cols-2 border-y border-border sm:grid-cols-4 [&>*]:py-4 [&>*]:pe-4 [&>*:not(:first-child)]:sm:border-s [&>*:not(:first-child)]:sm:ps-5 [&>*]:border-border-soft",
+        "grid grid-cols-2 rounded-xl border border-border bg-surface px-5 shadow-sm sm:grid-cols-4 [&>*]:py-4 [&>*]:pe-4 [&>*:not(:first-child)]:sm:border-s [&>*:not(:first-child)]:sm:ps-5 [&>*]:border-border-soft",
         className,
       )}
     >
@@ -134,8 +136,8 @@ export function PageHeader({
     <header className={cn("mb-10 flex flex-wrap items-end gap-x-6 gap-y-4", className)}>
       <div className="min-w-0 flex-1">
         {eyebrow && <div className="eyebrow mb-2">{eyebrow}</div>}
-        <h1 className="text-title font-semibold tracking-tight text-fg">{title}</h1>
-        {sub && <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-fg-2">{sub}</p>}
+        <h1 className="font-display brand-underline text-title text-fg">{title}</h1>
+        {sub && <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-fg-2">{sub}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </header>
@@ -165,7 +167,7 @@ export function Section({
         <div className="mb-3 flex items-end gap-4">
           <div className="min-w-0 flex-1">
             {title && (
-              <h2 id={hid} className="text-heading font-semibold text-fg">
+              <h2 id={hid} className="text-heading font-bold text-fg">
                 {title}
               </h2>
             )}
@@ -179,13 +181,18 @@ export function Section({
   );
 }
 
-/** Divided list container (rows separated by hairlines). */
+/** Divided list on one surface (rows separated by hairlines). */
 export function List({ className, ...props }: React.HTMLAttributes<HTMLUListElement>) {
-  return <ul className={cn("divide-y divide-border-soft border-y border-border", className)} {...props} />;
+  return (
+    <ul
+      className={cn("divide-y divide-border-soft overflow-hidden rounded-xl border border-border bg-surface shadow-sm", className)}
+      {...props}
+    />
+  );
 }
 
 export function ListItem({ className, ...props }: React.LiHTMLAttributes<HTMLLIElement>) {
-  return <li className={cn("py-3.5", className)} {...props} />;
+  return <li className={cn("px-4 py-3.5", className)} {...props} />;
 }
 
 /** Key/value pairs (metadata). */

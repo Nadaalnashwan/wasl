@@ -102,5 +102,5 @@ export function SettingRow({
 
 /** Bordered group of rows separated by hairlines. */
 export function RowGroup({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("divide-y divide-border rounded-lg border border-border-soft bg-surface", className)}>{children}</div>;
+  return <div className={cn("divide-y divide-border rounded-xl border border-border bg-surface shadow-sm", className)}>{children}</div>;
 }

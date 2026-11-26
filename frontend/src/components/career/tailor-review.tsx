@@ -262,7 +262,7 @@ export function BlockedChanges({ enforcement, original }: { enforcement?: Enforc
           {t("career2.blk.none")}
         </p>
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border-soft bg-surface">
+        <ul className="divide-y divide-border rounded-xl border border-border bg-surface shadow-sm">
           {(e.rejected_bullets ?? 0) > 0 && (
             <li className="flex gap-3 px-4 py-3 text-sm">
               <Ban className="mt-0.5 size-4 shrink-0 text-bad" aria-hidden />

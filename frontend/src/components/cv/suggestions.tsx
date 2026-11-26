@@ -204,7 +204,7 @@ export function SuggestionReview({
   }
 
   return (
-    <article className="rounded-lg border border-border-soft bg-surface" aria-labelledby={`sug-${s.id}`}>
+    <article className="rounded-xl border border-border bg-surface shadow-sm" aria-labelledby={`sug-${s.id}`}>
       <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border px-4 py-3">
         <h3 id={`sug-${s.id}`} className="text-sm font-semibold text-fg">
           {s.achievement_id ? t("cv2.sug.fromAchievement") : t("cv2.sug.title")}
@@ -309,7 +309,7 @@ export function StaleSuggestions({ items }: { items: Suggestion[] }) {
   const { t } = useI18n();
   if (!items.length) return null;
   return (
-    <details className="rounded-lg border border-border-soft bg-surface-2/50 px-4 py-3">
+    <details className="rounded-xl border border-border bg-surface shadow-sm-2/50 px-4 py-3">
       <summary className="cursor-pointer text-sm font-medium text-fg">
         {t("cv2.sug.staleList")} <span className="num text-fg-3">({items.length})</span>
       </summary>

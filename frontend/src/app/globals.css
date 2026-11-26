@@ -3,95 +3,112 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* =====================================================================
-   Wasl design system v2.1 "Ivory" — see docs/DESIGN_SYSTEM.md
-   Warm cream / ivory surfaces (never pure white), ink text, one brand blue used
-   sparingly, hairline separators instead of boxes, no decoration.
-   Every text token passes WCAG AA (>= 4.5:1) on every surface token;
-   --border-strong (form controls) passes 3:1 against the surfaces it sits on.
+   Wasl design system v2.2 "Sky" — see docs/DESIGN_SYSTEM.md
+   Wasl's own identity, matured: ink text, the brand blue and sky fills on a faint blueprint grid (from v1),
+   with v2's clarity — consistent components, crisp borders, restrained depth, no hand-drawn wobble.
+   One warm amber accent keeps it human. Never pure white (QA rule).
+   Every text token passes WCAG AA (>= 4.5:1) on every surface and tint token in both themes;
+   --border-strong (form controls) passes 3:1.
    ===================================================================== */
 
 :root {
-  /* surfaces — warm, neutral, layered by tone rather than by shadow */
-  --bg: #f5f1e8; /* page */
-  --bg-sidebar: #efeadf; /* navigation rail */
-  --surface: #faf7f0; /* primary surface: panels, rows, editors */
-  --surface-elevated: #fcfaf5; /* dialogs, drawers, menus, popovers */
-  --surface-2: #ede6d8; /* secondary: hover, table heads, segmented tracks */
-  --surface-3: #e8e0d2; /* subtle accent */
-  --field: #fcfaf4; /* text inputs */
-  --paper: #fdfbf6; /* in-app document preview (exports stay plain white) */
+  /* surfaces — cool paper with a hint of sky, layered by tone */
+  --bg: #eef4fb; /* page (carries the faint blueprint grid) */
+  --bg-sidebar: #e6effa; /* navigation rail */
+  --surface: #f8fbfe; /* primary surface: panels, rows, editors */
+  --surface-elevated: #fafcff; /* dialogs, drawers, menus, popovers */
+  --surface-2: #e3edf9; /* secondary: hover, table heads, segmented tracks */
+  --surface-3: #d3ebfc; /* sky fill: selection, active nav, highlights */
+  --field: #fbfdff; /* text inputs */
+  --paper: #fdfeff; /* in-app document preview (exports stay plain white) */
   /* lines */
-  --border: #d8cfc0;
-  --border-soft: #e4dccd;
-  --border-strong: #8f846f;
-  /* text */
-  --text: #202b3c;
-  --text-2: #4d5360;
-  --text-3: #646052;
+  --border: #c9daee;
+  --border-soft: #dbe7f5;
+  --border-strong: #6f86a6;
+  /* text — v1's ink */
+  --text: #15171c;
+  --text-2: #3f4859;
+  --text-3: #535d70;
   /* brand */
   --primary: #0b57c9;
   --primary-hover: #0848a8;
-  --primary-soft: #e5ebf4;
+  --primary-soft: #d3ebfc;
   --primary-text: #0a4fb8;
-  --on-primary: #fbf9f4;
+  --on-primary: #fbfdff;
+  --brand-2: #1e9bf0; /* sky blue: the signature underline and small accents (decorative, never text) */
+  --highlight: #a9d6f7; /* highlighter marker behind a key word */
+  /* warm secondary accent — attention, "new", featured; used sparingly */
+  --accent: #e08a1e;
+  --accent-soft: #fde9c8;
+  --accent-text: #9a4d00;
   /* status — reserved for verification, warnings, errors and operations */
   --ok: #0f6b4c;
-  --ok-soft: #e2ecdf;
+  --ok-soft: #dcf2e6;
   --warn: #8a4b08;
-  --warn-soft: #f4e6cc;
+  --warn-soft: #fdf0cf;
   --bad: #a61b12;
-  --bad-soft: #f5e0d8;
+  --bad-soft: #fde2e2;
   --focus: #0b57c9;
-  --scrim: rgb(32 43 60 / 0.38);
-  --shadow-sm: 0 1px 2px rgb(74 58 30 / 0.06);
-  --shadow-md: 0 6px 18px -8px rgb(74 58 30 / 0.18), 0 1px 3px rgb(74 58 30 / 0.06);
-  --shadow-lg: 0 28px 56px -18px rgb(46 38 24 / 0.32);
+  --scrim: rgb(13 27 46 / 0.4);
+  --grid: rgb(11 87 201 / 0.045);
+  /* depth: soft blue shadows + v1's solid "stamp" offset, refined (primary actions only) */
+  --stamp: #15171c;
+  --shadow-sm: 0 1px 2px rgb(11 45 100 / 0.06);
+  --shadow-md: 0 8px 20px -10px rgb(11 45 100 / 0.22), 0 1px 3px rgb(11 45 100 / 0.06);
+  --shadow-lg: 0 28px 56px -18px rgb(11 35 80 / 0.32);
   /* charts */
   --chart-1: #0b57c9;
-  --chart-2: #b4590c;
-  --chart-3: #2f7a55;
+  --chart-2: #d0790f;
+  --chart-3: #2a9d6f;
   --chart-4: #6b4fa0;
-  --chart-grid: #e2d9ca;
+  --chart-grid: #d6e3f2;
   color-scheme: light;
 }
 
-/* Dark: warm charcoal with a hint of navy — designed, not inverted. */
+/* Dark: v1's "Blueprint" — deep navy paper with the same faint grid. */
 :root[data-theme="dark"] {
-  --bg: #14161b;
-  --bg-sidebar: #111317;
-  --surface: #1b1e24;
-  --surface-elevated: #22262d;
-  --surface-2: #23272f;
-  --surface-3: #2b3039;
-  --field: #181b20;
-  --paper: #1e2127;
-  --border: #30353f;
-  --border-soft: #272b33;
-  --border-strong: #6e7482;
-  --text: #ece7dd;
-  --text-2: #bfb8aa;
-  --text-3: #9c9587;
-  --primary: #7aa9f7;
-  --primary-hover: #9bbef9;
-  --primary-soft: #1c2a42;
-  --primary-text: #9bbef9;
-  --on-primary: #0e1626;
-  --ok: #5cc99a;
-  --ok-soft: #16291f;
-  --warn: #e8b363;
-  --warn-soft: #2e2414;
-  --bad: #f08c80;
-  --bad-soft: #33191a;
-  --focus: #9bbef9;
-  --scrim: rgb(4 6 10 / 0.6);
+  --bg: #0d1b2e;
+  --bg-sidebar: #0b1727;
+  --surface: #11233b;
+  --surface-elevated: #152a45;
+  --surface-2: #16304f;
+  --surface-3: #17406e;
+  --field: #0f2035;
+  --paper: #12253e;
+  --border: #24405f;
+  --border-soft: #1b3350;
+  --border-strong: #6f8fb3;
+  --text: #e8f1fb;
+  --text-2: #b4c6dc;
+  --text-3: #9db2cc;
+  --primary: #4fb0ff;
+  --primary-hover: #8fd0ff;
+  --primary-soft: #17406e;
+  --primary-text: #8fd0ff;
+  --on-primary: #071425;
+  --brand-2: #4fb0ff;
+  --highlight: #1f5591;
+  --accent: #f2b35b;
+  --accent-soft: #46370f;
+  --accent-text: #f2b35b;
+  --ok: #5fd68f;
+  --ok-soft: #12402a;
+  --warn: #f2c25b;
+  --warn-soft: #46370f;
+  --bad: #ff8a8a;
+  --bad-soft: #4a1c22;
+  --focus: #8fd0ff;
+  --scrim: rgb(2 7 14 / 0.62);
+  --grid: rgb(143 208 255 / 0.05);
+  --stamp: #02070e;
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-md: 0 8px 22px -8px rgb(0 0 0 / 0.6);
   --shadow-lg: 0 28px 60px -16px rgb(0 0 0 / 0.7);
-  --chart-1: #7aa9f7;
-  --chart-2: #e39a55;
-  --chart-3: #5cc99a;
+  --chart-1: #3d9be9;
+  --chart-2: #c97a1c;
+  --chart-3: #2fa866;
   --chart-4: #b49bef;
-  --chart-grid: #2a2f38;
+  --chart-grid: #1f3a5a;
   color-scheme: dark;
 }
 
@@ -122,9 +139,14 @@
   --color-warn-soft: var(--warn-soft);
   --color-bad: var(--bad);
   --color-bad-soft: var(--bad-soft);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-text: var(--accent-text);
+  --color-brand-2: var(--brand-2);
+  --color-highlight: var(--highlight);
 
-  --font-sans: var(--font-inter), var(--font-plex-ar), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: var(--font-newsreader), var(--font-plex-ar), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-nunito), var(--font-plex-ar), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-nunito), var(--font-plex-ar), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
 
   --shadow-sm: var(--shadow-sm);
@@ -150,16 +172,20 @@ html {
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
+  /* v1's blueprint grid, much fainter: texture and identity without noise */
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
   color: var(--text);
   font-family: var(--font-sans);
-  font-feature-settings: "cv11", "ss01";
   text-rendering: optimizeLegibility;
 }
 
 :lang(ar) body,
 [dir="rtl"] body {
-  font-family: var(--font-plex-ar), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-plex-ar), var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
   font-feature-settings: normal;
 }
 
@@ -173,7 +199,8 @@ body {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--primary) 22%, transparent);
+  background: var(--highlight);
+  color: var(--text);
 }
 
 :focus-visible {
@@ -190,17 +217,48 @@ body {
     font-weight: 500;
     color: var(--text-3);
   }
-  /* Editorial serif — marketing headlines and the workspace greeting only. */
+  /* Display headings: Nunito at a confident weight — warm and rounded, never handwritten. */
   .font-display {
     font-family: var(--font-display);
-    font-weight: 450;
-    font-optical-sizing: auto;
-    letter-spacing: -0.015em;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
   [dir="rtl"] .font-display {
-    font-family: var(--font-plex-ar), var(--font-newsreader), serif;
-    font-weight: 600;
+    font-family: var(--font-plex-ar), var(--font-nunito), sans-serif;
+    font-weight: 700;
     letter-spacing: 0;
+  }
+  /* Wasl's signature: a short hand-drawn sky stroke under a page title (from v1, used once per page). */
+  .brand-underline {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.32em;
+  }
+  .brand-underline::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    bottom: 0;
+    width: min(100%, 5.5em);
+    height: 0.3em;
+    background: var(--brand-2);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8.5C38 4 74 3.2 108 4.6c30 1.2 58 2.6 89-.6' fill='none' stroke='black' stroke-width='4.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8.5C38 4 74 3.2 108 4.6c30 1.2 58 2.6 89-.6' fill='none' stroke='black' stroke-width='4.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
+    pointer-events: none;
+  }
+  /* Highlighter marker behind one key word (landing and auth only). */
+  .highlight {
+    background: linear-gradient(transparent 58%, var(--highlight) 58%, var(--highlight) 92%, transparent 92%);
+    padding-inline: 0.08em;
+    border-radius: 2px;
+  }
+  /* v1's solid offset shadow, refined: primary actions and the active nav item only. */
+  .stamp {
+    box-shadow: 2px 2px 0 var(--stamp);
+  }
+  .stamp:active {
+    box-shadow: 0 0 0 var(--stamp);
+    transform: translate(2px, 2px);
   }
   /* Tabular numbers for metrics and tables. */
   .num {

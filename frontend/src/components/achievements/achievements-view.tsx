@@ -180,7 +180,7 @@ export function AchievementsView({ initialStatus, initialOpen }: { initialStatus
                 <p className="mb-2 text-xs text-fg-3" aria-live="polite">
                   {fmt(t("achievements2.filter.showing"), { n: visible.length, t: inTab })}
                 </p>
-                <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border-soft bg-surface" aria-label={t("achievements2.list.label")}>
+                <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-sm" aria-label={t("achievements2.list.label")}>
                   {visible.map((a) => (
                     <AchievementRow key={a.id} a={a} active={a.id === openId} onOpen={(x) => {
                         setTab(active);

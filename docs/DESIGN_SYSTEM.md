@@ -1,4 +1,38 @@
-# Wasl design system (v2.1 "Ivory")
+# Wasl design system (v2.2 "Sky")
+
+> **v2.2 "Sky" (2026-11-26) supersedes "Ivory" below.** Feedback on Ivory: mature, but it had lost Wasl's
+> personality: beige, muted, every page empty and alike. v2.2 restores v1's identity and keeps v2's clarity.
+>
+> **Kept from v1:**
+> - ink text (`#15171C`), brand blue (`#0B57C9`), sky fills (`#D3EBFC`) and the sky stroke (`#1E9BF0`);
+> - the faint **blueprint grid** on the page, at about a third of v1's strength;
+> - the "Blueprint" navy dark mode;
+> - **Nunito**, v1's typeface, now also used for headings at 800 weight;
+> - three signature details, used sparingly:
+>   - the hand-drawn **sky underline** under each page title (`.brand-underline`);
+>   - a **highlighter** on one key word, landing and auth only (`.highlight`, `<Marked>`);
+>   - a small solid **offset "stamp"** on primary buttons and the active navigation item (`.stamp`).
+>
+> **Kept from v2:**
+> - shared components, consistent spacing, clear hierarchy, status colours reserved for verification;
+> - no pure white, WCAG AA text contrast on every surface and tint;
+> - no handwriting, wobbly borders or illustrations.
+>
+> **New:**
+> - one warm **amber accent** (`--accent`, `--accent-soft`, `--accent-text`, Badge tone `accent`) for
+>   attention and featured items;
+> - lists, metric rows and empty states sit on real surfaces (12px radius, crisp border, soft blue shadow)
+>   instead of bare hairlines on the page.
+>
+> **Tokens:** see `frontend/src/app/globals.css`.
+>
+> **Verified:**
+> - minimum text contrast is 5.6:1 (light) and 6.2:1 (dark) on surfaces, and 4.85:1 on tints;
+> - control borders are at least 3.15:1;
+> - `scripts/qa-visual.mjs --quick` passed 48 checks with 0 axe violations, 0 overflow, 0 pure-white pages and
+>   0 console errors.
+>
+> The rest of this document describes v2.1 and still applies wherever it doesn't conflict with the above.
 
 Wasl v2 removed the v1 "sketchbook" look (hand-drawn borders, handwritten fonts, offset shadows, cartoon
 machinery). v2.1 replaces the cold white-and-blue SaaS palette that followed with a warm, editorial identity:

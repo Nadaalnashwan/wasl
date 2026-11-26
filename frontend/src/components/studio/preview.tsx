@@ -25,7 +25,7 @@ function LinkedInPreview({ user, content, tags, post }: { user: User | null; con
     .toUpperCase();
   const images = post.images ?? [];
   return (
-    <figure className="overflow-hidden rounded-lg border border-border-soft bg-surface shadow-sm" aria-label={t("studio.preview")}>
+    <figure className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm shadow-sm" aria-label={t("studio.preview")}>
       <div className="flex items-start gap-2.5 px-4 pt-4">
         <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-semibold text-primary-text" aria-hidden>
           {initials || "?"}

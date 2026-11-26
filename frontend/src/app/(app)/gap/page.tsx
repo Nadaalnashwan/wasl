@@ -203,7 +203,7 @@ export default function GapPage() {
                 {/* ---------------- strengths */}
                 <ReportSection id="gap-strengths" title={t("career2.gap.strengths")} description={t("career2.gap.strengthsText")}>
                   {verified.length ? (
-                    <ul className="divide-y divide-border border-y border-border">
+                    <ul className="divide-y divide-border-soft overflow-hidden rounded-xl border border-border bg-surface shadow-sm [&>li]:px-4">
                       {verified.map((r, i) => (
                         <ReqLine key={r.skill + i} r={r}>
                           <ul className="flex flex-col gap-0.5">
@@ -225,7 +225,7 @@ export default function GapPage() {
                 <ReportSection id="gap-unverified" title={t("career2.gap.unverified")} description={t("career2.gap.unverifiedText")}>
                   {unverified.length ? (
                     <>
-                      <ul className="divide-y divide-border border-y border-border">
+                      <ul className="divide-y divide-border-soft overflow-hidden rounded-xl border border-border bg-surface shadow-sm [&>li]:px-4">
                         {unverified.map((r, i) => {
                           const st = stepFor(r.skill);
                           return (
@@ -258,7 +258,7 @@ export default function GapPage() {
                 {/* ---------------- missing */}
                 <ReportSection id="gap-missing" title={t("career2.gap.missing")} description={t("career2.gap.missingText")}>
                   {missing.length ? (
-                    <ul className="divide-y divide-border border-y border-border">
+                    <ul className="divide-y divide-border-soft overflow-hidden rounded-xl border border-border bg-surface shadow-sm [&>li]:px-4">
                       {missing.map((r, i) => {
                         const st = stepFor(r.skill);
                         return (

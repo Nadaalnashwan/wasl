@@ -15,6 +15,8 @@ export default defineMessages(
     "landing2.hero.eyebrow": "Evidence-grounded career workspace",
     "landing2.hero.t1": "Document an achievement once.",
     "landing2.hero.t2": "Use it everywhere.",
+    /* the word in t1 (and in auth2.side.title) that gets the highlighter marker */
+    "landing2.hero.mark": "once",
     "landing2.hero.sub":
       "Wasl turns your projects, documents and repositories into structured achievements, then helps you keep a verified Master CV, draft LinkedIn posts, tailor your CV to jobs and plan the skills you still need. Every AI draft is checked against your own evidence.",
     "landing2.hero.cta": "Create your account",
@@ -153,6 +155,7 @@ export default defineMessages(
     "landing2.hero.eyebrow": "مساحة مهنية مبنية على الأدلة",
     "landing2.hero.t1": "وثّق إنجازك مرة واحدة.",
     "landing2.hero.t2": "واستخدمه في كل مكان.",
+    "landing2.hero.mark": "مرة واحدة",
     "landing2.hero.sub":
       "يحوّل وصل مشاريعك ومستنداتك ومستودعاتك البرمجية إلى إنجازات منظمة، ثم يساعدك على الحفاظ على سيرة ذاتية رئيسية موثّقة، وكتابة منشورات LinkedIn، وتخصيص سيرتك للوظائف، والتخطيط للمهارات التي تحتاجها. وتُقارن كل مسودة يكتبها الذكاء الاصطناعي بأدلتك أنت.",
     "landing2.hero.cta": "أنشئ حسابك",

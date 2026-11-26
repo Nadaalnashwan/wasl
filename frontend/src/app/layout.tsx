@@ -1,11 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans_Arabic, Inter, Newsreader } from "next/font/google";
+import { IBM_Plex_Sans_Arabic, Nunito } from "next/font/google";
 import { Providers } from "@/lib/providers";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-// editorial serif, used only for marketing headlines and the workspace greeting
-const newsreader = Newsreader({ subsets: ["latin"], variable: "--font-newsreader", display: "swap", style: ["normal", "italic"] });
+// Nunito is Wasl's original typeface (v1): rounded and warm, used at confident weights for headings and UI
+const nunito = Nunito({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--font-nunito", display: "swap" });
 const plexAr = IBM_Plex_Sans_Arabic({
   weight: ["400", "500", "600", "700"],
   subsets: ["arabic"],
@@ -21,14 +20,14 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f1e8" },
-    { media: "(prefers-color-scheme: dark)", color: "#14161b" },
+    { media: "(prefers-color-scheme: light)", color: "#eef4fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d1b2e" },
   ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning className={`${inter.variable} ${newsreader.variable} ${plexAr.variable} h-full antialiased`}>
+    <html lang="en" dir="ltr" suppressHydrationWarning className={`${nunito.variable} ${plexAr.variable} h-full antialiased`}>
       <head>
         {/* set theme + direction before first paint (no light→dark flash) */}
         <script

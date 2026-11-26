@@ -295,7 +295,7 @@ export default function TailorPage() {
           {/* steps 2–6 */}
           {a && res && (
             <div className="fade-in mt-12 flex flex-col gap-12" aria-live="polite">
-              <header className="flex flex-wrap items-end gap-x-6 gap-y-3 rounded-lg border border-border-soft bg-surface px-5 py-4">
+              <header className="flex flex-wrap items-end gap-x-6 gap-y-3 rounded-xl border border-border bg-surface shadow-sm px-5 py-4">
                 <div className="min-w-0 flex-1">
                   <div className="text-xs text-fg-3">
                     {res.reopened ? t("career2.result.reopened") : t("career2.result.new")} · <span className="num">{fmtDate(a.created_at, locale)}</span>
@@ -365,7 +365,7 @@ export default function TailorPage() {
 
               <Step n={6}>
                 {res.tailored ? (
-                  <div className="flex flex-col gap-4 rounded-lg border border-border-soft bg-surface p-5 sm:flex-row sm:items-center">
+                  <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface shadow-sm p-5 sm:flex-row sm:items-center">
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold text-fg" dir="auto">
                         {res.tailored.title}

@@ -88,10 +88,10 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative flex h-8 items-center gap-2.5 rounded-md px-2.5 text-sm transition-colors",
+        "relative flex h-9 items-center gap-2.5 rounded-[10px] px-2.5 text-sm font-semibold transition-colors",
         active
-          ? "bg-surface font-medium text-fg shadow-sm before:absolute before:inset-y-1.5 before:start-0 before:w-0.5 before:rounded-full before:bg-primary"
-          : "text-fg-2 hover:bg-surface/60 hover:text-fg",
+          ? "stamp bg-primary-soft text-fg ring-1 ring-primary/25"
+          : "text-fg-2 hover:bg-surface hover:text-fg",
       )}
     >
       <Icon className={cn("size-4 shrink-0", active ? "text-primary" : "text-fg-3")} />
@@ -107,7 +107,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
     <nav className="flex flex-col gap-6" aria-label="Main">
       {NAV.map((g) => (
         <div key={g.group}>
-          <div className="mb-1.5 px-2.5 text-xs font-medium text-fg-3">{t(g.group)}</div>
+          <div className="mb-1.5 px-2.5 text-xs font-bold tracking-wide text-fg-3">{t(g.group)}</div>
           <ul className="flex flex-col gap-0.5">
             {g.items.map((item) => (
               <li key={item.href}>
@@ -118,7 +118,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       ))}
       <div>
-        <div className="mb-1.5 px-2.5 text-xs font-medium text-fg-3">{t("nav.group.system")}</div>
+        <div className="mb-1.5 px-2.5 text-xs font-bold tracking-wide text-fg-3">{t("nav.group.system")}</div>
         <ul className="flex flex-col gap-0.5">
           <li>
             <NavLink item={{ href: "/settings", key: "nav.settings", icon: Settings }} onNavigate={onNavigate} />
@@ -149,7 +149,7 @@ function UserBox() {
     .toUpperCase();
   return (
     <div className="flex items-center gap-2.5 rounded-lg px-1.5 py-1.5">
-      <div className="grid size-8 shrink-0 place-items-center rounded-full bg-surface-3 text-xs font-semibold text-fg-2">{initials}</div>
+      <div className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-on-primary">{initials}</div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium text-fg">{name}</div>
         <div className="truncate text-xs text-fg-3">{user.email}</div>
@@ -199,7 +199,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[232px_minmax(0,1fr)]">
-      <aside className="sticky top-0 hidden h-screen flex-col gap-7 overflow-y-auto border-e border-border-soft bg-sidebar px-3 py-5 md:flex">
+      <aside className="sticky top-0 hidden h-screen flex-col gap-7 overflow-y-auto border-e border-border bg-sidebar px-3 py-5 md:flex">
         <Logo className="px-2.5" href="/dashboard" />
         <NavList />
         <div className="mt-auto flex flex-col gap-2 border-t border-border-soft pt-3">
