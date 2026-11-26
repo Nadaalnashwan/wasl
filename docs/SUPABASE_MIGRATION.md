@@ -125,22 +125,52 @@ or `role` any more — the frontend never did; profile edits go through the back
 **History.** `supabase db push` compares the local `supabase/migrations` files with
 `supabase_migrations.schema_migrations` and runs the ones it does not find. With an empty history it would try to
 run `0001` and `0002` again. They must first be recorded as applied **without running them**, with
-`supabase migration repair --status applied`, which inserts history rows only. From a trusted machine with the
-Supabase CLI and the database password, never from CI:
+`supabase migration repair --status applied`, which inserts history rows only. Run this from a trusted machine with
+Supabase CLI **3.4.0** and the database password, never from CI. In CLI 3.4.0, `--remote` with no value targets the
+linked project; without `--remote` the commands target the local stack. `--db-url` is deprecated; use
+`--remote=<url>` instead.
 
 ```bash
+supabase --version                                             # 3.4.0 (the version verified below)
 supabase link --project-ref wgqppuadvbkfzobwmhoa
-supabase migration list                                  # expect LOCAL 0001..0005, REMOTE empty
-supabase migration repair --status applied 0001 0002     # records history only; runs no SQL from the files
-supabase migration list                                  # expect REMOTE 0001, 0002
-supabase db push --dry-run                               # must list exactly 0003, 0004, 0005
-supabase db push                                         # owner approval required
-supabase migration list                                  # expect REMOTE 0001..0005
+supabase migration list --remote                               # expect local 0001..0005, remote empty
+supabase migration repair --status applied 0001 0002 --remote  # records history only; runs no SQL from the files
+supabase migration list --remote                               # expect remote 0001, 0002
+supabase db push --dry-run --remote                            # must list exactly 0003, 0004, 0005
+supabase db push --remote                                      # owner approval required
+supabase migration list --remote                               # expect remote 0001..0005
 ```
 
-Stop at the first deviation. In particular, stop if `migration list` does not show all five local files (the CLI
-expects `<timestamp>_name.sql`; these files use 4-digit versions, which was not verified against the CLI in this
-session), or if the dry run lists anything other than 0003, 0004 and 0005.
+Stop at the first deviation: if `migration list` does not show all five local files, or if the dry run lists anything
+other than 0003, 0004 and 0005.
+
+**Verified on 2026-11-26 with CLI 3.4.0 against a disposable local PostgreSQL 16, never the live project.** The
+database had 0001/0002 applied by hand, no `supabase_migrations` schema, `posts.images` as `jsonb`, and a replica of
+the other application's tables, policies, triggers and buckets. Commands were run with `--remote=<disposable url>`.
+
+1. `migration list` showed local `0001`–`0005` and an empty remote: 4-digit versions are accepted.
+2. `migration repair --status applied 0001 0002` printed `Repaired migration history: [0001 0002] => applied`.
+   - It created `supabase_migrations.schema_migrations (version text primary key, statements text[], name text)`
+     and inserted `0001|init` and `0002|jobs`.
+   - With server statement logging on, the only SQL it sent was that schema/table setup and two
+     `INSERT INTO supabase_migrations.schema_migrations`. The file contents appear only as `INSERT` parameter data;
+     **no SQL from 0001/0002 ran**.
+3. `migration list` then showed remote `0001`, `0002`.
+4. `db push --dry-run` printed `Would push these migrations: 0003_v2_security.sql, 0004_v2_performance.sql,
+   0005_v2_client_privileges.sql` and changed nothing.
+   - On an identical database **without** the repair, the dry run listed all five, `0001` and `0002` included, so
+     the repair is required.
+5. `db push` applied the three files without warnings.
+   - History became `0001`–`0005`.
+   - Every object of the other application, and every row count, was unchanged; the only additions were the three
+     new empty Wasl tables.
+   - `supabase/tests/20_assert_v2.sql` passed, and a second `db push` reported `Remote database is up to date`.
+6. A deliberately failing scratch migration (never in the repository) made `db push` stop with `DbPushApplyError`,
+   and neither its table nor its history row was kept. The CLI runs each file, with its history insert, atomically,
+   which is why 0004 must not contain its own `COMMIT` (below).
+
+Not verified offline: `--remote` against the real linked project (login, TLS, connection pooler). The first live
+`migration list --remote` is the check for that.
 
 Do **not** apply these files through a tool that assigns its own version numbers (for example the dashboard or MCP
 "apply migration", which use a new timestamp). Their history rows would not match `0003`–`0005`, and a later

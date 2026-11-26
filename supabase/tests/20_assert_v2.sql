@@ -103,9 +103,11 @@ select pg_temp.expect_fail($q$update public.users set role = 'admin' where id = 
 reset role;
 
 -- 10. Client roles cannot TRUNCATE, add triggers to, or reference any Wasl table (0005). TRUNCATE ignores RLS, so a
---     table grant is the only barrier. Every public table in this test database is a Wasl table, so a NEW table that
---     0005 forgets is caught here too. Privilege-denied is required (SQLSTATE 42501); any other error, such as a
---     foreign-key refusal, does not count as blocked.
+--     table grant is the only barrier. Every public table is checked EXCEPT the five tables of the other application
+--     that shares the live project (0005 deliberately leaves them alone), so a NEW Wasl table that 0005 forgets is
+--     still caught, and the check stays correct on a database that also holds those tables. (This file as a whole is
+--     for throwaway test databases only: it needs the seed in 10_seed_pre_v2.sql and edits test users.) Privilege-denied is
+--     required (SQLSTATE 42501); any other error, such as a foreign-key refusal, does not count as blocked.
 create or replace function pg_temp.expect_denied(stmt text, who text) returns void language plpgsql as $$
 begin
   begin
@@ -117,7 +119,9 @@ begin
 end $$;
 do $$ declare t text; r text; begin
   for t in select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
-           where n.nspname = 'public' and c.relkind = 'r' and c.relname <> '_pre_counts' order by 1 loop
+           where n.nspname = 'public' and c.relkind = 'r' and c.relname <> '_pre_counts'
+             and c.relname not in ('profiles', 'resumes', 'resume_versions', 'job_applications', 'workflow_logs')  -- other app
+           order by 1 loop
     foreach r in array array['anon', 'authenticated'] loop
       if has_table_privilege(r, format('public.%I', t), 'TRUNCATE')
          or has_table_privilege(r, format('public.%I', t), 'TRIGGER')
