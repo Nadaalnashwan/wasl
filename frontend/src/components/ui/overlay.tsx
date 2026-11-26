@@ -6,6 +6,7 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { X } from "lucide-react";
 import * as React from "react";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 
@@ -155,7 +156,12 @@ export function DrawerContent({
 }
 
 /* ----------------------------------------------------------- Tabs (underline style) */
-export const Tabs = TabsPrimitive.Root;
+/** Radix Tabs default to dir="ltr" (it sets the attribute on its root), which flipped tabbed pages to LTR in Arabic.
+ *  Follow the interface language unless a caller sets dir explicitly. */
+export function Tabs({ dir, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
+  const { dir: uiDir } = useI18n();
+  return <TabsPrimitive.Root dir={dir ?? uiDir} {...props} />;
+}
 export function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
   return <TabsPrimitive.List className={cn("mb-6 flex gap-5 overflow-x-auto border-b border-border", className)} {...props} />;
 }

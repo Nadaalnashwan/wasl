@@ -14,7 +14,7 @@ import { useApi } from "@/lib/hooks";
 import { useI18n, type TKey } from "@/lib/i18n";
 import { useAuth } from "@/lib/providers";
 import type { Achievement, JobsResponse, Post } from "@/lib/types";
-import { cn, fmtDate, isArabic } from "@/lib/utils";
+import { cn, fmtDate } from "@/lib/utils";
 
 /** Shape of GET /api/dashboard (backend app/routers/dashboard.py). */
 type Summary = {
@@ -203,8 +203,8 @@ export default function DashboardPage() {
           <h1 className="font-display brand-underline text-[2.25rem] leading-[1.1] text-on-band sm:text-[2.75rem]">
             {name ? fmt(t("dashboard2.greeting"), { name }) : t("dashboard2.greeting.anon")}
           </h1>
-          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-on-band-2" dir="auto">
-            {data?.user.headline || t("dashboard2.sub")}
+          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-on-band-2">
+            <bdi>{data?.user.headline || t("dashboard2.sub")}</bdi>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -274,13 +274,12 @@ export default function DashboardPage() {
                           <span className="min-w-0 flex-1">
                             <span
                               className="block text-sm font-medium break-words text-fg group-hover:text-primary-text [overflow-wrap:anywhere]"
-                              dir={isArabic(a.title) ? "rtl" : undefined}
                             >
-                              {a.title}
+                              <bdi>{a.title}</bdi>
                             </span>
                             {a.preview && (
-                              <span className="mt-0.5 line-clamp-2 block text-sm text-fg-3" dir={isArabic(a.preview) ? "rtl" : undefined}>
-                                {a.preview}
+                              <span className="mt-0.5 line-clamp-2 block text-sm text-fg-3">
+                                <bdi>{a.preview}</bdi>
                               </span>
                             )}
                           </span>

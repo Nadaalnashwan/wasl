@@ -30,13 +30,13 @@ export function AchievementRow({ a, onOpen, active }: { a: Achievement; onOpen: 
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <span className="min-w-0 text-sm font-medium break-words text-fg [overflow-wrap:anywhere]" dir={isArabic(a.title) ? "rtl" : undefined}>
-              {a.title}
+              <bdi>{a.title}</bdi>
             </span>
             <DecisionStatus a={a} className="shrink-0" />
           </span>
           {a.description && (
             <span className="mt-0.5 line-clamp-1 block text-sm text-fg-3" dir={isArabic(a.description) ? "rtl" : undefined}>
-              {a.description}
+              <bdi>{a.description}</bdi>
             </span>
           )}
           <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-3">
