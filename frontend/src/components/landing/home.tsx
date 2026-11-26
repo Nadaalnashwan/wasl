@@ -61,8 +61,8 @@ function HomeNav() {
   const { theme, toggle } = useTheme();
   const dark = theme === "dark";
   return (
-    <header className={cn(wrap, "flex h-20 items-center gap-3")}>
-      <Logo className="shrink-0" imageClassName="h-8" />
+    <header className={cn(wrap, "flex h-20 items-center gap-2 sm:gap-3")}>
+      <Logo className="shrink-0" imageClassName="h-7 sm:h-8" />
       <nav aria-label={t("landing2.nav.label")} className="ms-8 hidden lg:block">
         <ul className="flex items-center gap-6">
           {NAV.map((l) => (
@@ -74,7 +74,7 @@ function HomeNav() {
           ))}
         </ul>
       </nav>
-      <div className="ms-auto flex items-center gap-2 sm:gap-2.5">
+      <div className="ms-auto flex items-center gap-1.5 sm:gap-2.5">
         <button
           type="button"
           onClick={toggle}
@@ -91,12 +91,12 @@ function HomeNav() {
           lang={locale === "ar" ? "en" : "ar"}
         >
           <Languages className="size-4" aria-hidden />
-          <span>{t("landing2.v1.lang")}</span>
+          <span className="sr-only min-[400px]:not-sr-only">{t("landing2.v1.lang")}</span>
         </button>
         <Link href="/login" className={cn(pillBase, "hidden h-9 bg-surface px-3 text-sm text-fg sm:inline-flex")}>
           {t("landing.signin")}
         </Link>
-        <Link href="/register" className={cn(pillBase, "h-9 bg-primary px-3 text-sm text-on-primary")}>
+        <Link href="/register" className={cn(pillBase, "h-9 bg-primary px-2.5 text-[13px] text-on-primary sm:px-3 sm:text-sm")}>
           {t("landing2.cta")}
         </Link>
       </div>

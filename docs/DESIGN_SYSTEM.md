@@ -1,4 +1,12 @@
-# Wasl design system (v2.3 "Evolved Original")
+# Wasl design system (v3 "V1 structure, evolved maturity")
+
+> **v3 supersedes the area banners and editorial lists of v2.x.** The whole product follows V1's information
+> architecture again (navigation, page layouts, section order, cards); see `docs/V1_RESTORATION.md`.
+> Components: ink cards (`.ink-card`, 1.5px ink, 14px radius, 4px offset shadow mirrored in RTL), inner items
+> (`.ink-soft`), dashed empty states, outlined pill badges/tabs, outlined buttons with a 2px shadow, V1 page header
+> (title + blue underline + subtitle + actions). Palette unchanged: paper + ink + brand blue, navy "Blueprint" dark mode.
+
+## Previous: v2.3 "Evolved Original"
 
 > **v2.3 (2026-11-26) supersedes v2.2 "Sky" and v2.1 "Ivory" below.** The direction is original Wasl's
 > creativity, executed with maturity. The v1 site (wasl-ruddy.vercel.app) was inspected as the reference.
